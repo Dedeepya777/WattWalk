@@ -5,6 +5,22 @@ energy-relevant assets (windows, lights, AC units, appliances…), places them a
 plan and in the 3D tour, and produces a costed upgrade plan that shows what the landlord pays and what
 the tenant saves. Built at HackPrinceton Fall 2026 (CoStar "Inside and Out: AI for the Built World").
 
+## Fastest way (two commands)
+
+You need Python 3.11+, Node.js 20+ and Git. Then, from the repository root:
+
+```bash
+python3 scripts/setup.py     # once: installs everything, creates .env (asks for your keys), downloads the local AI
+python3 scripts/run.py       # every time: starts the local AI, backend and frontend, opens the browser
+```
+
+On Windows use `py scripts\setup.py` and `py scripts\run.py`. `setup.py` is safe to run again: it skips
+what is done and never overwrites an existing `.env`. Three things cannot be automated and come from
+outside the repository: the Matterport keys (`/costar-keys` in the CoStar Discord), the CoStar kit
+(licensed download), and allowing `localhost:5173` for the SDK key on my.matterport.com (section 3.6).
+
+The rest of this guide is the same setup done by hand, plus how to use the app, prepare a demo and fix problems.
+
 This guide takes you from a fresh computer to a working app. Follow the sections in order.
 
 - [1. What you need](#1-what-you-need)
@@ -157,16 +173,19 @@ Without the kit, audits still run; the building card shows fewer fields.
 **Option A: free local model with Ollama (development, no account needed)**
 
 1. Install Ollama from https://ollama.com and open it (or run `ollama serve` in a terminal and leave it running).
-2. Download the vision model once (about 6 GB):
+2. Download the two models once (about 6 GB + 5 GB): one looks at photos, one plans (it must support
+   tool calling, which the vision model does not):
    ```bash
    ollama pull qwen2.5vl:7b
+   ollama pull qwen3:8b
    ```
-3. Check it is there: `ollama list` shows `qwen2.5vl:7b`.
+3. Check they are there: `ollama list`.
 4. In `.env`:
    ```bash
    WATTWALK_SMALL_VISION_MODEL_ID=ollama/qwen2.5vl:7b
    WATTWALK_LARGE_VISION_MODEL_ID=ollama/qwen2.5vl:7b
-   WATTWALK_AGENT_MODE=scripted
+   WATTWALK_PLANNER_MODEL_ID=ollama/qwen3:8b
+   WATTWALK_AGENT_MODE=deep_agents          # or scripted: same tools in a fixed order, no planner model
    ```
 
 The `ollama/` prefix is what routes calls to your local Ollama instead of Bedrock. Expect about 20 to
@@ -183,7 +202,13 @@ the first time (repeat runs are fast, see section 6.3). Ollama must be running t
    `WATTWALK_LARGE_VISION_MODEL_ID`, and a text model id in `WATTWALK_PLANNER_MODEL_ID` if you want
    `WATTWALK_AGENT_MODE=deep_agents`.
 
-You can mix: Ollama for vision and Bedrock for the planner, or the reverse.
+**Option C: Google Gemini API.** Any model id `gemini/<model>` (for example `gemini/gemini-2.5-flash`)
+uses the Gemini API with `GOOGLE_API_KEY` (create one at https://aistudio.google.com/apikey). Measured on
+14 Nov 2026: the **free tier allows 20 requests per model per day**, and one audit needs 60 to 100, so the
+free tier cannot run a full audit; with billing enabled on the key it works and is fast. When the daily
+quota is used up the audit stops with "Gemini daily quota used up".
+
+You can mix providers: for example Ollama for vision and Gemini or Bedrock for the planner.
 
 ### 3.6 3D pins: Showcase SDK key and allowed domain
 
