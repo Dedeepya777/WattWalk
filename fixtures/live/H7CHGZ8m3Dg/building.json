@@ -1,0 +1,41 @@
+{
+  "address": "889 Francisco St, 1206, Los Angeles, CA, 90017, US",
+  "city": "Los Angeles",
+  "costar_property_id": null,
+  "year_built": {
+    "value": null,
+    "source": "needs_verification",
+    "note": "",
+    "evidence_obs_ids": []
+  },
+  "units": {
+    "value": null,
+    "source": "needs_verification",
+    "note": "",
+    "evidence_obs_ids": []
+  },
+  "asking_rent_usd_month": {
+    "value": null,
+    "source": "needs_verification",
+    "note": "",
+    "evidence_obs_ids": []
+  },
+  "unit_floor_area_m2": {
+    "value": 130.6,
+    "source": "reported_in_data",
+    "note": "Sum of room floor areas from Matterport scan",
+    "evidence_obs_ids": []
+  },
+  "ebewe": null,
+  "roof": {
+    "status": "unavailable",
+    "attributes": {},
+    "ortho_ref": null
+  },
+  "layer_status": {
+    "matterport": "fixture",
+    "costar": "unavailable",
+    "vexcel": "unavailable",
+    "ebewe": "fixture"
+  }
+}

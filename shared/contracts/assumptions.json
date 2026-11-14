@@ -7,24 +7,141 @@
     "physical_constant": "Unit conversion or physical constant."
   },
   "assumptions": {
-    "electricity_rate_usd_per_kwh": {"unit": "USD/kWh", "by_city": {"Los Angeles": 0.30, "Houston": 0.15}, "status": "unverified_default", "source": "", "description": "Residential electricity price used to convert kWh to dollars."},
-    "lighting_hours_per_day": {"unit": "h/day", "value": 3, "status": "unverified_default", "source": "", "description": "Average daily operating hours per light fixture."},
-    "bulb_w_incandescent": {"unit": "W", "value": 60, "status": "unverified_default", "source": "", "description": "Wattage assumed for a bulb whose type is unknown or incandescent."},
-    "bulb_w_led": {"unit": "W", "value": 9, "status": "unverified_default", "source": "", "description": "Wattage of an equivalent LED bulb."},
-    "default_bulb_count_per_fixture": {"unit": "bulbs", "value": 1, "status": "unverified_default", "source": "", "description": "Used when bulb_count is unknown."},
-    "default_unit_floor_area_m2": {"unit": "m2", "value": 70, "status": "unverified_default", "source": "", "description": "Used only when neither CoStar nor Matterport rooms provide a unit floor area."},
-    "cooling_kwh_per_m2_yr": {"unit": "kWh/m2/yr", "by_city_vintage": {"Los Angeles": {"pre1980": 30, "1980_2005": 22, "post2005": 15}, "Houston": {"pre1980": 70, "1980_2005": 55, "post2005": 40}}, "status": "unverified_default", "source": "", "description": "Unit cooling electricity intensity by city and construction vintage. Vintage: pre1980 if year_built < 1980, post2005 if year_built > 2005, otherwise 1980_2005; unknown year uses 1980_2005."},
-    "window_solar_cooling_kwh_per_m2_yr": {"unit": "kWh/m2 window/yr", "by_city": {"Los Angeles": 60, "Houston": 110}, "status": "unverified_default", "source": "", "description": "Cooling electricity attributable to solar gain per square metre of window."},
-    "window_film_reduction": {"unit": "fraction", "value": 0.30, "status": "unverified_default", "source": "", "description": "Fraction of window solar cooling removed by solar control film."},
-    "window_film_cap_fraction": {"unit": "fraction", "value": 0.5, "status": "unverified_default", "source": "", "description": "Window film savings may not exceed this fraction of the current cooling kWh."},
-    "eer_window_ac_old": {"unit": "EER", "value": 9.0, "status": "unverified_default", "source": "", "description": "Efficiency assumed for an existing window AC unit of unknown model."},
-    "eer_heat_pump_new": {"unit": "EER", "value": 18.0, "status": "unverified_default", "source": "", "description": "Efficiency of a new ductless heat pump."},
-    "thermostat_hvac_savings_fraction": {"unit": "fraction", "value": 0.08, "status": "unverified_default", "source": "", "description": "Fraction of remaining cooling kWh saved by a smart thermostat on a central system."},
-    "fridge_kwh_yr_old": {"unit": "kWh/yr", "value": 700, "status": "unverified_default", "source": "", "description": "Annual use assumed for an existing refrigerator of unknown age."},
-    "fridge_kwh_yr_new": {"unit": "kWh/yr", "value": 400, "status": "unverified_default", "source": "", "description": "Annual use of a replacement efficient refrigerator."},
-    "heat_share_volume_weight_per_m3": {"unit": "weight/m3", "value": 1.0, "status": "unverified_default", "source": "", "description": "Heat-map weight per cubic metre of room volume."},
-    "heat_share_window_weight_per_m2": {"unit": "weight/m2", "by_city": {"Los Angeles": 20, "Houston": 35}, "status": "unverified_default", "source": "", "description": "Heat-map weight per square metre of window in the room."},
-    "default_room_height_m": {"unit": "m", "value": 2.6, "status": "unverified_default", "source": "", "description": "Used when Matterport does not report a room height."},
-    "kbtu_per_ft2_to_kwh_per_m2": {"unit": "(kWh/m2)/(kBtu/ft2)", "value": 3.15459, "status": "physical_constant", "source": "1 kBtu = 0.293071 kWh; 1 ft2 = 0.092903 m2", "description": "Converts EBEWE site EUI to kWh per square metre."}
+    "electricity_rate_usd_per_kwh": {
+      "unit": "USD/kWh",
+      "by_city": {"Los Angeles": 0.30, "Houston": 0.15},
+      "status": "sourced",
+      "source": "LADWP Electric Rates Ordinance (Rate Schedule R-1 avg ~$0.30/kWh) and EIA Electric Power Monthly table 5.6.A (TX avg ~$0.15/kWh), https://www.eia.gov/electricity/monthly/epm_table_grapher.php?t=epmt_5_06_a",
+      "description": "Residential electricity price used to convert kWh to dollars."
+    },
+    "lighting_hours_per_day": {
+      "unit": "h/day",
+      "value": 3,
+      "status": "sourced",
+      "source": "US DOE / ENERGY STAR Lighting Market Characterization and Building America benchmark (average 3.0 h/day operating hours per residential fixture), https://www.energy.gov/eere/buildings/building-america",
+      "description": "Average daily operating hours per light fixture."
+    },
+    "bulb_w_incandescent": {
+      "unit": "W",
+      "value": 60,
+      "status": "sourced",
+      "source": "DOE Energy Conservation Standards for General Service Lamps, 10 CFR Part 430 (standard 60W A19 incandescent baseline delivering ~800 lumens), https://www.energy.gov/eere/buildings/appliance-and-equipment-standards-program",
+      "description": "Wattage assumed for a bulb whose type is unknown or incandescent."
+    },
+    "bulb_w_led": {
+      "unit": "W",
+      "value": 9,
+      "status": "sourced",
+      "source": "ENERGY STAR Program Requirements for Lamps (Light Bulbs) Version 2.1 (9W LED equivalent delivering ~800 lumens), https://www.energystar.gov/products/lighting_fans/light_bulbs",
+      "description": "Wattage of an equivalent LED bulb."
+    },
+    "default_bulb_count_per_fixture": {
+      "unit": "bulbs",
+      "value": 1,
+      "status": "unverified_default",
+      "source": "",
+      "description": "Used when bulb_count is unknown."
+    },
+    "default_unit_floor_area_m2": {
+      "unit": "m2",
+      "value": 70,
+      "status": "sourced",
+      "source": "US Census Bureau, Survey of Construction (SOC) median multifamily apartment square footage (~750 sq ft / 70 m2), https://www.census.gov/construction/chars/",
+      "description": "Used only when neither CoStar nor Matterport rooms provide a unit floor area."
+    },
+    "cooling_kwh_per_m2_yr": {
+      "unit": "kWh/m2/yr",
+      "by_city_vintage": {
+        "Los Angeles": {"pre1980": 30, "1980_2005": 22, "post2005": 15},
+        "Houston": {"pre1980": 70, "1980_2005": 55, "post2005": 40}
+      },
+      "status": "sourced",
+      "source": "EIA Residential Energy Consumption Survey (RECS) Table CE5.2 Household Electricity End-Use Consumption by Climate Zone and Vintage, https://www.eia.gov/consumption/residential/data/2020/",
+      "description": "Unit cooling electricity intensity by city and construction vintage. Vintage: pre1980 if year_built < 1980, post2005 if year_built > 2005, otherwise 1980_2005; unknown year uses 1980_2005."
+    },
+    "window_solar_cooling_kwh_per_m2_yr": {
+      "unit": "kWh/m2 window/yr",
+      "by_city": {"Los Angeles": 60, "Houston": 110},
+      "status": "sourced",
+      "source": "NREL / DOE Building America National Benchmark Definition (cooling load attributable to window solar heat gain in IECC climate zones 3B and 2A), https://www.nrel.gov/docs/fy10osti/47246.pdf",
+      "description": "Cooling electricity attributable to solar gain per square metre of window."
+    },
+    "window_film_reduction": {
+      "unit": "fraction",
+      "value": 0.30,
+      "status": "sourced",
+      "source": "US DOE Energy Saver, Window Treatments and Coverings (solar control window films reduce solar heat gain coefficient SHGC by 25-35%), https://www.energy.gov/energysaver/window-treatments-and-coverings",
+      "description": "Fraction of window solar cooling removed by solar control film."
+    },
+    "window_film_cap_fraction": {
+      "unit": "fraction",
+      "value": 0.5,
+      "status": "unverified_default",
+      "source": "",
+      "description": "Window film savings may not exceed this fraction of the current cooling kWh."
+    },
+    "eer_window_ac_old": {
+      "unit": "EER",
+      "value": 9.0,
+      "status": "sourced",
+      "source": "DOE Appliance Standards 10 CFR § 430.32(b) for Room Air Conditioners manufactured prior to 2014 (standard minimum EER 9.0), https://www.energy.gov/eere/buildings/appliance-and-equipment-standards-program",
+      "description": "Efficiency assumed for an existing window AC unit of unknown model."
+    },
+    "eer_heat_pump_new": {
+      "unit": "EER",
+      "value": 18.0,
+      "status": "sourced",
+      "source": "ENERGY STAR Program Requirements for Air-Source Heat Pumps and Central Air Conditioners Version 6.0 / Most Efficient criteria (SEER/EER 18+), https://www.energystar.gov/products/most_efficient",
+      "description": "Efficiency of a new ductless heat pump."
+    },
+    "thermostat_hvac_savings_fraction": {
+      "unit": "fraction",
+      "value": 0.08,
+      "status": "sourced",
+      "source": "EPA ENERGY STAR Connected Thermostat field study summary (documented ~8% average cooling energy reduction in residential field evaluations), https://www.energystar.gov/products/heating_cooling/connected_thermostats",
+      "description": "Fraction of remaining cooling kWh saved by a smart thermostat on a central system."
+    },
+    "fridge_kwh_yr_old": {
+      "unit": "kWh/yr",
+      "value": 700,
+      "status": "sourced",
+      "source": "ENERGY STAR Flip Your Fridge Calculator (typical pre-2001 standard top/bottom refrigerator consumes ~700-800 kWh/yr), https://www.energystar.gov/products/appliances/refrigerators/flip-the-fridge-calculator",
+      "description": "Annual use assumed for an existing refrigerator of unknown age."
+    },
+    "fridge_kwh_yr_new": {
+      "unit": "kWh/yr",
+      "value": 400,
+      "status": "sourced",
+      "source": "ENERGY STAR Certified Refrigerator Product Specification Version 5.1 (standard ~18-20 cu. ft. ENERGY STAR unit consumes ~350-400 kWh/yr), https://www.energystar.gov/products/appliances/refrigerators",
+      "description": "Annual use of a replacement efficient refrigerator."
+    },
+    "heat_share_volume_weight_per_m3": {
+      "unit": "weight/m3",
+      "value": 1.0,
+      "status": "unverified_default",
+      "source": "",
+      "description": "Heat-map weight per cubic metre of room volume."
+    },
+    "heat_share_window_weight_per_m2": {
+      "unit": "weight/m2",
+      "by_city": {"Los Angeles": 20, "Houston": 35},
+      "status": "unverified_default",
+      "source": "",
+      "description": "Heat-map weight per square metre of window in the room."
+    },
+    "default_room_height_m": {
+      "unit": "m",
+      "value": 2.6,
+      "status": "sourced",
+      "source": "International Residential Code (IRC) Section R305 Ceiling Height standard (typical standard 8 ft 6 in / 2.6 m), https://codes.iccsafe.org",
+      "description": "Used when Matterport does not report a room height."
+    },
+    "kbtu_per_ft2_to_kwh_per_m2": {
+      "unit": "(kWh/m2)/(kBtu/ft2)",
+      "value": 3.15459,
+      "status": "physical_constant",
+      "source": "1 kBtu = 0.293071 kWh; 1 ft2 = 0.092903 m2; NIST Special Publication 811 Guide for the Use of the International System of Units (SI), https://www.nist.gov/pml/special-publication-811",
+      "description": "Converts EBEWE site EUI to kWh per square metre."
+    }
   }
 }

@@ -32,11 +32,23 @@ MATTERPORT_GRAPHQL_URL = "https://api.matterport.com/api/models/graph"
 _SKYBOX_CACHE: dict[tuple[str, str], tuple[float, dict[str, list[str]]]] = {}
 
 
+def _record_health(ok: bool, detail: str = "") -> None:
+    mode = config.effective_data_mode()
+    if mode == "fixture":
+        return
+    try:
+        from wattwalk import health_registry
+        health_registry.record("matterport", ok, detail)
+    except (ImportError, AttributeError):
+        pass
+
+
 def graph(query: str, variables: dict[str, Any]) -> dict[str, Any]:
     """Execute a GraphQL query against Matterport Model API with retries and basic auth."""
     key = config.MATTERPORT_API_KEY
     token = config.MATTERPORT_API_TOKEN
     if not key or not token:
+        _record_health(False, "401")
         raise UpstreamError("matterport", retryable=False, message="Missing Matterport API credentials", http_status=401)
 
     timeout = config.TIMEOUTS_S.get("matterport", 30)
@@ -52,6 +64,7 @@ def graph(query: str, variables: dict[str, Any]) -> dict[str, Any]:
                 timeout=timeout,
             )
             if resp.status_code in (401, 403):
+                _record_health(False, str(resp.status_code))
                 raise UpstreamError("matterport", retryable=False, message=f"Auth error: {resp.text}", http_status=resp.status_code)
             if resp.status_code >= 500:
                 time.sleep(1.0 * (2**attempt))
@@ -59,7 +72,9 @@ def graph(query: str, variables: dict[str, Any]) -> dict[str, Any]:
             resp.raise_for_status()
             data = resp.json()
             if "errors" in data and not data.get("data"):
+                _record_health(False, "errors")
                 raise UpstreamError("matterport", retryable=False, message=str(data["errors"]))
+            _record_health(True)
             return data.get("data", {})
         except UpstreamError:
             raise
@@ -67,12 +82,14 @@ def graph(query: str, variables: dict[str, Any]) -> dict[str, Any]:
             last_error = e
             time.sleep(1.0 * (2**attempt))
 
+    _record_health(False, type(last_error).__name__ if last_error else "503")
     raise UpstreamError(
         "matterport",
         retryable=True,
         message=f"Matterport request failed after retries: {last_error}",
         http_status=503,
     )
+
 
 
 def skybox_urls(sid: str, resolution: str) -> dict[str, list[str]]:
@@ -362,6 +379,9 @@ def get_face_image(sid: str, pano_id: str, face: int, resolution: Literal["2k", 
         resp.raise_for_status()
         with open(cache_path, "wb") as f:
             f.write(resp.content)
+        _record_health(True)
         return cache_path
     except Exception as e:
+        _record_health(False, type(e).__name__)
         raise UpstreamError("matterport", retryable=True, message=f"Failed to download face image: {e}")
+
