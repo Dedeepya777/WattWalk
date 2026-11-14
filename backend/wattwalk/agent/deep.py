@@ -218,6 +218,11 @@ def _is_default_request(request: dict) -> bool:
     return all(request.get(k) == v for k, v in DEFAULT_PLAN.items())
 
 
+def _views_left(sid: str) -> int:
+    tasks = store.read(sid, "view_tasks.json") or []
+    return max(0, len(tasks) - int(tools._state(sid).get("next_view", 0)))
+
+
 def _unresolved(sid: str) -> list[str]:
     done = set(tools._state(sid)["resolved"])
     return [o.id for o in store.observations(sid) if o.id not in done]
@@ -231,10 +236,18 @@ def _finish(ctx: RunContext) -> None:
                  {"code": "internal"})
         _complete_walk(ctx)
     corrected = False
+    views_left = _views_left(sid)
+    if views_left:
+        ctx.emit("planner", "error", f"Walker stopped with {views_left} planned views not inspected; inspecting "
+                 "them", {"code": "internal"})
+        while "No pending views" not in tools.inspect_next_view(ctx):
+            ctx.check_cancel()
+        corrected = True
     pending = _unresolved(sid)
-    if pending:
-        ctx.emit("planner", "error", f"Walker stopped with {len(pending)} unresolved observations; resolving them "
-                 "and rebuilding the inventory", {"code": "internal"})
+    if pending or corrected:
+        if pending:
+            ctx.emit("planner", "error", f"Walker stopped with {len(pending)} unresolved observations; resolving "
+                     "them and rebuilding the inventory", {"code": "internal"})
         while "All observations resolved" not in tools.resolve_next(ctx):
             ctx.check_cancel()
         tools.build_inventory_tool(ctx)
