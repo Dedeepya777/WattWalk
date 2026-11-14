@@ -4,6 +4,7 @@ import { isFixtureMode } from "../api";
 import type { StartAuditRequest } from "../contracts";
 import { FIXTURE_SID } from "../fixtures";
 import { useAppState } from "../state";
+import { ProgressTracker } from "./ProgressTracker";
 
 type Mode = StartAuditRequest["mode"];
 
@@ -113,6 +114,8 @@ export function StartControls({ onStart, onCancel, onReset }: Props) {
           Reset
         </button>
       </div>
+
+      <ProgressTracker />
 
       {isFixtureMode ? (
         <p className="hint">

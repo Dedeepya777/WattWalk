@@ -100,6 +100,11 @@ export function BuildingCard() {
                 onError={(event) => {
                   (event.currentTarget as HTMLImageElement).style.display = "none";
                 }}
+                onLoad={(event) => {
+                  // Fixture audits ship a 1x1 placeholder instead of a real aerial photo.
+                  const img = event.currentTarget as HTMLImageElement;
+                  if (img.naturalWidth <= 2 || img.naturalHeight <= 2) img.style.display = "none";
+                }}
               />
             ) : (
               <p className="empty">Aerial image is not bundled in fixture mode.</p>

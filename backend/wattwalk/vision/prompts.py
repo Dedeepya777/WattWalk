@@ -105,27 +105,44 @@ Return only JSON, no other text: {"attrs": {...}}"""
 
 
 # Second look (not in the plan; added after real-scan testing): each detection with one of these
-# labels is cropped and sent back with a narrow question. It is kept only if the model names the same
-# label again. On 10 hand-checked Cherokee faces it cut false detections from 4 to 2 with no new misses
-# (the mirror read as a window and the smoke detector read as a ceiling light were removed).
+# labels is cropped and sent back with a narrow, NEUTRAL question (the detector's guess is not shown:
+# telling the model the guess made it repeat the guess). The answer decides the detection:
+#   - the same label: kept;
+#   - another label from VOCAB (e.g. window_ac -> mini_split, lamp -> ceiling_light): relabelled;
+#   - anything else (mirror, doorway, picture...): dropped.
+# Results on hand-checked Cherokee crops (2026-11-14, qwen2.5vl:7b): old keep/drop prompt 17/20,
+# neutral prompt with relabelling 20/20 on two runs (fixed: doorway read as a window, mini split
+# read as a window AC, ceiling fixture read as a lamp).
 # Set SECOND_LOOK_LABELS to an empty dict to switch it off.
 SECOND_LOOK_LABELS: dict[str, list[str]] = {
-    "window": ["window", "mirror", "door", "cabinet", "picture", "screen", "curtain", "wall", "other"],
+    "window": ["window", "mirror", "doorway", "door", "cabinet", "picture", "screen", "curtain", "wall", "other"],
     "window_ac": ["window_ac", "mini_split", "electrical_panel", "vent", "other"],
     "ceiling_light": ["ceiling_light", "smoke_detector", "vent", "other"],
     "ceiling_fan": ["ceiling_fan", "table", "furniture", "other"],
-    "lamp": ["lamp", "picture", "mirror", "other"],
+    "lamp": ["lamp", "ceiling_light", "picture", "mirror", "other"],
 }
 
-VERIFY_PROMPT = """This is a close crop from an apartment photo. A detector thought it shows a {label}.
+SECOND_LOOK_HINTS: dict[str, str] = {
+    "window": ("A window is glass in a wall that shows the outdoors. A mirror shows the inside of the room. "
+               "A doorway is an open passage you could walk through into another room."),
+    "window_ac": ("A window_ac is a box unit sitting in a window opening. A mini_split is a long, flat, white "
+                  "unit mounted high on a wall, not in a window."),
+    "ceiling_light": ("A ceiling_light is a light fixture on the ceiling or high on a wall. A smoke detector is "
+                      "a small round plastic disc with no bulb."),
+    "ceiling_fan": "A ceiling fan has blades hanging from the ceiling.",
+    "lamp": ("A lamp stands on the floor or a table, or is a wall lamp with a shade or arm. A ceiling_light "
+             "is fixed flat to the ceiling."),
+}
+
+VERIFY_PROMPT = """This is a close crop from an apartment photo.
 What is the main object in the crop? Choose exactly one of: {choices}.
-A window shows the outdoors; a mirror shows the inside of the room.
+{hints}
 Return only JSON, no other text: {"object": "..."}"""
 
 
 def verify_prompt(label: str) -> str:
-    return (VERIFY_PROMPT.replace("{label}", label.replace("_", " "))
-            .replace("{choices}", ", ".join(SECOND_LOOK_LABELS[label])))
+    return (VERIFY_PROMPT.replace("{choices}", ", ".join(SECOND_LOOK_LABELS[label]))
+            .replace("{hints}", SECOND_LOOK_HINTS.get(label, "")))
 
 
 def detect_prompt(w: int, h: int) -> str:

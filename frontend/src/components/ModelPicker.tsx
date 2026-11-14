@@ -5,6 +5,8 @@ import { useAppDispatch, useAppState } from "../state";
 export function ModelPicker({ onRetry }: { onRetry: () => void }) {
   const state = useAppState();
   const dispatch = useAppDispatch();
+  // Switching is allowed during a run: audits run on the server per model, so the run keeps going,
+  // and selecting the model again reattaches to its events (App.tsx). Only Start/Cancel act on a run.
   const running = state.audit?.status.status === "running";
 
   return (
@@ -23,6 +25,12 @@ export function ModelPicker({ onRetry }: { onRetry: () => void }) {
       ) : state.testModels.length === 0 ? (
         <p className="empty">No test models configured.</p>
       ) : (
+        <>
+        {running ? (
+          <p className="hint small">
+            This audit keeps running if you switch scans. Come back to it to cancel it or see progress.
+          </p>
+        ) : null}
         <ul className="model-list">
           {state.testModels.map((model) => {
             const selected = model.sid === state.selectedSid;
@@ -32,7 +40,6 @@ export function ModelPicker({ onRetry }: { onRetry: () => void }) {
                   type="button"
                   className={`model-row ${selected ? "selected" : ""}`}
                   onClick={() => dispatch({ type: "selectSid", sid: model.sid })}
-                  disabled={running}
                   aria-pressed={selected}
                 >
                   <span className="model-address">{model.address}</span>
@@ -53,6 +60,7 @@ export function ModelPicker({ onRetry }: { onRetry: () => void }) {
             );
           })}
         </ul>
+        </>
       )}
     </section>
   );

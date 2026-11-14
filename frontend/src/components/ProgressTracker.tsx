@@ -1,0 +1,66 @@
+/** Audit progress bar under the Start / Cancel controls; the maths lives in progress.ts. */
+import { useEffect, useState } from "react";
+import { useAppState } from "../state";
+import { computeProgress } from "./progress";
+
+function clock(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return m > 0 ? `${m} min ${s.toString().padStart(2, "0")} s` : `${s} s`;
+}
+
+export function ProgressTracker() {
+  const state = useAppState();
+  const status = state.audit?.status.status;
+  const running = status === "running";
+  const progress = computeProgress(state.events);
+
+  // Tick once a second so "elapsed" moves between events.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    if (!running) return undefined;
+    const timer = window.setInterval(() => setTick((n) => n + 1), 1000);
+    return () => window.clearInterval(timer);
+  }, [running]);
+
+  if (!running && state.events.length === 0) return null;
+  if (!running && status !== "completed") return null;
+
+  const startedAt = state.audit?.status.started_at ? Date.parse(state.audit.status.started_at) : NaN;
+  const elapsed = running && Number.isFinite(startedAt)
+    ? Math.max(progress.elapsedS, Math.round((Date.now() - startedAt) / 1000))
+    : progress.elapsedS;
+
+  return (
+    <div className="progress" role="group" aria-label="Audit progress">
+      <div className="progress-head">
+        <strong>{progress.stage}</strong>
+        <span>{progress.percent}%</span>
+      </div>
+      <div
+        className="progress-track"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={progress.percent}
+        aria-valuetext={`${progress.percent}% – ${progress.stage}`}
+      >
+        <div
+          className={running ? "progress-fill running" : "progress-fill"}
+          style={{ width: `${progress.percent}%` }}
+        />
+      </div>
+      <div className="progress-meta muted small">
+        <span>{progress.detail}</span>
+        <span>
+          {clock(elapsed)} elapsed
+          {running && progress.etaS !== null
+            ? ` · about ${clock(progress.etaS)} left in this stage`
+            : running && progress.estimating
+              ? " · estimating time left…"
+              : ""}
+        </span>
+      </div>
+    </div>
+  );
+}

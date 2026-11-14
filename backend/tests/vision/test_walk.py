@@ -78,7 +78,7 @@ class FakeBedrock:
 
     def converse(self, modelId, messages, inferenceConfig):
         prompt = messages[0]["content"][1]["text"]
-        kind = "verify" if "A detector thought" in prompt else ("attr" if "close crop" in prompt else "detect")
+        kind = "verify" if "What is the main object" in prompt else ("attr" if "close crop" in prompt else "detect")
         self.calls.append((modelId, kind))
         if self.fail:
             raise RuntimeError("throttled")
@@ -184,6 +184,17 @@ def test_live_second_look_drops_unconfirmed(geometry, live):
     result = walk.inspect_view("liveA", geometry, "r_bed", "p03")
     assert result.observations == [] and result.calls == 8  # 4 detections + 4 second looks, all rejected
     assert sum(1 for _, k in live.calls if k == "verify") == 4
+
+
+def test_live_second_look_relabels_to_another_vocab_label(geometry, live, monkeypatch):
+    """An answer that is another offered VOCAB label relabels the detection instead of dropping it."""
+    monkeypatch.setitem(walk.SECOND_LOOK_LABELS, "ceiling_light", ["ceiling_light", "lamp", "other"])
+    live.second_look = "lamp"
+    _faces("liveA", "p03")
+    result = walk.inspect_view("liveA", geometry, "r_bed", "p03")
+    assert len(result.observations) == 4
+    assert {o.label for o in result.observations} == {"lamp"}
+    assert all(set(o.attrs) <= {"bulb_type", "bulb_count"} for o in result.observations)
 
 
 def test_live_second_look_can_be_switched_off(geometry, live, monkeypatch):

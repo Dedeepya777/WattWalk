@@ -8,6 +8,11 @@ camera is ``camera_height_m`` above the floor.  Skybox faces 1 to 4 look around
 the horizon, 0 up and 5 down.  The face-to-direction mapping is a calibration
 constant stored in ``face_basis.json``; until calibration passes it is labelled
 ``unverified``.
+
+Real Model API panoramas also carry a per-pano ``rotation`` quaternion.  When
+it is present, faces use the measured pano-local basis (``pano_local_faces``
+in ``face_basis.json``) rotated by that quaternion; see :func:`basis_for_pano`.
+Panos without a rotation (fixtures, synthetic tests) use ``faces`` unchanged.
 """
 from __future__ import annotations
 
@@ -19,12 +24,21 @@ from typing import Iterable, Mapping, Sequence
 
 import numpy as np
 
-from wattwalk.contracts import BBox, ModelGeometry, Observation, Pano, Room, Vec2, Vec3, WallSegment
+from wattwalk.contracts import BBox, ModelGeometry, Observation, Pano, Quat, Room, Vec2, Vec3, WallSegment
 
 FACE_BASIS_PATH = Path(__file__).resolve().with_name("face_basis.json")
 
 DEFAULT_CAMERA_HEIGHT_M = 1.5
 DEFAULT_ROOM_HEIGHT_M = 2.6
+# Single-floor Model API scans put the floor at z = 0, so a pano at a plausible
+# tripod height is its own camera height.  Outside this band (upper floors,
+# odd data) fall back to the basis constant.
+CAMERA_HEIGHT_BAND_M = (0.8, 2.0)
+
+# Measured on 2ibibwUGQAe (2026-11-14): with these pano-local directions rotated
+# by each pano's quaternion, three sight lines to the same window from three
+# panos met within 0.03 m.  Face 1 looks along local +x, then clockwise.
+_PANO_LOCAL_FORWARD = {1: (1.0, 0.0, 0.0), 2: (0.0, -1.0, 0.0), 3: (-1.0, 0.0, 0.0), 4: (0.0, 1.0, 0.0)}
 WALL_CLEARANCE_M = 0.10
 MAX_HIT_DISTANCE_M = 15.0
 
@@ -71,6 +85,7 @@ class FaceBasis:
     faces: Mapping[int, FaceDirections]
     calibrated_on: str | None = None
     residual_m: float | None = None
+    pano_local: Mapping[int, FaceDirections] | None = None
 
     @property
     def calibrated(self) -> bool:
@@ -98,13 +113,91 @@ def load_basis(path: Path | None = None) -> FaceBasis:
         )
     if set(faces) != {1, 2, 3, 4}:
         raise ValueError(f"{target} must define faces 1 to 4")
+    pano_local = {int(k): _directions(v) for k, v in raw.get("pano_local_faces", {}).items()}
+    if pano_local and set(pano_local) != {1, 2, 3, 4}:
+        raise ValueError(f"{target} pano_local_faces must define faces 1 to 4")
     return FaceBasis(
         status=str(raw.get("status", "unverified")),
         camera_height_m=float(raw.get("camera_height_m", DEFAULT_CAMERA_HEIGHT_M)),
         faces=faces,
         calibrated_on=raw.get("calibrated_on"),
         residual_m=raw.get("residual_m"),
+        pano_local=pano_local or _measured_pano_local(),
     )
+
+
+def _directions(value: Mapping[str, Sequence[float]]) -> FaceDirections:
+    return FaceDirections(
+        forward=tuple(float(v) for v in value["forward"]),  # type: ignore[arg-type]
+        right=tuple(float(v) for v in value["right"]),  # type: ignore[arg-type]
+        up=tuple(float(v) for v in value["up"]),  # type: ignore[arg-type]
+    )
+
+
+def _measured_pano_local() -> dict[int, FaceDirections]:
+    """Pano-local face directions: right = forward x up, up = +z."""
+    up = np.array([0.0, 0.0, 1.0])
+    faces: dict[int, FaceDirections] = {}
+    for face, forward in _PANO_LOCAL_FORWARD.items():
+        fw = np.asarray(forward)
+        faces[face] = FaceDirections(forward, tuple(float(v) for v in np.cross(fw, up)), (0.0, 0.0, 1.0))  # type: ignore[arg-type]
+    return faces
+
+
+def quat_matrix(q: Quat) -> np.ndarray:
+    """3x3 rotation matrix of a unit quaternion (normalised defensively)."""
+    x, y, z, w = float(q.x), float(q.y), float(q.z), float(q.w)
+    n = math.sqrt(x * x + y * y + z * z + w * w)
+    if n < 1e-9:
+        return np.eye(3)
+    x, y, z, w = x / n, y / n, z / n, w / n
+    return np.array(
+        [
+            [1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w)],
+            [2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w)],
+            [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)],
+        ]
+    )
+
+
+def basis_for_pano(basis: FaceBasis, pano: Pano) -> FaceBasis:
+    """The face basis of one panorama in the model frame.
+
+    With ``pano.rotation`` the pano-local directions are rotated by it; without
+    one the global ``faces`` are returned unchanged (fixtures, synthetic data).
+    """
+    rotation = getattr(pano, "rotation", None)
+    if rotation is None:
+        return basis
+    local = basis.pano_local or _measured_pano_local()
+    r = quat_matrix(rotation)
+
+    def turn(v: Sequence[float]) -> tuple[float, float, float]:
+        out = r @ np.asarray(v, dtype=float)
+        return (float(out[0]), float(out[1]), float(out[2]))
+
+    faces = {f: FaceDirections(turn(d.forward), turn(d.right), turn(d.up)) for f, d in local.items()}
+    return FaceBasis(
+        status=basis.status,
+        camera_height_m=basis.camera_height_m,
+        faces=faces,
+        calibrated_on=basis.calibrated_on,
+        residual_m=basis.residual_m,
+        pano_local=local,
+    )
+
+
+def camera_height(pano: Pano, basis: FaceBasis) -> float:
+    """Camera height above the floor: ``pano.z`` inside the band, else the constant."""
+    z = float(pano.position.z)
+    low, high = CAMERA_HEIGHT_BAND_M
+    return z if low <= z <= high else float(basis.camera_height_m)
+
+
+def face_forward_xy(pano: Pano, basis: FaceBasis | None = None) -> dict[int, tuple[float, float]]:
+    """Horizontal look direction of faces 1 to 4 of ``pano`` in the model frame."""
+    active = basis_for_pano(basis or load_basis(), pano)
+    return {f: (float(active.faces[f].forward[0]), float(active.faces[f].forward[1])) for f in (1, 2, 3, 4)}
 
 
 def _default_basis() -> FaceBasis:
@@ -118,6 +211,7 @@ def _default_basis() -> FaceBasis:
             3: FaceDirections((0, -1, 0), (-1, 0, 0), (0, 0, 1)),
             4: FaceDirections((-1, 0, 0), (0, 1, 0), (0, 0, 1)),
         },
+        pano_local=_measured_pano_local(),
     )
 
 
@@ -210,7 +304,7 @@ def anchor_from_bbox(
     floor-standing detections use the top/bottom of the box as plan 9.3
     requires.  Without ``label`` the box centre is used.
     """
-    active_basis = basis or load_basis()
+    active_basis = basis_for_pano(basis or load_basis(), pano)
     u, v = anchor_pixel(bbox, label)
     direction = pixel_ray(active_basis, face, u, v, face_px)
 
@@ -235,7 +329,7 @@ def anchor_from_bbox(
     room_height = DEFAULT_ROOM_HEIGHT_M
     if room is not None and room.height_m is not None:
         room_height = float(room.height_m)
-    floor_z = float(origin[2]) - float(active_basis.camera_height_m)
+    floor_z = float(origin[2]) - camera_height(pano, active_basis)
     if dz > 1e-9:
         ceiling_z = floor_z + room_height
         delta_z = ceiling_z - float(origin[2])

@@ -25,6 +25,11 @@
       "required": ["x", "y"],
       "properties": {"x": {"type": "number"}, "y": {"type": "number"}}
     },
+    "Quat": {
+      "type": "object", "additionalProperties": false,
+      "required": ["x", "y", "z", "w"],
+      "properties": {"x": {"type": "number"}, "y": {"type": "number"}, "z": {"type": "number"}, "w": {"type": "number"}}
+    },
     "Vec3": {
       "type": "object", "additionalProperties": false,
       "required": ["x", "y", "z"],
@@ -86,7 +91,8 @@
         "id": {"$ref": "#/$defs/Id"},
         "label": {"type": "string"},
         "position": {"$ref": "#/$defs/Vec3"},
-        "room_id": {"anyOf": [{"$ref": "#/$defs/Id"}, {"type": "null"}]}
+        "room_id": {"anyOf": [{"$ref": "#/$defs/Id"}, {"type": "null"}]},
+        "rotation": {"anyOf": [{"$ref": "#/$defs/Quat"}, {"type": "null"}], "description": "Optional. Model API panoLocations.rotation; rotates skybox face directions into the model frame."}
       }
     },
     "WallSegment": {
