@@ -82,6 +82,40 @@ export default function App() {
     [refreshAudit],
   );
 
+  // Stream a run's events into the log and progress bar; also used to reattach to a run that is
+  // already going when the page loads or the model is re-selected.
+  const listen = useCallback(
+    (sid: string, nonce: number) => {
+      stopEventsRef.current?.();
+      stopEventsRef.current = subscribeEvents(sid, 0, (event: WattEvent) => {
+        if (nonce !== runNonceRef.current) return;
+        dispatch({ type: "addEvent", event });
+        if (event.type === "question") scheduleRefresh(sid);
+        if (
+          event.type === "tool_result" &&
+          event.data.question_id &&
+          String(event.summary).toLowerCase().includes("expired")
+        ) {
+          dispatch({ type: "question", question: null });
+        }
+        if (event.type === "done") dispatch({ type: "question", question: null });
+        if (
+          event.type === "finding" ||
+          event.type === "tool_result" ||
+          event.type === "question" ||
+          event.type === "done"
+        ) {
+          scheduleRefresh(sid);
+        }
+      }, (message) => {
+        if (nonce === runNonceRef.current) {
+          dispatch({ type: "auditError", error: { status: 0, message } });
+        }
+      });
+    },
+    [dispatch, scheduleRefresh],
+  );
+
   const loadHealth = useCallback(async () => {
     try {
       const health = await getHealth();
@@ -147,7 +181,12 @@ export default function App() {
     if (!state.selectedSid) return () => undefined;
     void getAudit(state.selectedSid)
       .then((audit) => {
-        if (!cancelled) dispatch({ type: "audit", audit });
+        if (cancelled) return;
+        dispatch({ type: "audit", audit });
+        if (audit?.status.status === "running") {
+          dispatch({ type: "clearEvents" });
+          listen(state.selectedSid, runNonceRef.current);
+        }
       })
       .catch((error) => {
         if (cancelled) return;
@@ -160,7 +199,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [dispatch, state.selectedSid]);
+  }, [dispatch, listen, state.selectedSid]);
 
   // Plan requests: debounced 250 ms, recomputed from current inputs, never cached.
   const inventoryLength = state.audit?.inventory.length ?? 0;
@@ -207,31 +246,7 @@ export default function App() {
       await resetAudit(sid);
       await startAudit(sid, mode);
       if (nonce !== runNonceRef.current) return;
-      stopEventsRef.current = subscribeEvents(sid, 0, (event: WattEvent) => {
-        if (nonce !== runNonceRef.current) return;
-        dispatch({ type: "addEvent", event });
-        if (event.type === "question") scheduleRefresh(sid);
-        if (
-          event.type === "tool_result" &&
-          event.data.question_id &&
-          String(event.summary).toLowerCase().includes("expired")
-        ) {
-          dispatch({ type: "question", question: null });
-        }
-        if (event.type === "done") dispatch({ type: "question", question: null });
-        if (
-          event.type === "finding" ||
-          event.type === "tool_result" ||
-          event.type === "question" ||
-          event.type === "done"
-        ) {
-          scheduleRefresh(sid);
-        }
-      }, (message) => {
-        if (nonce === runNonceRef.current) {
-          dispatch({ type: "auditError", error: { status: 0, message } });
-        }
-      });
+      listen(sid, nonce);
       await refreshAudit(sid);
     } catch (error) {
       if (nonce !== runNonceRef.current) return;
