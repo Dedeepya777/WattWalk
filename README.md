@@ -327,6 +327,13 @@ Run all three before opening a pull request. Never push to `main`: push a branch
 
 ## 8. Troubleshooting
 
+First run the setup checker. It looks at `.env`, the keys, Ollama and its models, the CoStar kit path and
+the ports, and prints every problem with numbered fix steps (`scripts/run.py` runs it before starting):
+
+```bash
+python3 scripts/doctor.py
+```
+
 | Symptom | Cause | Fix |
 |---|---|---|
 | Banner says "Illustrative fixture" / "Fixture mode only provides fixtureUnitA" | frontend not pointed at the backend | `VITE_API_BASE=http://localhost:8000` in `.env`, restart `npm run dev` |

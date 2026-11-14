@@ -19,6 +19,7 @@ import webbrowser
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from doctor import DEFAULT_API_BASE, report, run_checks  # noqa: E402
 from setup import ENV_FILE, ROOT, read_env, start_ollama, venv_python  # noqa: E402
 
 BACKEND = "http://localhost:8000/health"
@@ -86,13 +87,25 @@ def main() -> None:
             sys.exit("These settings use Ollama, but it is not installed or did not start (see scripts/setup.py).")
         print("Ollama is running")
 
+    # Check the setup before starting anything: problems stop here with numbered fix steps.
+    issues = run_checks(include_ports=True)
+    if report(issues):
+        sys.exit("Fix the problem(s) above, then run  python3 scripts/run.py  again "
+                 "(python3 scripts/doctor.py re-checks without starting).")
+
     procs: list[subprocess.Popen] = []
     group = {"start_new_session": True} if os.name != "nt" else {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
     procs.append(subprocess.Popen([str(py), "-m", "uvicorn", "wattwalk.api.app:app", "--app-dir", "backend",
                                    "--port", "8000"], cwd=ROOT, **group))
     npm = shutil.which("npm")
+    # Point the page at the backend started above. Variables already in the environment win over .env in
+    # Vite, so a missing or "fixture:" VITE_API_BASE in .env can no longer leave the page on the sample data.
+    frontend_env = dict(os.environ)
+    if env.get("VITE_API_BASE", "").strip() in ("", "fixture:") and "VITE_API_BASE" not in os.environ:
+        frontend_env["VITE_API_BASE"] = DEFAULT_API_BASE
+        print(f"Using VITE_API_BASE={DEFAULT_API_BASE} for the page (not set in .env)")
     procs.append(subprocess.Popen([npm, "run", "dev", "--", "--port", "5173", "--strictPort"],
-                                  cwd=ROOT / "frontend", **group))
+                                  cwd=ROOT / "frontend", env=frontend_env, **group))
 
     def stop(*_):
         print("\nStopping backend and frontend…")
