@@ -317,9 +317,9 @@ async def research_alternatives(sid: str, asset_id: str, refresh: bool = False) 
     try:
         return await asyncio.to_thread(ai.research, sid, asset_id, inv, b, None, refresh)
     except ai.ResearchUnavailable as e:
-        raise E.ApiError(503, "unavailable", str(e), False, {"fix": "Add DEEPSEEK_API_KEY to .env and restart."})
+        raise E.ApiError(503, "upstream_unavailable", str(e), False, {"fix": "Add DEEPSEEK_API_KEY to .env and restart."})
     except ai.ResearchFailed as e:
-        raise E.ApiError(502, "upstream_error", f"Could not get alternatives: {e}", True)
+        raise E.ApiError(502, "upstream_unavailable", f"Could not get alternatives: {e}", True)
 
 
 @app.post("/audits/{sid}/explain", response_model=ExplainResponse)

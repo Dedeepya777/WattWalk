@@ -4,7 +4,8 @@
  * "Compare alternatives" button. Plain on purpose: the expanding animation and the glows come later.
  */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { AssetEnergy, EnergyAlternative } from "../contracts";
+import { postResearchAlternatives } from "../api";
+import type { AiAlternativesResponse, AssetEnergy, EnergyAlternative } from "../contracts";
 import { formatRange, labelText } from "../format";
 import { useAppDispatch, useAppState } from "../state";
 import { REMOVES_HEAT, buildScale, gradient, position, toHex, type EnergyScale } from "../viewer/energyColor";
@@ -140,8 +141,14 @@ function PopNow({ row, scale }: { row: AssetEnergy; scale: EnergyScale | null })
 }
 
 /** Pop-out: the upgrade, what it saves (big), and cost and payback in one line. */
-function PopAlt({ alt, row, scale }: { alt: EnergyAlternative; row: AssetEnergy; scale: EnergyScale | null }) {
+function PopAlt({ alt, row, scale, ai = false }: {
+  alt: EnergyAlternative;
+  row: AssetEnergy;
+  scale: EnergyScale | null;
+  ai?: boolean;
+}) {
   const afterHeat = mid(alt.heat_kwh_yr);
+  const free = alt.cost_usd[1] <= 0;
   return (
     <li className="energy-alt-option energy-alt-with-glow pop-row">
       {afterHeat !== null ? (
@@ -150,16 +157,102 @@ function PopAlt({ alt, row, scale }: { alt: EnergyAlternative; row: AssetEnergy;
         <div className="energy-alt-glow-box" aria-hidden="true" />
       )}
       <div>
-        <div className="pop-title">{alt.title}</div>
+        <div className="pop-title">
+          {alt.title}
+          {ai ? <span className="pop-ai-tag" title={alt.basis}>AI estimate</span> : null}
+        </div>
         <div className="pop-save">
           Save {formatRange(alt.saves_usd_yr, "", true)}
           <span className="pop-unit">/yr</span>
         </div>
         <div className="pop-sub">
-          {formatRange(alt.cost_usd, "", true)} · pays back in {formatPayback(alt.payback_years)}
+          {free ? "Free, just a habit change" : `${formatRange(alt.cost_usd, "", true)} · pays back in ${formatPayback(alt.payback_years)}`}
         </div>
       </div>
     </li>
+  );
+}
+
+type AiState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "done"; data: AiAlternativesResponse }
+  | { status: "error"; message: string };
+
+/** Answers already fetched in this session, so reopening a card shows them at once. */
+const aiSeen = new Map<string, AiAlternativesResponse>();
+
+/** Pop-out: "Find more alternatives" asks DeepSeek for 2-3 rough ideas and lists them, marked as AI. */
+function PopAiAlternatives({ sid, row, scale }: { sid: string; row: AssetEnergy; scale: EnergyScale | null }) {
+  const key = `${sid}:${row.asset_id}`;
+  const [ai, setAi] = useState<AiState>(() => {
+    const seen = aiSeen.get(key);
+    return seen ? { status: "done", data: seen } : { status: "idle" };
+  });
+  useEffect(() => {
+    const seen = aiSeen.get(key);
+    setAi(seen ? { status: "done", data: seen } : { status: "idle" });
+  }, [key]);
+
+  const find = async (refresh: boolean) => {
+    setAi({ status: "loading" });
+    try {
+      const data = await postResearchAlternatives(sid, row.asset_id, refresh);
+      aiSeen.set(key, data);
+      setAi({ status: "done", data });
+    } catch (error) {
+      setAi({ status: "error", message: error instanceof Error ? error.message : String(error) });
+    }
+  };
+
+  if (ai.status === "idle") {
+    return (
+      <button className="pop-ai-button" onClick={() => void find(false)}>
+        ✨ Find more alternatives
+      </button>
+    );
+  }
+  if (ai.status === "loading") {
+    return (
+      <div className="pop-ai-button pop-ai-loading" role="status">
+        <span className="spinner" aria-hidden="true" /> Researching alternatives…
+      </div>
+    );
+  }
+  if (ai.status === "error") {
+    return (
+      <div className="pop-ai-error" role="alert">
+        <span>{ai.message}</span>
+        <button className="pop-link" onClick={() => void find(false)}>
+          Try again
+        </button>
+      </div>
+    );
+  }
+  const { data } = ai;
+  // For an item with no sourced estimate, the ideas are relative to the model's estimate of today.
+  const base: AssetEnergy = data.today_kwh_yr ? { ...row, kwh_yr: data.today_kwh_yr, usd_yr: data.today_usd_yr } : row;
+  return (
+    <section className="pop-ai">
+      {data.today_usd_yr ? (
+        <p className="pop-ai-today">
+          Today, roughly <strong>{formatRange(data.today_usd_yr, "", true)}/yr</strong>
+          <span className="pop-ai-tag">AI estimate</span>
+        </p>
+      ) : null}
+      {data.alternatives.length ? (
+        <ul className="energy-alt-list">
+          {data.alternatives.map((alt) => (
+            <PopAlt key={alt.upgrade_id} alt={alt} row={base} scale={scale} ai />
+          ))}
+        </ul>
+      ) : (
+        <p className="empty">{data.note}</p>
+      )}
+      <button className="pop-link" onClick={() => void find(true)}>
+        Ask again
+      </button>
+    </section>
   );
 }
 
@@ -338,7 +431,7 @@ export function EnergyAlternatives() {
         ) : (
           <p className="muted">Today: not estimated ({row.note}).</p>
         )}
-        {row.alternatives.length === 0 ? (
+        {row.alternatives.length === 0 && popout ? null : row.alternatives.length === 0 ? (
           <p className="empty">
             {row.label === "lamp" || row.label === "ceiling_light"
               ? "Already efficient: these bulbs are LED."
@@ -355,6 +448,7 @@ export function EnergyAlternatives() {
             )}
           </ul>
         )}
+        {popout && state.selectedSid ? <PopAiAlternatives sid={state.selectedSid} row={row} scale={heatScale} /> : null}
         {popout ? (
           <button
             className="pop-link"

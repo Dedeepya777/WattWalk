@@ -2390,3 +2390,72 @@ select:disabled {
 .energy-pop .modal-head {
   align-items: center;
 }
+
+/* Pop-out: AI alternatives (DeepSeek) */
+.energy-pop .pop-ai-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin: 10px 0 2px;
+  padding: 10px 12px;
+  border: 1px dashed #c4b5fd;
+  border-radius: 12px;
+  background: #faf5ff;
+  color: #6d28d9;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.energy-pop button.pop-ai-button:hover {
+  background: #f3e8ff;
+  border-style: solid;
+}
+.energy-pop .pop-ai-loading {
+  cursor: default;
+  color: #7c3aed;
+}
+.energy-pop .pop-ai-loading .spinner {
+  border-color: #ddd6fe;
+  border-top-color: #7c3aed;
+}
+.energy-pop .pop-ai {
+  margin-top: 10px;
+}
+.energy-pop .pop-ai .energy-alt-option {
+  border-color: #e9d5ff;
+}
+.energy-pop .pop-ai-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #f3e8ff;
+  color: #6d28d9;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  vertical-align: 2px;
+}
+.energy-pop .pop-ai-today {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #374151;
+}
+.energy-pop .pop-ai-error {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 12px;
+}
+.energy-pop .pop-ai-error .pop-link {
+  margin: 4px 0 0;
+  color: #b91c1c;
+}
+.energy-pop .empty {
+  color: var(--muted);
+  font-size: 12px;
+}
