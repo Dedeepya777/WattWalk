@@ -35,6 +35,39 @@ def wait_for(url: str, seconds: int) -> bool:
     return False
 
 
+HINTS = {
+    "matterport": "check MATTERPORT_API_KEY / MATTERPORT_API_TOKEN in .env",
+    "bedrock": "the vision model did not answer: is Ollama running and the model pulled (ollama list)?",
+    "costar_kit": "optional: set COSTAR_KIT_ZIP in .env for year built, units and rent",
+    "ebewe": "optional: LA building energy data (needs internet)",
+    "vexcel": "optional: roof imagery, needs VEXCEL_API_KEY",
+}
+
+
+def check_integrations(timeout_s: int = 120) -> dict[str, str] | None:
+    """Run the backend's integration probes once (what the page's "Check integrations" button does).
+
+    Health starts as "unavailable" for everything after a start, and the page blocks Live mode until a
+    probe has succeeded, so doing it here means the page opens with Live already allowed. The first
+    vision probe loads the model, hence the long timeout. Never raises.
+    """
+    import json
+
+    print("Checking integrations (the first check loads the AI model, up to a minute)…", flush=True)
+    try:
+        with urllib.request.urlopen(f"{BACKEND}?probe=1", timeout=timeout_s) as resp:
+            integrations = json.loads(resp.read()).get("integrations", {})
+    except (OSError, ValueError) as exc:
+        print(f"  could not check integrations ({exc}); use the page's 'Check integrations' button")
+        return None
+    for name, state in integrations.items():
+        hint = "" if state in ("live", "fixture") else f"   ({HINTS.get(name, '')})"
+        print(f"  {name:11} {state}{hint}")
+    if integrations.get("matterport") == "live" and integrations.get("bedrock") == "live":
+        print("  Live audits are ready.")
+    return integrations
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description="Start WattWalk")
     p.add_argument("--no-browser", action="store_true")
@@ -82,6 +115,8 @@ def main() -> None:
     if not wait_for(BACKEND, 60):
         print("The backend did not start: see its output above.")
         stop()
+    if env.get("WATTWALK_DATA_MODE") == "live" or env.get("WATTWALK_VISION_MODE") == "live":
+        check_integrations()
     if not wait_for(FRONTEND, 60):
         print("The frontend did not start: see its output above.")
         stop()
