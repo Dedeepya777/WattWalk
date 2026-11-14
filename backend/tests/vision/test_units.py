@@ -292,4 +292,15 @@ def test_second_look_keeps_only_confirmed():
     assert not second_look_keeps({"object": "mirror"}, "window")
     assert second_look_keeps(None, "window")  # unparseable answer: keep the detection
     p = verify_prompt("ceiling_light")
-    assert "ceiling light" in p and "smoke_detector" in p and '{"object": "..."}' in p
+    assert "ceiling_light" in p and "smoke_detector" in p and '{"object": "..."}' in p
+    assert "detector thought" not in p  # neutral: showing the guess made the model repeat it
+
+
+def test_second_look_relabels_only_to_offered_vocab_labels():
+    from wattwalk.vision.detect import second_look_label
+    assert second_look_label({"object": "mini split"}, "window_ac") == "mini_split"
+    assert second_look_label({"object": "ceiling_light"}, "lamp") == "ceiling_light"
+    assert second_look_label({"object": "doorway"}, "window") is None      # not an energy asset: drop
+    assert second_look_label({"object": "refrigerator"}, "window") is None # in VOCAB but not offered
+    assert second_look_label({"object": "lamp"}, "lamp") == "lamp"
+    assert second_look_label({}, "lamp") == "lamp"

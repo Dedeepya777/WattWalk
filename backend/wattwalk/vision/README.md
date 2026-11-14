@@ -94,7 +94,8 @@ written from viewing the photos; a development check, not the hand-labeled bench
 |---|---|---|
 | Plan E.1 wording plus one-line rules | 7 | 1 |
 | Label definitions (current `DETECT_PROMPT`) | 4 | 1 |
-| Label definitions + second look (current pipeline) | 2 | 1 |
+| Label definitions + keep/drop second look | 2 | 1 |
+| Label definitions + neutral second look with relabelling (current pipeline) | 1 | 0 |
 
 The definitions fixed closet doors read as windows and an electrical panel read as a window AC.
 The second look removed a mirror read as a window and a smoke detector read as a ceiling light.
@@ -103,10 +104,22 @@ a small sample: treat this as "clearly helps", not a precise rate. Output format
 "unknown" rule of the detection prompt are unchanged, as Appendix E requires.
 
 Second look (`prompts.SECOND_LOOK_LABELS`, `walk._second_look`): every window, window AC, ceiling
-light, ceiling fan and lamp detection is cropped and sent back to the small model with a narrow
-"what is this?" question; it is kept only if the model names the same label. One extra small call per
-such detection (logged as kind `attr`). An unparseable answer or a failed call keeps the detection.
-Set `SECOND_LOOK_LABELS = {}` to switch it off.
+light, ceiling fan and lamp detection is cropped and sent back to the small model with a narrow,
+neutral "what is the main object?" question with short definitions. The detector's guess is NOT shown:
+when it was, the model mostly repeated it. The answer decides: same label, kept; another offered VOCAB
+label, relabelled (window AC to mini split, lamp to ceiling light); anything else (mirror, doorway,
+picture), dropped. On 20 hand-checked Cherokee crops: keep/drop prompt 17/20, neutral prompt with
+relabelling 20/20 on two runs (fixed a doorway read as a window, a mini split read as a window AC, a
+ceiling fixture read as a lamp). One extra small call per such detection (logged as kind `attr`). An
+unparseable answer or a failed call keeps the detection. Set `SECOND_LOOK_LABELS = {}` to switch it off.
+
+Doorway rescue (`triangulate.py`): Matterport often draws doorways as solid wall (every edge of
+2ibibwUGQAe is type "wall"), so an object seen through a door anchors on the door's wall. After each
+inspected view, every wall-raycast anchor is checked against other panoramas' sightings of the same
+label: if the two sight lines meet (within 0.25 m) at least 0.5 m behind the wall hit, and the other
+sighting's own anchor agrees with the meeting point, the blocked sighting adopts that anchor so dedupe
+merges them. On Cherokee this fixed 3 of 24 anchors (the main window seen from the closet and from the
+bathroom, a wall lamp seen from the bathroom) and changed nothing else.
 
 215 W 7th St Unit 301 (r1NfhYW4TAr, proposed demo apartment: 1911 building, in LA EBEWE 2025, 10
 rooms, 64 walls, room heights for the main rooms): full walk with the earlier prompt and no second
@@ -134,6 +147,8 @@ seen from three panoramas is three assets until anchors land.
   a doorway otherwise lands in the wrong room and dedupe can never merge it. No effect until anchors exist.
 - A face is rejected as blurry only when the Laplacian variance is below 60 and edge sharpness is
   below 0.08 (plan 8.2 uses the variance alone); `quality.blur` still reports the variance.
+- Doorway rescue (not in the plan): see `triangulate.py` and "Prompt tuning" above. It can rewrite
+  the anchor and room of an earlier stored observation.
 - Second look on detections (not in the plan): see "Prompt tuning" above. Switch off with
   `SECOND_LOOK_LABELS = {}` if the team prefers the plan's single detection call.
 - HARD_LABELS are read from `eval/hard_labels.json`, which the benchmark writes (the `Benchmark`

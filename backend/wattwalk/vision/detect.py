@@ -15,7 +15,7 @@ from .. import config
 from ..contracts import BBox, ModelCall
 from ..errors import UpstreamError
 from .cache import cached_call
-from .prompts import INT_ATTRS, MODEL_ATTRS, VOCAB
+from .prompts import INT_ATTRS, MODEL_ATTRS, SECOND_LOOK_LABELS, VOCAB
 from .types import RawDetection
 
 MIN_BOX_PX = 12
@@ -222,12 +222,25 @@ def parse_detections(raw: dict | None, image_px: int, face_px: int) -> list[RawD
     return result
 
 
-def second_look_keeps(raw: dict | None, label: str) -> bool:
-    """True when the second-look answer names the same label. An unparseable answer keeps the
-    detection: a formatting failure must not delete a real object."""
+def second_look_label(raw: dict | None, label: str) -> str | None:
+    """The label a detection should have after the second look, or ``None`` to drop it.
+
+    Same label: kept. Another label offered for this detection and in VOCAB: relabelled. Anything
+    else (mirror, doorway, picture...): dropped. An unparseable answer keeps the detection: a
+    formatting failure must not delete a real object."""
     if not raw or "object" not in raw:
-        return True
-    return str(raw["object"]).strip().lower() == label
+        return label
+    answer = str(raw["object"]).strip().lower().replace(" ", "_")
+    if answer == label:
+        return label
+    if answer in VOCAB and answer in SECOND_LOOK_LABELS.get(label, []):
+        return answer
+    return None
+
+
+def second_look_keeps(raw: dict | None, label: str) -> bool:
+    """True when the second look keeps the detection (possibly under a new label)."""
+    return second_look_label(raw, label) is not None
 
 
 def parse_attrs(raw: dict | None, label: str) -> dict[str, Any]:

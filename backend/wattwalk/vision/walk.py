@@ -18,13 +18,15 @@ from ..errors import UpstreamError
 from ..inventory import THRESHOLD_M, same_object
 from . import fixture
 from .deps import anchor_from_bbox, get_face_image
-from .detect import call_vision, detect_px, image_ok, now_iso, parse_attrs, parse_detections, second_look_keeps
+from .detect import (call_vision, clean_attrs, detect_px, image_ok, now_iso, parse_attrs, parse_detections,
+                     second_look_label)
 from .images import BRIGHTNESS_MAX, BRIGHTNESS_MIN, crop, downscale, quality, rejection_reason
 from .prompts import (ATTR_ORDER, KEY_ATTR, NON_VISUAL, SECOND_LOOK_LABELS, USER_ANSWERABLE, attr_prompt,
                       detect_prompt, verify_prompt)
 from .questions import apply_answer, make_question
 from .router import key_unknown, next_action
 from .state import load_state, lock, log_calls, next_observation_ids, next_question_id, save_state
+from .triangulate import rescue_blocked
 from .types import (FINAL_ACTIONS, MAX_LARGE_CALLS_PER_AUDIT, AskFn, InspectResult, RawDetection, RejectedFace,
                     ResolveResult, RouterState, Signals)
 from .views import face_toward, neighbor_pano, plan_views, room_for  # noqa: F401  (plan_views re-exported, canonical)
@@ -175,8 +177,23 @@ def inspect_view(sid: str, geometry: ModelGeometry, room_id: str | None, pano_id
                         for face, path, q, dets in per_face for det in dets]
         state = _merge_state(sid, state, pano_id, inspected)
         save_state(sid, state)
+    observations = _rescue_doorway_anchors(sid, geometry, observations)
     log_calls(sid, calls)
     return InspectResult(observations=observations, faces_inspected=inspected, faces_rejected=rejected, calls=len(calls))
+
+
+def _rescue_doorway_anchors(sid: str, geometry: ModelGeometry, new: list[Observation]) -> list[Observation]:
+    """Re-check sight lines against every stored observation (see triangulate.py). Earlier observations
+    that are fixed are written back now; the new ones are returned fixed for the caller to store."""
+    stored = store.observations(sid)
+    known = {o.id for o in new}
+    fixed = rescue_blocked([o for o in stored if o.id not in known] + new, geometry)
+    if not fixed:
+        return new
+    earlier = [fixed[o.id] for o in stored if o.id in fixed and o.id not in known]
+    if earlier:
+        store.append_observations(sid, earlier)
+    return [fixed.get(o.id, o) for o in new]
 
 
 def _second_look(sid: str, per_face: list, model_id: str, calls: list[ModelCall]) -> list:
@@ -195,18 +212,26 @@ def _second_look(sid: str, per_face: list, model_id: str, calls: list[ModelCall]
             raw, call, _ = call_vision(model_id, image, verify_prompt(det.label), sid, "walker", "attr", "small",
                                        image_px=_px(image))
         except UpstreamError:
-            return True, None  # a failed check keeps the detection
-        return second_look_keeps(raw, det.label), call
+            return det.label, None  # a failed check keeps the detection
+        return second_look_label(raw, det.label), call
 
     with ThreadPoolExecutor(max_workers=4) as pool:
         verdicts = list(pool.map(ask, jobs))
-    dropped = set()
-    for (i, j, _, _), (keep, call) in zip(jobs, verdicts):
+    decided: dict[tuple[int, int], str | None] = {}
+    for (i, j, _, _), (new_label, call) in zip(jobs, verdicts):
         if call is not None:
             calls.append(call)
-        if not keep:
-            dropped.add((i, j))
-    return [(face, path, q, [d for j, d in enumerate(dets) if (i, j) not in dropped])
+        decided[(i, j)] = new_label
+
+    def apply(i: int, j: int, det):
+        if (i, j) not in decided:
+            return det
+        new_label = decided[(i, j)]
+        if new_label is None or new_label == det.label:
+            return det if new_label else None
+        return det.model_copy(update={"label": new_label, "attrs": clean_attrs(new_label, det.attrs)})
+
+    return [(face, path, q, [d for d in (apply(i, j, det) for j, det in enumerate(dets)) if d is not None])
             for i, (face, path, q, dets) in enumerate(per_face)]
 
 
