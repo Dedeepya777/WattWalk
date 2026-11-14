@@ -71,13 +71,14 @@ Edge sharpness (mean |Laplacian| / mean gradient on edge pixels) separates them:
 the same faces Gaussian-blurred 0.020 to 0.028. With the combined rule, 0 of 68 real faces are rejected
 and 66 of 68 blurred copies still are (the 2 that pass are blank walls with no edges at all).
 
-## Temporary stand-ins (remove at M2)
+## Calls into other modules
 
-`deps.py` falls back when other people's modules are missing:
-- `get_face_image` (Person 1): reads `audits/cache/faces/<sid>/<pano>_<face>_<res>.jpg`.
-- `get_geometry` (Person 1): reads the fixture geometry files.
-- `anchor_from_bbox` (Person 4): returns `(None, "none")`.
-- `backend/wattwalk/store.py` (Person 3) is a minimal stand-in until the shared baseline lands.
+Vision imports the real functions directly: `wattwalk.data.matterport.get_face_image` and
+`get_geometry` (Person 1), `wattwalk.spatial.geometry.anchor_from_bbox` and `face_forward_xy`
+(Person 4). There are no stand-ins: if one of those modules fails to import, importing
+`wattwalk.vision.walk` fails with the real error (`test_no_silent_fallback`). Fixture behaviour comes
+only from `config.effective_vision_mode() == "fixture"` in `walk.py`. Cached faces in
+`audits/cache/faces/` are reused by Person 1's loader.
 
 ## Real-scan results with the local model (Qwen2.5-VL 7B, Nov 14)
 

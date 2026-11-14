@@ -98,6 +98,9 @@ class FakeBedrock:
 
 @pytest.fixture
 def live(monkeypatch):
+    # Live vision reads faces through Person 1's real loader, which serves them only in live data mode.
+    # The faces are pre-cached by _faces(), so no network call is made.
+    monkeypatch.setattr(config, "DATA_MODE", "live")
     monkeypatch.setattr(config, "VISION_MODE", "live")
     monkeypatch.setattr(config, "SMALL_VISION_MODEL_ID", "small-id")
     monkeypatch.setattr(config, "LARGE_VISION_MODEL_ID", "large-id")

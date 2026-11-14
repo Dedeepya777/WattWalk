@@ -158,7 +158,7 @@ def run_modes(crops: list[CropLabel], faces: dict[tuple, list[str]], detect: Det
 
 def _bedrock_fns():
     """Real model calls with the cache disabled."""
-    from ..vision.deps import get_face_image
+    from ..data.matterport import get_face_image
     from ..vision.detect import call_vision, detect_px, parse_attrs, parse_detections
     from ..vision.images import downscale
     from ..vision.prompts import attr_prompt, detect_prompt

@@ -18,7 +18,7 @@ from collections import Counter
 from .. import config, store
 from ..contracts import Question
 from ..inventory import build_inventory, compute_coverage
-from .deps import get_geometry
+from ..data.matterport import get_geometry
 from .state import forget_reservations, load_state
 from .walk import coverage_inputs, inspect_view, pending_observation_ids, plan_views, resolve
 

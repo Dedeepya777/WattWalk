@@ -5,6 +5,7 @@ import itertools
 import random
 
 import numpy as np
+import pytest
 from PIL import Image
 
 from wattwalk.contracts import ModelGeometry
@@ -304,3 +305,24 @@ def test_second_look_relabels_only_to_offered_vocab_labels():
     assert second_look_label({"object": "refrigerator"}, "window") is None # in VOCAB but not offered
     assert second_look_label({"object": "lamp"}, "lamp") == "lamp"
     assert second_look_label({}, "lamp") == "lamp"
+
+
+def test_no_silent_fallback(monkeypatch):
+    """A broken dependency must crash the import with the real error, never fall back to fixture data."""
+    import importlib
+    import sys
+
+    for name in [m for m in sys.modules if m.startswith("wattwalk.vision.") and m != "wattwalk.vision.types"]:
+        monkeypatch.delitem(sys.modules, name)
+    monkeypatch.setitem(sys.modules, "wattwalk.spatial.geometry", None)  # import now raises ImportError
+    with pytest.raises(ImportError):
+        importlib.import_module("wattwalk.vision.walk")
+
+
+def test_no_temporary_markers_left():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[2] / "wattwalk"
+    hits = [str(p) for d in ("vision", "inventory", "eval") for p in (root / d).rglob("*.py")
+            if "TEMPORARY" in p.read_text(encoding="utf-8")]
+    assert hits == []

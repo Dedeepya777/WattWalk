@@ -4,7 +4,7 @@ from __future__ import annotations
 import math
 
 from ..contracts import ModelGeometry, Observation, Pano, Room, Vec2
-from .deps import face_forward_xy
+from ..spatial.geometry import face_forward_xy
 from .types import ViewTask
 
 LARGE_ROOM_M2 = 20.0
