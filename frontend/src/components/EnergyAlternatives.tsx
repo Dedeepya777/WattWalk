@@ -141,21 +141,40 @@ function PopNow({ row, scale }: { row: AssetEnergy; scale: EnergyScale | null })
 }
 
 /** Pop-out: the upgrade, what it saves (big), and cost and payback in one line. */
-function PopAlt({ alt, row, scale, ai = false }: {
-  alt: EnergyAlternative;
-  row: AssetEnergy;
-  scale: EnergyScale | null;
-  ai?: boolean;
-}) {
-  const afterHeat = mid(alt.heat_kwh_yr);
+/** Ring filled to the share of the item's electricity the upgrade cuts, with the % in the middle. */
+function CutRing({ pct }: { pct: number | null }) {
+  const r = 24;
+  const length = 2 * Math.PI * r;
+  const share = pct === null ? 0 : Math.max(0, Math.min(100, pct)) / 100;
+  return (
+    <div className="energy-alt-glow-box pop-ring" aria-label={pct === null ? "energy cut unknown" : `cuts ${pct}% of its energy`}>
+      <svg viewBox="0 0 60 60" width="60" height="60" aria-hidden="true">
+        <circle cx="30" cy="30" r={r} className="pop-ring-track" />
+        <circle
+          cx="30"
+          cy="30"
+          r={r}
+          className="pop-ring-fill"
+          strokeDasharray={`${length * share} ${length}`}
+          transform="rotate(-90 30 30)"
+        />
+      </svg>
+      <span className="pop-ring-text">
+        <strong>{pct === null ? "?" : `−${pct}%`}</strong>
+        <small>energy</small>
+      </span>
+    </div>
+  );
+}
+
+function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEnergy; ai?: boolean }) {
   const free = alt.cost_usd[1] <= 0;
+  const today = mid(row.kwh_yr);
+  const saved = mid(alt.saves_kwh_yr);
+  const cut = today && saved !== null && today > 0 ? Math.round(Math.min(1, saved / today) * 100) : null;
   return (
     <li className="energy-alt-option energy-alt-with-glow pop-row">
-      {afterHeat !== null ? (
-        <Glow size={glowSize(afterHeat, mid(row.heat_kwh_yr))} color={glowColor(afterHeat, scale)} />
-      ) : (
-        <div className="energy-alt-glow-box" aria-hidden="true" />
-      )}
+      <CutRing pct={cut} />
       <div>
         <div className="pop-title">
           {alt.title}
@@ -183,7 +202,7 @@ type AiState =
 const aiSeen = new Map<string, AiAlternativesResponse>();
 
 /** Pop-out: "Find more alternatives" asks DeepSeek for 2-3 rough ideas and lists them, marked as AI. */
-function PopAiAlternatives({ sid, row, scale }: { sid: string; row: AssetEnergy; scale: EnergyScale | null }) {
+function PopAiAlternatives({ sid, row }: { sid: string; row: AssetEnergy }) {
   const key = `${sid}:${row.asset_id}`;
   const [ai, setAi] = useState<AiState>(() => {
     const seen = aiSeen.get(key);
@@ -243,7 +262,7 @@ function PopAiAlternatives({ sid, row, scale }: { sid: string; row: AssetEnergy;
       {data.alternatives.length ? (
         <ul className="energy-alt-list">
           {data.alternatives.map((alt) => (
-            <PopAlt key={alt.upgrade_id} alt={alt} row={base} scale={scale} ai />
+            <PopAlt key={alt.upgrade_id} alt={alt} row={base} ai />
           ))}
         </ul>
       ) : (
@@ -441,14 +460,14 @@ export function EnergyAlternatives() {
           <ul className="energy-alt-list">
             {row.alternatives.map((alt, index) =>
               popout ? (
-                <PopAlt key={alt.upgrade_id} alt={alt} row={row} scale={heatScale} />
+                <PopAlt key={alt.upgrade_id} alt={alt} row={row} />
               ) : (
                 <AlternativeRow key={alt.upgrade_id} alt={alt} row={row} scale={heatScale} index={index} />
               ),
             )}
           </ul>
         )}
-        {popout && state.selectedSid ? <PopAiAlternatives sid={state.selectedSid} row={row} scale={heatScale} /> : null}
+        {popout && state.selectedSid ? <PopAiAlternatives sid={state.selectedSid} row={row} /> : null}
         {popout ? (
           <button
             className="pop-link"
