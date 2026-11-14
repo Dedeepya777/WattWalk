@@ -31,15 +31,17 @@ const GLOW_MAX = 84; // px, today's glow (centred card)
 const POP_WIDTH = 380; // px, the pop-out next to a 3D pin
 const POP_MARGIN = 12;
 
-/** CSS variables for the expand: inset of the button's box (radius r around ox, oy) from each card edge. */
-function expandFrom(p: { ox: number; oy: number; h: number }, r: number): Record<string, string> {
-  const px = (v: number) => `${Math.max(0, v)}px`;
+/** CSS variables for the bubble: it starts as the pressed glow (radius r around the click point x, y)
+ *  and ends as the card's box. */
+function bubbleFrom(card: { left: number; top: number; h: number }, x: number, y: number, r: number): Record<string, string> {
   return {
-    "--it": px(p.oy - r),
-    "--ib": px(p.h - p.oy - r),
-    "--il": px(p.ox - r),
-    "--ir": px(POP_WIDTH - p.ox - r),
-    "--r0": `${r}px`,
+    "--bx0": `${x - r}px`,
+    "--by0": `${y - r}px`,
+    "--bs0": `${2 * r}px`,
+    "--bx1": `${card.left}px`,
+    "--by1": `${card.top}px`,
+    "--bw1": `${POP_WIDTH}px`,
+    "--bh1": `${card.h}px`,
   };
 }
 
@@ -234,8 +236,6 @@ export function EnergyAlternatives() {
         left: place?.left ?? 0,
         top: place?.top ?? 0,
         width: POP_WIDTH,
-        // start of the expand in styles.css: the pressed button's box inside the card
-        ...(place ? expandFrom(place, origin?.r ?? 14) : {}),
       } as React.CSSProperties)
     : undefined;
 
@@ -245,6 +245,17 @@ export function EnergyAlternatives() {
       role="presentation"
       onClick={close}
     >
+      {popout && place && origin ? (
+        // The pressed glow itself: same place, size and colour, it grows into the card's shape.
+        <div
+          className="energy-pop-bubble"
+          aria-hidden="true"
+          style={{
+            ...bubbleFrom(place, origin.x, origin.y, origin.r ?? 14),
+            ["--seed" as string]: origin.color ?? "#f97316",
+          } as React.CSSProperties}
+        />
+      ) : null}
       <div
         ref={cardRef}
         className={cardClass}

@@ -2098,9 +2098,7 @@ select:disabled {
   background: transparent;
   cursor: pointer;
 }
-.heat-glow-hit:hover,
 .heat-glow-hit:focus-visible {
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85), 0 0 14px 4px rgba(255, 255, 255, 0.45);
   outline: none;
 }
 .modal.energy-alt-card.energy-alt-measuring {
@@ -2150,12 +2148,43 @@ select:disabled {
 }
 /* The pressed button expands into the card: the visible area starts as the button and grows to
    the full card. Nothing is scaled and nothing else animates. */
-.energy-pop.energy-pop-in {
-  animation: energy-pop-expand 320ms cubic-bezier(0.3, 0, 0.2, 1) both;
+/* The pressed glow grows into the card: the bubble starts as that glow (same spot, size and soft
+   colour) and its box grows into the card's box; then the card's details appear on top of it. */
+.energy-pop-bubble {
+  position: fixed;
+  z-index: 0;
+  pointer-events: none;
+  animation: energy-pop-grow 380ms cubic-bezier(0.3, 0, 0.2, 1) both;
 }
-@keyframes energy-pop-expand {
-  from { clip-path: inset(var(--it) var(--ir) var(--ib) var(--il) round var(--r0)); }
-  to { clip-path: inset(0 0 0 0 round 14px); }
+.energy-pop-bubble::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle, color-mix(in srgb, var(--seed) 70%, transparent) 0%, color-mix(in srgb, var(--seed) 45%, transparent) 28%, color-mix(in srgb, var(--seed) 18%, transparent) 52%, transparent 72%);
+  animation: energy-pop-settle 380ms ease-in both;
+}
+@keyframes energy-pop-grow {
+  from {
+    left: var(--bx0); top: var(--by0); width: var(--bs0); height: var(--bs0);
+    border-radius: 50%; background-color: transparent; border: 1px solid transparent;
+  }
+  to {
+    left: var(--bx1); top: var(--by1); width: var(--bw1); height: var(--bh1);
+    border-radius: 14px; background-color: var(--panel); border: 1px solid var(--border);
+  }
+}
+@keyframes energy-pop-settle {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+.energy-pop.energy-pop-in {
+  z-index: 1;
+  animation: energy-pop-show 120ms ease-out 320ms both;
+}
+@keyframes energy-pop-show {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 .energy-pop-actions {
   display: flex;
@@ -2179,6 +2208,7 @@ select:disabled {
 }
 @media (prefers-reduced-motion: reduce) {
   .energy-pop.energy-pop-in { animation: none; }
+  .energy-pop-bubble { display: none; }
 }
 
 .energy-pop .energy-alt-glow,

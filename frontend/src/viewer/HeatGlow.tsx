@@ -12,7 +12,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Asset, AssetEnergy, Pano } from "../contracts";
 import { formatRange, labelText } from "../format";
-import { useAppDispatch } from "../state";
+import { useAppDispatch, useAppState } from "../state";
 import { pinColor, position, toHex, type EnergyScale } from "./energyColor";
 import type { MpSdk } from "./sdkAdapter";
 import { modelToSdk, type SdkFrameFit } from "./sdkFrame";
@@ -68,6 +68,7 @@ function glowLabel(row: AssetEnergy, scale: EnergyScale): string {
 
 export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, scale, onCount }: Props) {
   const dispatch = useAppDispatch();
+  const { focusAssetId } = useAppState();
   const [glows, setGlows] = useState<Glow[]>([]);
   const [box, setBox] = useState({ left: 0, top: 0, width: 0, height: 0 });
   const poseRef = useRef<Pose | null>(null);
@@ -181,7 +182,7 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, scale,
 
   return (
     <div className="heat-glow-layer" style={{ left: box.left, top: box.top, width: box.width, height: box.height }}>
-      {glows.map((g, index) => (
+      {glows.filter((g) => g.id !== focusAssetId).map((g, index) => (
         <div
           key={g.id}
           className="heat-glow"
@@ -212,7 +213,7 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, scale,
             onClick={(event) =>
               dispatch({ type: "focusEnergy", assetId: g.id, origin: (() => {
                   const b = event.currentTarget.getBoundingClientRect();
-                  return { x: b.left + b.width / 2, y: b.top + b.height / 2, r: b.width / 2, color: g.color };
+                  return { x: b.left + b.width / 2, y: b.top + b.height / 2, r: Math.min(160, g.r), color: g.color };
                 })() })
             }
           />
