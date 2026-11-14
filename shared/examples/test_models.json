@@ -1,25 +1,9 @@
 [
   {
-    "sid": "fixtureUnitA",
-    "address": "100 Example St, Los Angeles, CA 90000",
-    "city": "Los Angeles",
-    "note": "Illustrative fixture, not a real building",
-    "has_fixture": true,
-    "has_replay": false
-  },
-  {
     "sid": "r1NfhYW4TAr",
     "address": "215 W 7th St, Unit 301, Los Angeles, CA",
     "city": "Los Angeles",
-    "note": "Real scan, proposed demo; building listed in LA EBEWE (built 1911, site EUI 40.8); 10 rooms, 64 walls",
-    "has_fixture": false,
-    "has_replay": false
-  },
-  {
-    "sid": "2ibibwUGQAe",
-    "address": "1830 N Cherokee Ave, Los Angeles, CA",
-    "city": "Los Angeles",
-    "note": "Real scan; building listed in LA EBEWE (built 1946, site EUI 32.5); 4 rooms, 25 walls, no room heights",
+    "note": "Demo scan (hero); downtown LA; building listed in LA EBEWE (built 1911, site EUI 40.8); 10 rooms, 64 walls",
     "has_fixture": false,
     "has_replay": false
   },
@@ -27,8 +11,24 @@
     "sid": "H7CHGZ8m3Dg",
     "address": "889 Francisco St, Unit 1206, Los Angeles, CA",
     "city": "Los Angeles",
-    "note": "Real scan, backup; built 2017, not in LA EBEWE; 12 rooms, 90 walls",
+    "note": "Demo scan (backup); built 2017, not in LA EBEWE; 12 rooms, 90 walls",
     "has_fixture": false,
+    "has_replay": false
+  },
+  {
+    "sid": "2ibibwUGQAe",
+    "address": "1830 N Cherokee Ave, Los Angeles, CA",
+    "city": "Los Angeles",
+    "note": "Real scan used in vision regression tests; building listed in LA EBEWE (built 1946, site EUI 32.5); 4 rooms, 25 walls, no room heights",
+    "has_fixture": false,
+    "has_replay": false
+  },
+  {
+    "sid": "fixtureUnitA",
+    "address": "100 Example St, Los Angeles, CA 90000",
+    "city": "Los Angeles",
+    "note": "Illustrative fixture, not a real building",
+    "has_fixture": true,
     "has_replay": false
   }
 ]

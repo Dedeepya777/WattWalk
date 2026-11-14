@@ -11,7 +11,7 @@ from typing import Optional
 
 from pydantic import TypeAdapter
 
-from .. import config, store
+from .. import config, health_registry, store
 from ..contracts import Asset, Building, CorrectionRequest, ModelGeometry, PlanRequest, PlanResponse
 from . import providers as P
 from .ask import make_ask_fn
@@ -73,6 +73,18 @@ def _money(x: float) -> str:
     return f"${x:,.0f}"
 
 
+_LAYER_TO_INTEGRATION = {"matterport": "matterport", "costar": "costar_kit", "vexcel": "vexcel", "ebewe": "ebewe"}
+
+
+def _record_layers(b: Building) -> None:
+    """Feed the outcome of a live run's real provider calls into the health registry."""
+    if config.effective_data_mode() == "fixture":
+        return
+    for layer, st in b.layer_status.model_dump().items():
+        if st in ("live", "unavailable") and layer in _LAYER_TO_INTEGRATION:
+            health_registry.record(_LAYER_TO_INTEGRATION[layer], st == "live", f"live audit: layer {st}")
+
+
 # ----------------------------------------------------------------------------- tools
 def load_building(ctx: RunContext) -> str:
     sid, agent = ctx.sid, TOOL_AGENT["load_building"]
@@ -85,10 +97,7 @@ def load_building(ctx: RunContext) -> str:
     ctx.check_cancel()
     b = P.get_building(sid, g)
     store.write(sid, "building.json", b)
-    if b.roof.ortho_ref and P.implementation_status()["get_building"] == "stub":
-        p = store.audit_path(sid, b.roof.ortho_ref)  # TEMPORARY: placeholder ortho for the fixture stub
-        if not p.exists():
-            p.write_bytes(P.PLACEHOLDER_JPEG)
+    _record_layers(b)
     parts = []
     if b.year_built.value is not None:
         parts.append(f"Built {b.year_built.value}")

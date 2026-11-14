@@ -58,5 +58,8 @@ AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 SMALL_VISION_MODEL_ID = os.getenv("WATTWALK_SMALL_VISION_MODEL_ID", "")
 LARGE_VISION_MODEL_ID = os.getenv("WATTWALK_LARGE_VISION_MODEL_ID", "")
 PLANNER_MODEL_ID = os.getenv("WATTWALK_PLANNER_MODEL_ID", "")
+# OpenRouter (free hosted models): model ids of the form "openrouter/<model>" are sent here.
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
+OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1").rstrip("/")
 
 TIMEOUTS_S = {"matterport": 30, "vexcel": 20, "ebewe": 15, "bedrock_vision": 45, "explain": 15, "ask_user": 30}

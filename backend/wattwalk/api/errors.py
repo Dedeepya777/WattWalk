@@ -7,7 +7,6 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from ..agent.providers import StubLimitation
 from ..contracts import AnswerRequest, CorrectionRequest, ExplainRequest, PlanRequest
 from ..errors import UpstreamError
 
@@ -98,10 +97,6 @@ def install(app: FastAPI) -> None:
     async def _upstream(_: Request, e: UpstreamError):
         status = 502 if e.code == "upstream_auth" else 503
         return JSONResponse(body(e.code, e.message, e.retryable, {"integration": e.integration}), status_code=status)
-
-    @app.exception_handler(StubLimitation)
-    async def _stub(_: Request, e: StubLimitation):
-        return JSONResponse(body("internal", str(e), False, {"temporary_stub": True}), status_code=501)
 
     @app.exception_handler(ValueError)
     async def _value(_: Request, e: ValueError):
