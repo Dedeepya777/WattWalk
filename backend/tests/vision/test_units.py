@@ -237,7 +237,7 @@ def test_router_terminates(fixture_observations):
 
 # ---------- local Ollama backend ----------
 
-def test_ollama_backend_routes_by_model_prefix(monkeypatch):
+def test_deepseek_backend_routes_by_model_prefix(monkeypatch):
     import io
     import json as _json
     import urllib.request
@@ -248,15 +248,19 @@ def test_ollama_backend_routes_by_model_prefix(monkeypatch):
 
     def fake_urlopen(req, timeout):
         sent.update(_json.loads(req.data))
-        reply = {"message": {"content": '{"image_ok": true, "detections": []}'}, "prompt_eval_count": 700, "eval_count": 20}
+        reply = {
+            "choices": [{"message": {"content": '{"image_ok": true, "detections": []}'}}],
+            "usage": {"prompt_tokens": 700, "completion_tokens": 20},
+        }
         return io.BytesIO(_json.dumps(reply).encode())
 
+    monkeypatch.setattr(detect.config, "DEEPSEEK_API_KEY", "sk-test")
     monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
     monkeypatch.setattr(detect, "_converse", lambda *a: (_ for _ in ()).throw(AssertionError("Bedrock must not be called")))
-    raw, call, _ = detect.call_vision("ollama/qwen2.5vl:7b", b"jpegbytes", "prompt", "s", "walker", "detect", image_px=768)
+    raw, call, _ = detect.call_vision("deepseek/deepseek-flash", b"jpegbytes", "prompt", "s", "walker", "detect", image_px=768)
     assert raw == {"image_ok": True, "detections": []}
-    assert sent["model"] == "qwen2.5vl:7b" and sent["format"] == "json" and sent["messages"][0]["images"]
-    assert (call.tokens_in, call.tokens_out, call.model_id) == (700, 20, "ollama/qwen2.5vl:7b")
+    assert sent["model"] == "deepseek-flash" and "image_url" in sent["messages"][0]["content"][1]["type"]
+    assert (call.tokens_in, call.tokens_out, call.model_id) == (700, 20, "deepseek/deepseek-flash")
 
 
 # ---------- regressions from the first real-scan walk (2ibibwUGQAe) ----------

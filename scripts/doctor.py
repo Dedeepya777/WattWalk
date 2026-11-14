@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from setup import ENV_FILE, OLLAMA_URL, ROOT, ollama_models, ollama_up, read_env, venv_python  # noqa: E402
+from setup import ENV_FILE, ROOT, read_env, venv_python  # noqa: E402
 
 BACKEND_PORT, FRONTEND_PORT = 8000, 5173
 DEFAULT_API_BASE = f"http://localhost:{BACKEND_PORT}"
@@ -48,18 +48,6 @@ def _port_in_use(port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.settimeout(0.5)
         return s.connect_ex(("127.0.0.1", port)) == 0
-
-
-def _ollama_capabilities(model: str) -> set[str] | None:
-    """Capabilities Ollama reports for a model ("completion", "vision", "tools"...), None if unknown."""
-    try:
-        req = urllib.request.Request(f"{OLLAMA_URL}/api/show", data=json.dumps({"model": model}).encode(),
-                                     headers={"Content-Type": "application/json"})
-        data = json.loads(urllib.request.urlopen(req, timeout=10).read())
-        caps = data.get("capabilities")
-        return set(caps) if isinstance(caps, list) else None
-    except (OSError, ValueError):
-        return None
 
 
 def _venv_has(module: str) -> bool:
@@ -141,14 +129,6 @@ def check_sdk_key(env: dict[str, str], issues: list[Issue]) -> None:
                             ["Open .env and copy the correct SDK key into both lines."]))
 
 
-def _ollama_steps_install() -> list[str]:
-    if platform.system() == "Darwin" and shutil.which("brew"):
-        first = "Install it:  brew install ollama   (or download the app from https://ollama.com/download)"
-    else:
-        first = "Install it from https://ollama.com/download"
-    return [first, "Run  python3 scripts/setup.py  again: it starts Ollama and downloads the models."]
-
-
 def check_models(env: dict[str, str], issues: list[Issue], ollama_should_run: bool = True) -> None:
     vision_live = env.get("WATTWALK_VISION_MODE") == "live"
     deep = env.get("WATTWALK_AGENT_MODE") == "deep_agents"
@@ -160,54 +140,25 @@ def check_models(env: dict[str, str], issues: list[Issue], ollama_should_run: bo
     if vision_live and not (ids["WATTWALK_SMALL_VISION_MODEL_ID"] and ids["WATTWALK_LARGE_VISION_MODEL_ID"]):
         issues.append(Issue("problem", "Vision is live but a vision model id is empty",
                             "Live audits need a model that looks at the photos.",
-                            ["For the free local model, put these in .env:",
-                             "   WATTWALK_SMALL_VISION_MODEL_ID=ollama/qwen2.5vl:7b",
-                             "   WATTWALK_LARGE_VISION_MODEL_ID=ollama/qwen2.5vl:7b",
-                             "Then run  python3 scripts/setup.py  to download the model."]))
+                            ["Put these in .env:",
+                             "   WATTWALK_SMALL_VISION_MODEL_ID=deepseek/deepseek-flash",
+                             "   WATTWALK_LARGE_VISION_MODEL_ID=deepseek/deepseek-flash",
+                             "   DEEPSEEK_API_KEY=sk-..."]))
     if deep and not ids["WATTWALK_PLANNER_MODEL_ID"]:
         issues.append(Issue("problem", "WATTWALK_AGENT_MODE=deep_agents but WATTWALK_PLANNER_MODEL_ID is empty",
                             "Deep Agents mode needs a planner model; the audit fails at once without it.",
-                            ["Either add  WATTWALK_PLANNER_MODEL_ID=ollama/qwen3:8b  to .env and run  ollama pull qwen3:8b",
+                            ["Add  WATTWALK_PLANNER_MODEL_ID=deepseek/deepseek-flash  to .env",
                              "or set  WATTWALK_AGENT_MODE=scripted  (same tools in a fixed order, no planner model)."]))
 
-    ollama_models_used = {v.removeprefix("ollama/") for v in used.values() if v.startswith("ollama/")}
-    if ollama_models_used:
-        if not shutil.which("ollama"):
-            issues.append(Issue("problem", "Your .env uses Ollama models but Ollama is not installed",
-                                "The local AI that looks at photos (and plans, in Deep Agents mode) runs in Ollama.",
-                                _ollama_steps_install()))
-        elif not ollama_up():
-            if ollama_should_run:
-                issues.append(Issue("problem", "Ollama is installed but not running",
-                                    "Every photo and planner call goes to Ollama at " + OLLAMA_URL + ".",
-                                    ["Open the Ollama app, or run  ollama serve  in a terminal and leave it open.",
-                                     "scripts/run.py starts it for you; if it still fails, restart your computer's "
-                                     "Ollama app.", "Then start WattWalk again."]))
-        else:
-            have = ollama_models()
-            for model in sorted(ollama_models_used):
-                if model not in have and f"{model}:latest" not in have:
-                    issues.append(Issue("problem", f"The Ollama model {model} is not downloaded",
-                                        "Calls to it fail with 'model not found' and the audit stops.",
-                                        [f"Run:  ollama pull {model}   (several GB, one time)",
-                                         "Check with:  ollama list", "Then start WattWalk again."]))
-                    continue
-                caps = _ollama_capabilities(model)
-                is_planner = used.get("WATTWALK_PLANNER_MODEL_ID") == f"ollama/{model}"
-                is_vision = f"ollama/{model}" in (used.get("WATTWALK_SMALL_VISION_MODEL_ID"),
-                                                  used.get("WATTWALK_LARGE_VISION_MODEL_ID"))
-                if caps is not None and is_planner and "tools" not in caps:
-                    issues.append(Issue("problem", f"The planner model {model} cannot use tools",
-                                        "The Deep Agents planner works by calling tools; this model cannot, so "
-                                        "the audit would fail on its first step.",
-                                        ["Use a tool-capable model:  ollama pull qwen3:8b",
-                                         "In .env set  WATTWALK_PLANNER_MODEL_ID=ollama/qwen3:8b",
-                                         "(or set WATTWALK_AGENT_MODE=scripted)"]))
-                if caps is not None and is_vision and "vision" not in caps:
-                    issues.append(Issue("problem", f"The vision model {model} cannot read images",
-                                        "Photo detection needs an image model.",
-                                        ["Use  ollama pull qwen2.5vl:7b  and set both WATTWALK_*_VISION_MODEL_ID to "
-                                         "ollama/qwen2.5vl:7b in .env."]))
+    if any(v.startswith("deepseek/") or v.lower().startswith("deepseek-") for v in used.values()):
+        if not _set(env, "DEEPSEEK_API_KEY"):
+            issues.append(Issue("problem", "A deepseek/ model is set but DEEPSEEK_API_KEY is empty",
+                                "DeepSeek API calls need an API key from https://platform.deepseek.com",
+                                ["Add  DEEPSEEK_API_KEY=sk-...  to .env and start WattWalk again."]))
+        if not _venv_has("langchain_openai"):
+            issues.append(Issue("problem", "deepseek/ planner ids need the langchain-openai package",
+                                "The package is needed for OpenAI-compatible chat models.",
+                                ["Run:  .venv\\Scripts\\python -m pip install langchain-openai"]))
 
     if any(v.startswith("gemini/") for v in used.values()):
         if not _set(env, "GOOGLE_API_KEY"):
@@ -218,7 +169,7 @@ def check_models(env: dict[str, str], issues: list[Issue], ollama_should_run: bo
         issues.append(Issue("warning", "Gemini free tier: 20 requests per model per day",
                             "One audit needs 60 to 100 calls, so a free key runs out during the first audit "
                             "('Gemini daily quota used up').",
-                            ["Enable billing on the key, or switch the model ids back to ollama/... in .env."]))
+                            ["Enable billing on the key, or switch the model ids back to deepseek/... in .env."]))
     if any(v.startswith("openrouter/") for v in used.values()):
         if not _set(env, "OPENROUTER_API_KEY"):
             issues.append(Issue("problem", "An openrouter/ planner is set but OPENROUTER_API_KEY is empty",
@@ -229,13 +180,13 @@ def check_models(env: dict[str, str], issues: list[Issue], ollama_should_run: bo
                                 "It is optional and not installed.",
                                 ["Run:  .venv/bin/python -m pip install langchain-openai   "
                                  "(Windows: .venv\\Scripts\\python -m pip install langchain-openai)"]))
-    bedrock = [v for v in used.values() if not v.startswith(("ollama/", "gemini/", "openrouter/"))]
+    bedrock = [v for v in used.values() if not v.startswith(("deepseek/", "gemini/", "openrouter/")) and not v.lower().startswith("deepseek-")]
     if bedrock and not (os.environ.get("AWS_ACCESS_KEY_ID") or (Path.home() / ".aws" / "credentials").exists()
                         or os.environ.get("AWS_PROFILE")):
         issues.append(Issue("warning", "Bedrock model ids are set but no AWS credentials were found",
                             "Amazon Bedrock calls need AWS credentials and model access in your region.",
                             ["Run  aws configure  (or set AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY in your shell).",
-                             "Or use the free local models: ollama/qwen2.5vl:7b (vision) and ollama/qwen3:8b (planner)."]))
+                             "Or use DeepSeek: deepseek/deepseek-flash."]))
 
 
 def check_costar(env: dict[str, str], issues: list[Issue]) -> None:

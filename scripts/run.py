@@ -20,7 +20,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from doctor import DEFAULT_API_BASE, report, run_checks  # noqa: E402
-from setup import ENV_FILE, ROOT, read_env, start_ollama, venv_python  # noqa: E402
+from setup import ENV_FILE, ROOT, read_env, venv_python  # noqa: E402
 
 BACKEND = "http://localhost:8000/health"
 FRONTEND = "http://localhost:5173"
@@ -38,7 +38,7 @@ def wait_for(url: str, seconds: int) -> bool:
 
 HINTS = {
     "matterport": "check MATTERPORT_API_KEY / MATTERPORT_API_TOKEN in .env",
-    "bedrock": "the vision model did not answer: is Ollama running and the model pulled (ollama list)?",
+    "bedrock": "the vision model did not answer: check DEEPSEEK_API_KEY in .env",
     "costar_kit": "optional: set COSTAR_KIT_ZIP in .env for year built, units and rent",
     "ebewe": "optional: LA building energy data (needs internet)",
     "vexcel": "optional: roof imagery, needs VEXCEL_API_KEY",
@@ -80,12 +80,6 @@ def main() -> None:
     env = read_env(ENV_FILE) if ENV_FILE.exists() else {}
     print(f"Modes: data {env.get('WATTWALK_DATA_MODE', 'fixture')}, vision {env.get('WATTWALK_VISION_MODE', 'fixture')}, "
           f"agent {env.get('WATTWALK_AGENT_MODE', 'scripted')}")
-
-    if any(v.startswith("ollama/") for k, v in env.items() if k.endswith("_MODEL_ID")):
-        exe = shutil.which("ollama")
-        if not exe or not start_ollama(exe):
-            sys.exit("These settings use Ollama, but it is not installed or did not start (see scripts/setup.py).")
-        print("Ollama is running")
 
     # Check the setup before starting anything: problems stop here with numbered fix steps.
     issues = run_checks(include_ports=True)

@@ -65,39 +65,75 @@ def _converse(model_id: str, image: bytes, prompt: str) -> tuple[str, dict]:
     return text, {"inputTokens": usage.get("inputTokens"), "outputTokens": usage.get("outputTokens")}
 
 
-# ---------- local development backend: Ollama ----------
-# A model id of the form "ollama/<model>" (for example "ollama/qwen2.5vl:7b") sends the call to a
-# local Ollama server instead of Bedrock. For free development only: the demo and the benchmark
-# use Bedrock (decision D6). Everything else (prompts, parsing, cache, logging) is identical.
-OLLAMA_PREFIX = "ollama/"
-OLLAMA_URL = f"{config.OLLAMA_BASE_URL}/api/chat"
-OLLAMA_TIMEOUT_S = 180  # local models on a laptop are slower than Bedrock
+# ---------- cloud backend: DeepSeek API (multimodal) ----------
+# A model id of the form "deepseek/<model>" (for example "deepseek/deepseek-flash" or
+# "deepseek/DeepSeek-V4.1-Flash-1017") sends the call to DeepSeek's OpenAI-compatible API with DEEPSEEK_API_KEY.
+DEEPSEEK_PREFIX = "deepseek/"
+DEEPSEEK_TIMEOUT_S = config.TIMEOUTS_S.get("deepseek_vision", 45)
 
 
-def _ollama(model_id: str, image: bytes, prompt: str) -> tuple[str, dict]:
+def _normalize_deepseek_model(name: str) -> str:
+    cleaned = name.removeprefix(DEEPSEEK_PREFIX).strip()
+    if cleaned.lower() in ("deepseek-v4.1-flash-1017", "deepseek-v4.1-flash", "deepseek-flash-1017"):
+        return "deepseek-flash"
+    return cleaned
+
+
+def _deepseek(model_id: str, image: bytes, prompt: str) -> tuple[str, dict]:
     import base64
     import urllib.error
     import urllib.request
 
+    if not config.DEEPSEEK_API_KEY:
+        raise UpstreamError("bedrock", False, "DEEPSEEK_API_KEY is not set; add it to .env for deepseek/ model ids")
+
+    model = _normalize_deepseek_model(model_id)
+    b64_image = base64.b64encode(image).decode("ascii")
+
     body = json.dumps({
-        "model": model_id.removeprefix(OLLAMA_PREFIX),
-        "messages": [{"role": "user", "content": prompt, "images": [base64.b64encode(image).decode("ascii")]}],
-        "stream": False,
-        "format": "json",  # constrain the output to valid JSON
-        "options": {"temperature": 0, "num_predict": MAX_TOKENS},
+        "model": model,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64_image}"}}
+                ]
+            }
+        ],
+        "temperature": 0,
+        "max_tokens": MAX_TOKENS,
     }).encode("utf-8")
-    req = urllib.request.Request(OLLAMA_URL, data=body, headers={"Content-Type": "application/json"})
+
+    base_url = config.DEEPSEEK_BASE_URL
+    endpoint = f"{base_url}/v1/chat/completions" if not base_url.endswith("/v1") else f"{base_url}/chat/completions"
+    req = urllib.request.Request(
+        endpoint,
+        data=body,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {config.DEEPSEEK_API_KEY}",
+        }
+    )
     try:
-        with urllib.request.urlopen(req, timeout=OLLAMA_TIMEOUT_S) as resp:
+        with urllib.request.urlopen(req, timeout=DEEPSEEK_TIMEOUT_S) as resp:
             data = json.loads(resp.read())
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", "replace")[:300]
-        name = model_id.removeprefix(OLLAMA_PREFIX)
-        hint = f" Run: ollama pull {name}" if exc.code == 404 else ""
-        raise UpstreamError("bedrock", False, f"Ollama returned {exc.code}: {detail}.{hint}") from exc
+        status = exc.code
+        raise UpstreamError("bedrock", status not in (401, 403), f"DeepSeek returned HTTP {status}: {detail}", status) from exc
     except (urllib.error.URLError, TimeoutError, OSError) as exc:
-        raise UpstreamError("bedrock", True, f"Ollama not reachable at {OLLAMA_URL} (is 'ollama serve' running?): {exc}") from exc
-    return data["message"]["content"], {"inputTokens": data.get("prompt_eval_count"), "outputTokens": data.get("eval_count")}
+        raise UpstreamError("bedrock", True, f"DeepSeek not reachable at {endpoint}: {exc}") from exc
+
+    choices = data.get("choices", [])
+    if not choices:
+        raise UpstreamError("bedrock", True, "DeepSeek returned empty choices")
+    message = choices[0].get("message", {})
+    text = message.get("content") or ""
+    if not text.strip() and message.get("reasoning_content"):
+        text = message.get("reasoning_content", "")
+    usage = data.get("usage", {}) or {}
+    return text, {"inputTokens": usage.get("prompt_tokens"), "outputTokens": usage.get("completion_tokens")}
 
 
 # ---------- free cloud backend: Google Gemini API ----------
@@ -186,14 +222,13 @@ def _gemini(model_id: str, image: bytes, prompt: str) -> tuple[str, dict]:
 
 DETECT_PX_BEDROCK = 768   # plan 8.2
 DETECT_PX_GEMINI = 1000   # Gemini reports boxes on a 0-1000 grid; at 1000 px that grid equals pixels
-DETECT_PX_OLLAMA = 1008   # measured: Qwen2.5-VL in Ollama upsamples smaller images and reports boxes
-                          # in its own grid (factor 1.1 to 1.33); at 1008 px (36 x 28) the factor is 1.0
+DETECT_PX_DEEPSEEK = 1024
 
 
 def detect_px(model_id: str) -> int:
     """Longest side of the image sent for detection."""
-    if model_id.startswith(OLLAMA_PREFIX):
-        return DETECT_PX_OLLAMA
+    if model_id.startswith(DEEPSEEK_PREFIX) or model_id.lower().startswith("deepseek-"):
+        return DETECT_PX_DEEPSEEK
     if model_id.startswith(GEMINI_PREFIX):
         return DETECT_PX_GEMINI
     return DETECT_PX_BEDROCK
@@ -202,8 +237,8 @@ def detect_px(model_id: str) -> int:
 def _call_model(model_id: str, image: bytes, prompt: str) -> tuple[str, dict]:
     """One real model call (cache misses only), recorded for the health endpoint."""
     try:
-        if model_id.startswith(OLLAMA_PREFIX):
-            result = _ollama(model_id, image, prompt)
+        if model_id.startswith(DEEPSEEK_PREFIX) or model_id.lower().startswith("deepseek-"):
+            result = _deepseek(model_id, image, prompt)
         elif model_id.startswith(GEMINI_PREFIX):
             result = _gemini(model_id, image, prompt)
         else:

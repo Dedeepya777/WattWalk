@@ -121,9 +121,10 @@ cp .env.example .env            # Windows: copy .env.example .env
 | `COSTAR_KIT_ZIP` | full path to the CoStar kit zip **or** its unzipped folder (section 3.4) | year built, units, rent |
 | `COSTAR_ZIP_PASSWORD` | the kit password, if you point at the zip | |
 | `AWS_REGION` | `us-east-1` unless your Bedrock access is elsewhere | Bedrock |
-| `WATTWALK_SMALL_VISION_MODEL_ID` | `ollama/qwen2.5vl:7b` or a Bedrock model id (section 3.5) | AI detection |
+| `DEEPSEEK_API_KEY` | DeepSeek API key (`sk-...`) | cloud AI detection and Deep Agents planning |
+| `WATTWALK_SMALL_VISION_MODEL_ID` | `deepseek/deepseek-flash` or Bedrock/Gemini id (section 3.5) | AI detection |
 | `WATTWALK_LARGE_VISION_MODEL_ID` | same idea; the "escalation" model | AI escalation |
-| `WATTWALK_PLANNER_MODEL_ID` | a Bedrock model id, only for `deep_agents` mode | Deep Agents |
+| `WATTWALK_PLANNER_MODEL_ID` | `deepseek/deepseek-flash` for `deep_agents` mode | Deep Agents planner |
 | `VITE_API_BASE` | `http://localhost:8000` | frontend talks to the backend (without it the frontend only plays fixtures) |
 
 A working local `.env` therefore looks like this (values replaced):
@@ -131,19 +132,15 @@ A working local `.env` therefore looks like this (values replaced):
 ```bash
 WATTWALK_DATA_MODE=live
 WATTWALK_VISION_MODE=live
-WATTWALK_AGENT_MODE=scripted
-WATTWALK_AUDITS_DIR=
+WATTWALK_AGENT_MODE=deep_agents
+DEEPSEEK_API_KEY=sk-...
+WATTWALK_SMALL_VISION_MODEL_ID=deepseek/deepseek-flash
+WATTWALK_LARGE_VISION_MODEL_ID=deepseek/deepseek-flash
+WATTWALK_PLANNER_MODEL_ID=deepseek/deepseek-flash
 MATTERPORT_API_KEY=<from /costar-keys>
 MATTERPORT_API_TOKEN=<from /costar-keys>
 MATTERPORT_SDK_KEY=<your SDK key>
 VITE_MATTERPORT_SDK_KEY=<the same SDK key>
-VEXCEL_API_KEY=
-COSTAR_KIT_ZIP=/full/path/to/costar-hackathon-kit
-COSTAR_ZIP_PASSWORD=
-AWS_REGION=us-east-1
-WATTWALK_SMALL_VISION_MODEL_ID=ollama/qwen2.5vl:7b
-WATTWALK_LARGE_VISION_MODEL_ID=ollama/qwen2.5vl:7b
-WATTWALK_PLANNER_MODEL_ID=
 VITE_API_BASE=http://localhost:8000
 ```
 
@@ -170,45 +167,29 @@ Without the kit, audits still run; the building card shows fewer fields.
 
 ### 3.5 The AI model: choose one
 
-**Option A: free local model with Ollama (development, no account needed)**
+**Option A: DeepSeek Cloud API (recommended: high speed, multimodal, tool-calling)**
 
-1. Install Ollama from https://ollama.com and open it (or run `ollama serve` in a terminal and leave it running).
-2. Download the two models once (about 6 GB + 5 GB): one looks at photos, one plans (it must support
-   tool calling, which the vision model does not):
+1. Get an API key from https://platform.deepseek.com
+2. In `.env`:
    ```bash
-   ollama pull qwen2.5vl:7b
-   ollama pull qwen3:8b
-   ```
-3. Check they are there: `ollama list`.
-4. In `.env`:
-   ```bash
-   WATTWALK_SMALL_VISION_MODEL_ID=ollama/qwen2.5vl:7b
-   WATTWALK_LARGE_VISION_MODEL_ID=ollama/qwen2.5vl:7b
-   WATTWALK_PLANNER_MODEL_ID=ollama/qwen3:8b
-   WATTWALK_AGENT_MODE=deep_agents          # or scripted: same tools in a fixed order, no planner model
+   DEEPSEEK_API_KEY=sk-...
+   WATTWALK_SMALL_VISION_MODEL_ID=deepseek/deepseek-flash
+   WATTWALK_LARGE_VISION_MODEL_ID=deepseek/deepseek-flash
+   WATTWALK_PLANNER_MODEL_ID=deepseek/deepseek-flash
+   WATTWALK_AGENT_MODE=deep_agents
    ```
 
-The `ollama/` prefix is what routes calls to your local Ollama instead of Bedrock. Expect about 20 to
-25 seconds per photo on a 16 GB laptop, so a full audit of a mid-size apartment takes 15 to 30 minutes
-the first time (repeat runs are fast, see section 6.3). Ollama must be running the whole time.
+The `deepseek/` prefix routes calls to DeepSeek's OpenAI-compatible API (`https://api.deepseek.com`). DeepSeek-V4.1-Flash supports native text, tool calling, and multimodal image input. DeepSeek-V4.1-Flash-1017 aliases directly to `deepseek-flash`.
 
-**Option B: Amazon Bedrock (better accuracy, needed for `deep_agents`)**
+**Option B: Amazon Bedrock (alternative)**
 
 1. In the AWS console, open Amazon Bedrock → Model access, and enable a vision-capable model in your region.
 2. Give the backend AWS credentials through the standard AWS chain, for example `aws configure`, or
-   `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_SESSION_TOKEN` in your shell. Do not put AWS
-   secrets in the repository.
-3. Put the enabled model ids (exactly as Bedrock shows them) in `WATTWALK_SMALL_VISION_MODEL_ID` and
-   `WATTWALK_LARGE_VISION_MODEL_ID`, and a text model id in `WATTWALK_PLANNER_MODEL_ID` if you want
-   `WATTWALK_AGENT_MODE=deep_agents`.
+   `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_SESSION_TOKEN` in your shell.
+3. Put the enabled model ids in `WATTWALK_SMALL_VISION_MODEL_ID` and `WATTWALK_LARGE_VISION_MODEL_ID`.
 
 **Option C: Google Gemini API.** Any model id `gemini/<model>` (for example `gemini/gemini-2.5-flash`)
-uses the Gemini API with `GOOGLE_API_KEY` (create one at https://aistudio.google.com/apikey). Measured on
-14 Nov 2026: the **free tier allows 20 requests per model per day**, and one audit needs 60 to 100, so the
-free tier cannot run a full audit; with billing enabled on the key it works and is fast. When the daily
-quota is used up the audit stops with "Gemini daily quota used up".
-
-You can mix providers: for example Ollama for vision and Gemini or Bedrock for the planner.
+uses the Gemini API with `GOOGLE_API_KEY` (create one at https://aistudio.google.com/apikey).
 
 ### 3.6 3D pins: Showcase SDK key and allowed domain
 

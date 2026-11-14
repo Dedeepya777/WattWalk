@@ -34,24 +34,24 @@ ROOT = Path(__file__).resolve().parents[1]
 VENV = ROOT / ".venv"
 ENV_FILE = ROOT / ".env"
 ENV_EXAMPLE = ROOT / ".env.example"
-OLLAMA_URL = "http://localhost:11434"
-VISION_MODEL = "qwen2.5vl:7b"   # about 6 GB, photo detection
-PLANNER_MODEL = "qwen3:8b"      # about 5 GB, Deep Agents planner (needs tool calling)
+
+DEEPSEEK_MODEL = "deepseek-flash"
 
 LOCAL_DEFAULTS = {
-    "WATTWALK_SMALL_VISION_MODEL_ID": f"ollama/{VISION_MODEL}",
-    "WATTWALK_LARGE_VISION_MODEL_ID": f"ollama/{VISION_MODEL}",
-    "WATTWALK_PLANNER_MODEL_ID": f"ollama/{PLANNER_MODEL}",
+    "WATTWALK_SMALL_VISION_MODEL_ID": f"deepseek/{DEEPSEEK_MODEL}",
+    "WATTWALK_LARGE_VISION_MODEL_ID": f"deepseek/{DEEPSEEK_MODEL}",
+    "WATTWALK_PLANNER_MODEL_ID": f"deepseek/{DEEPSEEK_MODEL}",
     "WATTWALK_AGENT_MODE": "deep_agents",
     "VITE_API_BASE": "http://localhost:8000",
 }
 # (variable, question). The SDK key is written under both names: the browser only sees VITE_*.
 KEY_QUESTIONS = [
+    ("DEEPSEEK_API_KEY", "DeepSeek API key (sk-...)"),
     ("MATTERPORT_API_KEY", "Matterport API key (from /costar-keys)"),
     ("MATTERPORT_API_TOKEN", "Matterport API token (from /costar-keys)"),
     ("MATTERPORT_SDK_KEY", "Matterport Showcase SDK key (for 3D pins)"),
 ]
-NEEDED_FOR_LIVE = ["MATTERPORT_API_KEY", "MATTERPORT_API_TOKEN"]
+NEEDED_FOR_LIVE = ["DEEPSEEK_API_KEY", "MATTERPORT_API_KEY", "MATTERPORT_API_TOKEN"]
 
 
 def say(msg: str) -> None:
@@ -80,7 +80,13 @@ def ask(question: str, assume_yes: bool) -> bool:
 
 
 def venv_python() -> Path:
-    return VENV / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+    direct = VENV / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+    if direct.exists():
+        return direct
+    backend_v = ROOT / "backend" / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+    if backend_v.exists():
+        return backend_v
+    return direct
 
 
 # ---------------------------------------------------------------- 1. versions
@@ -192,68 +198,7 @@ def setup_env(assume_yes: bool) -> dict[str, str]:
     return env
 
 
-# ---------------------------------------------------------------- 5. Ollama
-def ollama_up() -> bool:
-    try:
-        urllib.request.urlopen(f"{OLLAMA_URL}/api/tags", timeout=2).read()
-        return True
-    except OSError:
-        return False
-
-
-def ollama_models() -> set[str]:
-    try:
-        data = json.loads(urllib.request.urlopen(f"{OLLAMA_URL}/api/tags", timeout=5).read())
-        return {m["name"] for m in data.get("models", [])}
-    except OSError:
-        return set()
-
-
-def start_ollama(exe: str) -> bool:
-    if ollama_up():
-        return True
-    kwargs = {"stdout": subprocess.DEVNULL, "stderr": subprocess.DEVNULL}
-    if os.name == "nt":
-        kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS
-    else:
-        kwargs["start_new_session"] = True
-    subprocess.Popen([exe, "serve"], **kwargs)
-    for _ in range(30):
-        time.sleep(1)
-        if ollama_up():
-            return True
-    return False
-
-
-def setup_ollama(env: dict[str, str], assume_yes: bool) -> None:
-    uses = {v.removeprefix("ollama/") for k, v in env.items() if k.endswith("_MODEL_ID") and v.startswith("ollama/")}
-    if not uses:
-        say("Ollama: not used by .env model ids, skipping")
-        return
-    say(f"Ollama (local AI): models {', '.join(sorted(uses))}")
-    exe = shutil.which("ollama")
-    if not exe and platform.system() == "Darwin" and shutil.which("brew"):
-        if ask("Ollama is not installed. Install it with Homebrew now?", assume_yes):
-            run([shutil.which("brew"), "install", "ollama"])
-            exe = shutil.which("ollama")
-    if not exe:
-        warn("Ollama is not installed: get it from https://ollama.com/download, then run this script again")
-        return
-    if not start_ollama(exe):
-        warn("Ollama did not start; open the Ollama app or run 'ollama serve', then run this script again")
-        return
-    ok("Ollama is running")
-    have = ollama_models()
-    for model in sorted(uses):
-        if model in have or f"{model}:latest" in have:
-            ok(f"model {model} present")
-        elif ask(f"Download model {model} now (several GB)?", assume_yes):
-            run([exe, "pull", model])
-        else:
-            warn(f"model {model} missing: run 'ollama pull {model}'")
-
-
-# ---------------------------------------------------------------- 6. checks
+# ---------------------------------------------------------------- 5. checks
 def run_checks() -> None:
     say("Checks: contracts and tests")
     py = str(venv_python())
@@ -274,7 +219,6 @@ def main() -> None:
     setup_backend()
     setup_frontend()
     env = setup_env(args.yes)
-    setup_ollama(env, args.yes)
     if not args.skip_tests:
         run_checks()
     say("Done. Start everything with:  python3 scripts/run.py")

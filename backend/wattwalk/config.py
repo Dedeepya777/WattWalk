@@ -58,8 +58,8 @@ AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 SMALL_VISION_MODEL_ID = os.getenv("WATTWALK_SMALL_VISION_MODEL_ID", "")
 LARGE_VISION_MODEL_ID = os.getenv("WATTWALK_LARGE_VISION_MODEL_ID", "")
 PLANNER_MODEL_ID = os.getenv("WATTWALK_PLANNER_MODEL_ID", "")
-# Local Ollama server for "ollama/..." model ids (vision and planner).
-OLLAMA_BASE_URL = (os.getenv("OLLAMA_BASE_URL") or "http://localhost:11434").rstrip("/")
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
+DEEPSEEK_BASE_URL = (os.getenv("DEEPSEEK_BASE_URL") or "https://api.deepseek.com").rstrip("/")
 # Google Gemini API for "gemini/..." model ids (vision and planner). Free-tier keys are rate limited:
 # vision calls are spaced at least this many seconds apart.
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
@@ -68,4 +68,4 @@ GEMINI_MIN_INTERVAL_S = float(os.getenv("GEMINI_MIN_INTERVAL_S", "4"))
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1").rstrip("/")
 
-TIMEOUTS_S = {"matterport": 30, "vexcel": 20, "ebewe": 15, "bedrock_vision": 45, "explain": 15, "ask_user": 30}
+TIMEOUTS_S = {"matterport": 30, "vexcel": 20, "ebewe": 15, "bedrock_vision": 45, "deepseek_vision": 45, "explain": 15, "ask_user": 30}

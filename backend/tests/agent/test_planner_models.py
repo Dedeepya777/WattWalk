@@ -10,14 +10,23 @@ def _deep():
     return deep
 
 
-def test_ollama_prefix_builds_chat_ollama_with_large_context():
-    pytest.importorskip("langchain_ollama")
+def test_deepseek_prefix_builds_chat_openai(monkeypatch):
+    pytest.importorskip("langchain_openai")
     deep = _deep()
-    model = deep.make_model("ollama/qwen3:8b")
-    assert type(model).__name__ == "ChatOllama"
-    assert model.model == "qwen3:8b"
-    assert model.num_ctx == deep.OLLAMA_CONTEXT_TOKENS >= 16384
-    assert model.temperature == 0
+    monkeypatch.setattr(deep.config, "DEEPSEEK_API_KEY", "sk-test-key")
+    model = deep.make_model("deepseek/deepseek-flash")
+    assert type(model).__name__ == "ChatOpenAI"
+    assert model.model_name == "deepseek-flash"
+    assert "deepseek" in str(model.openai_api_base).lower()
+
+
+def test_deepseek_alias_normalizes(monkeypatch):
+    pytest.importorskip("langchain_openai")
+    deep = _deep()
+    monkeypatch.setattr(deep.config, "DEEPSEEK_API_KEY", "sk-test-key")
+    model = deep.make_model("deepseek/DeepSeek-V4.1-Flash-1017")
+    assert type(model).__name__ == "ChatOpenAI"
+    assert model.model_name == "deepseek-flash"
 
 
 def test_bedrock_id_builds_chat_bedrock_converse():
