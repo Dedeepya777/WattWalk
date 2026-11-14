@@ -61,6 +61,10 @@ def test_savings_are_computed_from_the_assets_energy(inventory, building):
     first, second = out.alternatives
     assert first.saves_kwh_yr == (round(row.kwh_yr[0] * 0.10, 1), round(row.kwh_yr[1] * 0.20, 1))
     assert first.upgrade_id.startswith("ai:") and "AI estimate" in first.basis
+    for alt in out.alternatives:  # every range is (low, high)
+        for r in (alt.kwh_yr, alt.usd_yr, alt.heat_kwh_yr, alt.saves_kwh_yr, alt.cost_usd, alt.payback_years):
+            assert r is None or r[0] <= r[1]
+    assert first.kwh_yr == (round(row.kwh_yr[0] * 0.80, 1), round(row.kwh_yr[1] * 0.90, 1))
     assert first.who == "the tenant can do it"
     # out-of-range numbers from the model are clamped and ordered
     assert second.cost_usd == (0, 400)

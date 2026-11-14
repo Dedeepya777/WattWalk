@@ -150,7 +150,8 @@ def parse_ideas(text: str, row: AssetEnergy, rate: float) -> tuple[Optional[tupl
             continue
         seen.add(_slug(title))
         saves = _r(kwh[0] * cut[0] / 100, kwh[1] * cut[1] / 100)
-        after = _r(kwh[0] - saves[0], kwh[1] - saves[1])
+        # lowest use afterwards: low use today with the biggest cut; highest: high use with the smallest cut
+        after = _r(kwh[0] * (1 - cut[1] / 100), kwh[1] * (1 - cut[0] / 100))
         saves_usd = _money(saves, rate)
         payback = None
         if saves_usd[1] > 0:
