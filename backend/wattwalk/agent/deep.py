@@ -38,37 +38,51 @@ RECURSION_LIMIT = 400
 
 
 # The planner model id picks the provider by prefix, like the vision model ids:
-#   ollama/<model>     local Ollama (free; the model must support tool calling, e.g. qwen3:8b)
+#   deepseek/<model>   DeepSeek API (DEEPSEEK_API_KEY in .env, e.g. deepseek/deepseek-flash)
 #   gemini/<model>     Google Gemini API (GOOGLE_API_KEY in .env)
 #   openrouter/<model> OpenRouter's OpenAI-compatible API (OPENROUTER_API_KEY in .env)
 #   anything else      Amazon Bedrock model id (the plan's default)
-OLLAMA_PREFIX = "ollama/"
+DEEPSEEK_PREFIX = "deepseek/"
 GEMINI_PREFIX = "gemini/"
 OPENROUTER_PREFIX = "openrouter/"
-# Deep Agents sends a long system prompt (planner rules, subagent and file tool descriptions, todos).
-# Ollama's default context window is far smaller and silently drops the start of the prompt.
-OLLAMA_CONTEXT_TOKENS = 16384
+
+
+def _normalize_deepseek_model(name: str) -> str:
+    cleaned = name.removeprefix(DEEPSEEK_PREFIX).strip()
+    if cleaned.lower() in ("deepseek-v4.1-flash-1017", "deepseek-v4.1-flash", "deepseek-flash-1017"):
+        return "deepseek-flash"
+    return cleaned
 
 
 def make_model(model_id: str | None = None):
     """Planner chat model for the configured (or supplied) model id.
 
-    Bedrock ids use ChatBedrockConverse; ollama/, gemini/ and openrouter/ ids use their provider.
+    Bedrock ids use ChatBedrockConverse; deepseek/, gemini/ and openrouter/ ids use their provider.
     """
     if MODEL_FACTORY is not None:
         return MODEL_FACTORY()
     model_id = model_id if model_id is not None else config.PLANNER_MODEL_ID
     if not model_id:
         raise RuntimeError("WATTWALK_PLANNER_MODEL_ID is not set; use WATTWALK_AGENT_MODE=scripted")
-    if model_id.startswith(OLLAMA_PREFIX):
-        from langchain_ollama import ChatOllama
+    if model_id.startswith(DEEPSEEK_PREFIX) or model_id.lower().startswith("deepseek-"):
+        if not config.DEEPSEEK_API_KEY:
+            raise RuntimeError("WATTWALK_PLANNER_MODEL_ID is a deepseek/ id but DEEPSEEK_API_KEY is not set")
+        try:
+            from langchain_openai import ChatOpenAI
+        except ImportError as e:
+            raise RuntimeError("deepseek/ planner ids need the langchain-openai package: pip install langchain-openai") from e
 
-        return ChatOllama(
-            model=model_id.removeprefix(OLLAMA_PREFIX),
-            base_url=config.OLLAMA_BASE_URL,
+        target = _normalize_deepseek_model(model_id)
+        base_url = config.DEEPSEEK_BASE_URL
+        if not base_url.endswith("/v1"):
+            base_url = f"{base_url}/v1"
+        return ChatOpenAI(
+            model=target,
+            base_url=base_url,
+            api_key=config.DEEPSEEK_API_KEY,
             temperature=0,
-            num_ctx=OLLAMA_CONTEXT_TOKENS,
-            reasoning=False,  # no hidden "thinking" pass: faster, and tool calls come back directly
+            max_retries=3,
+            timeout=120,
         )
     if model_id.startswith(GEMINI_PREFIX):
         from langchain_google_genai import ChatGoogleGenerativeAI

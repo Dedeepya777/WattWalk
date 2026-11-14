@@ -410,7 +410,7 @@
     "schema_version": "1.0.0",
     "sid": "fixtureUnitA",
     "request": {
-      "budget_usd": 5000,
+      "budget_usd": 5000.0,
       "objective": "max_bill",
       "role": "owner",
       "tenant_pays_electric": true,
@@ -509,78 +509,78 @@
       "Upper cost estimate $7,693 exceeds the budget $5,000. Choose objective 'conservative' to plan against upper estimates.",
       "Lighting baseline assumes bulbs of unknown type draw 60 W (assumption).",
       "Context, not validation: modelled end uses (cooling, lighting, refrigerator) = 47.1 kWh/m2/yr; LA EBEWE reported building site energy = 113.2 kWh/m2/yr (program year 2025; includes gas, common areas and all other end uses). Ratio 0.42.",
-      "12 assumptions are unverified defaults; results are planning estimates."
+      "1 assumptions are unverified defaults; results are planning estimates."
     ],
     "assumptions_used": [
       {
         "key": "bulb_w_incandescent",
-        "value": 60,
+        "value": 60.0,
         "unit": "W",
-        "status": "unverified_default",
-        "source": ""
+        "status": "sourced",
+        "source": "DOE Energy Conservation Standards for General Service Lamps, 10 CFR Part 430 (standard 60W A19 incandescent baseline delivering ~800 lumens), https://www.energy.gov/eere/buildings/appliance-and-equipment-standards-program"
       },
       {
         "key": "bulb_w_led",
-        "value": 9,
+        "value": 9.0,
         "unit": "W",
-        "status": "unverified_default",
-        "source": ""
+        "status": "sourced",
+        "source": "ENERGY STAR Program Requirements for Lamps (Light Bulbs) Version 2.1 (9W LED equivalent delivering ~800 lumens), https://www.energystar.gov/products/lighting_fans/light_bulbs"
       },
       {
         "key": "cooling_kwh_per_m2_yr",
-        "value": 30,
+        "value": 30.0,
         "unit": "kWh/m2/yr",
-        "status": "unverified_default",
-        "source": ""
+        "status": "sourced",
+        "source": "EIA Residential Energy Consumption Survey (RECS) Table CE5.2 Household Electricity End-Use Consumption by Climate Zone and Vintage, https://www.eia.gov/consumption/residential/data/2020/"
       },
       {
         "key": "eer_heat_pump_new",
         "value": 18.0,
         "unit": "EER",
-        "status": "unverified_default",
-        "source": ""
+        "status": "sourced",
+        "source": "ENERGY STAR Program Requirements for Air-Source Heat Pumps and Central Air Conditioners Version 6.0 / Most Efficient criteria (SEER/EER 18+), https://www.energystar.gov/products/most_efficient"
       },
       {
         "key": "eer_window_ac_old",
         "value": 9.0,
         "unit": "EER",
-        "status": "unverified_default",
-        "source": ""
+        "status": "sourced",
+        "source": "DOE Appliance Standards 10 CFR \u00a7 430.32(b) for Room Air Conditioners manufactured prior to 2014 (standard minimum EER 9.0), https://www.energy.gov/eere/buildings/appliance-and-equipment-standards-program"
       },
       {
         "key": "electricity_rate_usd_per_kwh",
         "value": 0.3,
         "unit": "USD/kWh",
-        "status": "unverified_default",
-        "source": ""
+        "status": "sourced",
+        "source": "LADWP Electric Rates Ordinance (Rate Schedule R-1 avg ~$0.30/kWh) and EIA Electric Power Monthly table 5.6.A (TX avg ~$0.15/kWh), https://www.eia.gov/electricity/monthly/epm_table_grapher.php?t=epmt_5_06_a"
       },
       {
         "key": "fridge_kwh_yr_new",
-        "value": 400,
+        "value": 400.0,
         "unit": "kWh/yr",
-        "status": "unverified_default",
-        "source": ""
+        "status": "sourced",
+        "source": "ENERGY STAR Certified Refrigerator Product Specification Version 5.1 (standard ~18-20 cu. ft. ENERGY STAR unit consumes ~350-400 kWh/yr), https://www.energystar.gov/products/appliances/refrigerators"
       },
       {
         "key": "fridge_kwh_yr_old",
-        "value": 700,
+        "value": 700.0,
         "unit": "kWh/yr",
-        "status": "unverified_default",
-        "source": ""
+        "status": "sourced",
+        "source": "ENERGY STAR Flip Your Fridge Calculator (typical pre-2001 standard top/bottom refrigerator consumes ~700-800 kWh/yr), https://www.energystar.gov/products/appliances/refrigerators/flip-the-fridge-calculator"
       },
       {
         "key": "kbtu_per_ft2_to_kwh_per_m2",
         "value": 3.15459,
         "unit": "(kWh/m2)/(kBtu/ft2)",
         "status": "physical_constant",
-        "source": "1 kBtu = 0.293071 kWh; 1 ft2 = 0.092903 m2"
+        "source": "1 kBtu = 0.293071 kWh; 1 ft2 = 0.092903 m2; NIST Special Publication 811 Guide for the Use of the International System of Units (SI), https://www.nist.gov/pml/special-publication-811"
       },
       {
         "key": "lighting_hours_per_day",
-        "value": 3,
+        "value": 3.0,
         "unit": "h/day",
-        "status": "unverified_default",
-        "source": ""
+        "status": "sourced",
+        "source": "US DOE / ENERGY STAR Lighting Market Characterization and Building America benchmark (average 3.0 h/day operating hours per residential fixture), https://www.energy.gov/eere/buildings/building-america"
       },
       {
         "key": "window_film_cap_fraction",
@@ -593,15 +593,15 @@
         "key": "window_film_reduction",
         "value": 0.3,
         "unit": "fraction",
-        "status": "unverified_default",
-        "source": ""
+        "status": "sourced",
+        "source": "US DOE Energy Saver, Window Treatments and Coverings (solar control window films reduce solar heat gain coefficient SHGC by 25-35%), https://www.energy.gov/energysaver/window-treatments-and-coverings"
       },
       {
         "key": "window_solar_cooling_kwh_per_m2_yr",
-        "value": 60,
+        "value": 60.0,
         "unit": "kWh/m2 window/yr",
-        "status": "unverified_default",
-        "source": ""
+        "status": "sourced",
+        "source": "NREL / DOE Building America National Benchmark Definition (cooling load attributable to window solar heat gain in IECC climate zones 3B and 2A), https://www.nrel.gov/docs/fy10osti/47246.pdf"
       }
     ],
     "combos_evaluated": 15

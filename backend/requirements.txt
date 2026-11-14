@@ -8,12 +8,9 @@ boto3==1.44.3
 botocore==1.44.3
 langchain-aws==1.9.3
 deepagents==0.7.38
-# Local/free planner and vision providers:
-#   ollama/<model>      langchain-ollama
-#   gemini/<model>      langchain-google-genai
-langchain-ollama>=1.0
+# Model providers: DeepSeek, Gemini, Bedrock, OpenRouter
+langchain-openai>=0.3.0
 langchain-google-genai>=4.0
-# Optional, only for an "openrouter/..." WATTWALK_PLANNER_MODEL_ID: langchain-openai (not pinned: untested here)
 shapely>=2.0
 numpy>=1.26
 opencv-python-headless>=4.9
