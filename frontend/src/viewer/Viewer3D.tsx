@@ -12,6 +12,7 @@ import type { Asset, AssetEnergy } from "../contracts";
 import { FIXTURE_SID } from "../fixtures";
 import { energySummary, labelText, unknownAttrCount } from "../format";
 import { buildScale, pinColor, type Rgb } from "./energyColor";
+import { HeatGlow } from "./HeatGlow";
 import { useAppDispatch, useAppState } from "../state";
 import {
   SDK_CONNECT_TIMEOUT_MS,
@@ -369,6 +370,17 @@ export function Viewer3D({ readiness, attempt, onReady, onFailed, onRetry }: Vie
         allow="fullscreen; xr-spatial-tracking"
         onLoad={() => setLoadedSid(selectedSid)}
       />
+      {phase.kind === "ready" && energyScale && sdkRef.current ? (
+        <HeatGlow
+          sdk={sdkRef.current}
+          fit={phase.fit}
+          frame={iframeRef.current}
+          inventory={inventory}
+          panos={panos}
+          energyById={energyById}
+          scale={energyScale}
+        />
+      ) : null}
       <p className={`viewer-tour-note pins-${phase.kind}`} role="status">
         {statusText(phase, tagCount, inventory.length)}
       </p>
