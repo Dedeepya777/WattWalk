@@ -49,11 +49,14 @@ def get_building(sid: str, geometry: ModelGeometry) -> Building:
     costar_data = None
     layer_costar = costar.kit_status()
     try:
-        costar_data = costar.costar_record(costar_prop_id, homes_id)
+        # Join by Matterport model id first (the kit's starter CSVs carry it); the index-id join is a fallback.
+        costar_data = costar.record_for_sid(sid) or costar.costar_record(costar_prop_id, homes_id)
         if costar_data:
             layer_costar = "live"
+            costar_prop_id = costar_data.get("costar_property_id") or costar_prop_id
     except Exception:
         layer_costar = "unavailable"
+    costar_notes = (costar_data or {}).get("notes", {})
 
     # 2. EBEWE layer (Los Angeles only)
     ebewe_rec: EbeweRecord | None = None
@@ -83,7 +86,8 @@ def get_building(sid: str, geometry: ModelGeometry) -> Building:
     # Field precedence (plan section 7.5)
     # year_built
     if costar_data and "year_built" in costar_data:
-        yb_attr = Attr(value=costar_data["year_built"], source="reported_in_data", note="From CoStar property record")
+        yb_attr = Attr(value=costar_data["year_built"], source="reported_in_data",
+                     note=costar_notes.get("year_built", "From CoStar property record"))
     elif ebewe_rec and ebewe_rec.year_built is not None:
         yb_attr = Attr(value=ebewe_rec.year_built, source="reported_in_data", note="From LA EBEWE benchmark record")
     else:
@@ -91,13 +95,15 @@ def get_building(sid: str, geometry: ModelGeometry) -> Building:
 
     # units
     if costar_data and "units" in costar_data:
-        units_attr = Attr(value=costar_data["units"], source="reported_in_data", note="From CoStar property record")
+        units_attr = Attr(value=costar_data["units"], source="reported_in_data",
+                     note=costar_notes.get("units", "From CoStar property record"))
     else:
         units_attr = Attr(value=None, source="needs_verification")
 
     # asking_rent_usd_month
     if costar_data and "asking_rent_usd_month" in costar_data:
-        rent_attr = Attr(value=costar_data["asking_rent_usd_month"], source="reported_in_data", note="From CoStar listing")
+        rent_attr = Attr(value=costar_data["asking_rent_usd_month"], source="reported_in_data",
+                     note=costar_notes.get("asking_rent_usd_month", "From CoStar listing"))
     else:
         rent_attr = Attr(value=None, source="needs_verification")
 
