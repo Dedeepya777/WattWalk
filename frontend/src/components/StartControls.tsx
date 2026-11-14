@@ -43,6 +43,7 @@ export function StartControls({
   const running = state.audit?.status.status === "running";
   const [mode, setMode] = useState<Mode>(isFixtureMode ? "fixture" : "live");
   const [busy, setBusy] = useState<null | "start" | "cancel" | "reset">(null);
+  const [showOptions, setShowOptions] = useState(false);
   const [probe, setProbe] = useState<Health | null>(null);
   const [probing, setProbing] = useState(false);
   const [probeError, setProbeError] = useState<string | null>(null);
@@ -191,6 +192,18 @@ export function StartControls({
 
       <ProgressTracker />
 
+      {!running ? (
+        <button
+          type="button"
+          className="audit-link audit-options-toggle"
+          aria-expanded={showOptions}
+          onClick={() => setShowOptions((open) => !open)}
+        >
+          {showOptions ? "Hide options" : "Options"}
+        </button>
+      ) : null}
+
+      {showOptions && !running ? (
       <div className="audit-extras">
         <div
           className="segmented audit-mode"
@@ -241,8 +254,9 @@ export function StartControls({
           </button>
         ) : null}
       </div>
+      ) : null}
 
-      {probeError ? <p className="hint small">{liveReason}</p> : null}
+      {probeError && showOptions ? <p className="hint small">{liveReason}</p> : null}
 
       {otherRunSid ? (
         <p className="hint small">Another apartment is still being audited. Stop it or wait first.</p>

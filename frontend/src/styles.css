@@ -3221,3 +3221,17 @@ select:disabled {
 .building-details[open] > summary h2::after {
   transform: rotate(90deg);
 }
+
+.audit-options-toggle {
+  display: block;
+  margin: 8px auto 0;
+  text-decoration: none;
+}
+.audit-options-toggle:hover {
+  text-decoration: underline;
+}
+.audit-panel .audit-extras {
+  justify-content: center;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-soft);
+}
