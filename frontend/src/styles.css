@@ -2281,3 +2281,427 @@ select:disabled {
 @media (prefers-reduced-motion: reduce) {
   .heat-glow { animation: none; }
 }
+
+/* Energy alternatives card (components/EnergyAlternatives.tsx) */
+.modal.energy-alt-card {
+  width: 560px;
+  max-height: 86vh;
+  overflow-y: auto;
+  z-index: 90;
+}
+.energy-alt-now {
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+}
+.energy-alt-list {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.energy-alt-option {
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+.energy-alt-option-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.energy-alt-saves {
+  color: var(--green);
+  font-weight: 700;
+}
+
+/* Alternatives card: entrance, glows and bars (step 3) */
+.energy-alt-backdrop {
+  animation: energy-alt-fade 180ms ease-out both;
+}
+.modal.energy-alt-card {
+  animation: energy-alt-in 280ms cubic-bezier(0.2, 0.9, 0.25, 1.15) both;
+}
+.energy-alt-option {
+  animation: energy-alt-rise 320ms ease-out both;
+}
+.energy-alt-with-glow {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+.energy-alt-glow-box {
+  width: 96px;
+  height: 96px;
+  display: grid;
+  place-items: center;
+}
+.energy-alt-glow {
+  display: block;
+  border-radius: 50%;
+  transition: width 900ms cubic-bezier(0.3, 0.7, 0.2, 1), height 900ms cubic-bezier(0.3, 0.7, 0.2, 1);
+  animation: heat-glow-pulse 3.2s ease-in-out infinite;
+}
+.energy-alt-body {
+  min-width: 0;
+}
+.energy-alt-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 2px;
+}
+.energy-alt-bar-track {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--panel-3);
+  border: 1px solid var(--border-soft);
+  overflow: hidden;
+}
+.energy-alt-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--green), var(--accent));
+  transition: width 900ms cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+.energy-alt-pct {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--green);
+  min-width: 82px;
+  text-align: right;
+}
+@keyframes energy-alt-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes energy-alt-in {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes energy-alt-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .energy-alt-backdrop,
+  .modal.energy-alt-card,
+  .energy-alt-option,
+  .energy-alt-glow {
+    animation: none;
+  }
+  .energy-alt-glow,
+  .energy-alt-bar-fill {
+    transition: none;
+  }
+}
+
+/* Step 4: the card grows out of the clicked 3D glow */
+.heat-glow-hit {
+  position: absolute;
+  pointer-events: auto;
+  border-radius: 50%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.heat-glow-hit:focus-visible {
+  outline: none;
+}
+.modal.energy-alt-card.energy-alt-measuring {
+  animation: none;
+  opacity: 0;
+}
+.modal.energy-alt-card.energy-alt-from-glow {
+  animation: energy-alt-from-glow 420ms cubic-bezier(0.2, 0.9, 0.25, 1.05) both;
+}
+@keyframes energy-alt-from-glow {
+  from {
+    opacity: 0.15;
+    transform: translate(var(--from-x, 0px), var(--from-y, 0px)) scale(0.12);
+    border-radius: 50%;
+  }
+  60% { opacity: 1; }
+  to {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+    border-radius: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal.energy-alt-card.energy-alt-from-glow { animation: none; }
+}
+
+/* Energy pop-out next to a 3D pin: a compact card that grows out of the clicked point */
+.energy-pop-catcher {
+  position: fixed;
+  inset: 0;
+  z-index: 85;
+  background: transparent;
+}
+.energy-pop {
+  position: fixed;
+  isolation: isolate;
+  max-height: 72vh;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow), 0 0 0 1px rgba(255, 255, 255, 0.03);
+  padding: 12px 14px;
+}
+.energy-pop.energy-pop-measuring {
+  opacity: 0;
+}
+/* The pressed button expands into the card: the visible area starts as the button and grows to
+   the full card. Nothing is scaled and nothing else animates. */
+/* The pressed glow grows into the card: the bubble starts as that glow (same spot, size and soft
+   colour) and its box grows into the card's box; then the card's details appear on top of it. */
+.energy-pop-bubble {
+  position: fixed;
+  z-index: 0;
+  pointer-events: none;
+  animation: energy-pop-grow 380ms cubic-bezier(0.3, 0, 0.2, 1) both;
+}
+.energy-pop-bubble::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle, color-mix(in srgb, var(--seed) 70%, transparent) 0%, color-mix(in srgb, var(--seed) 45%, transparent) 28%, color-mix(in srgb, var(--seed) 18%, transparent) 52%, transparent 72%);
+  animation: energy-pop-settle 380ms ease-in both;
+}
+@keyframes energy-pop-grow {
+  from {
+    left: var(--bx0); top: var(--by0); width: var(--bs0); height: var(--bs0);
+    border-radius: 50%; background-color: transparent; border: 1px solid transparent;
+  }
+  to {
+    left: var(--bx1); top: var(--by1); width: var(--bw1); height: var(--bh1);
+    border-radius: 16px; background-color: #ffffff; border: 1px solid #e5e7eb;
+  }
+}
+@keyframes energy-pop-settle {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+.energy-pop.energy-pop-in {
+  z-index: 1;
+  animation: energy-pop-show 120ms ease-out 320ms both;
+}
+@keyframes energy-pop-show {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.energy-pop-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+/* compact layout inside the pop-out */
+.energy-pop .energy-alt-with-glow {
+  grid-template-columns: 64px 1fr;
+}
+.energy-pop .energy-alt-glow-box {
+  width: 64px;
+  height: 64px;
+}
+.energy-pop .energy-alt-glow {
+  max-width: 60px;
+  max-height: 60px;
+}
+.energy-pop h2 {
+  font-size: 15px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .energy-pop.energy-pop-in { animation: none; }
+  .energy-pop-bubble { display: none; }
+}
+
+.energy-pop .energy-alt-glow,
+.energy-pop .energy-alt-option,
+.energy-pop .energy-alt-bar-fill {
+  animation: none;
+  transition: none;
+}
+
+/* Energy pop-out: light card. The colour variables are redefined inside the card so every shared
+   class (buttons, grids, muted text) turns light without touching the rest of the dark UI. */
+.energy-pop {
+  color-scheme: light;
+  --panel: #ffffff;
+  --panel-3: #f1f5f9;
+  --border: #e5e7eb;
+  --border-soft: #eef0f3;
+  --text: #111827;
+  --muted: #6b7280;
+  --green: #059669;
+  --accent: #10b981;
+  color: var(--text);
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 16px 16px 12px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35), 0 4px 14px rgba(15, 23, 42, 0.18);
+}
+.energy-pop .modal-head {
+  align-items: flex-start;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.energy-pop h2 {
+  margin: 0 0 2px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.energy-pop h3 {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9a3412;
+}
+.energy-pop .button {
+  background: #ffffff;
+  border-color: #d1d5db;
+  color: #374151;
+  border-radius: 999px;
+  font-weight: 600;
+}
+.energy-pop .button:hover:not(:disabled) {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+.energy-pop .energy-alt-now {
+  background: linear-gradient(135deg, #fff7ed, #fef2f2);
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+.energy-pop .energy-alt-list {
+  gap: 10px;
+}
+.energy-pop .energy-alt-option {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+.energy-pop .energy-alt-option-head strong {
+  font-size: 14px;
+}
+.energy-pop .energy-grid {
+  gap: 3px 12px;
+}
+.energy-pop .energy-grid dd {
+  font-weight: 600;
+  text-align: right;
+}
+.energy-pop .energy-alt-saves {
+  justify-self: end;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #d1fae5;
+  color: #065f46;
+}
+.energy-pop .energy-alt-bar-track {
+  height: 6px;
+  background: #eef2f7;
+  border: 0;
+}
+.energy-pop .energy-alt-bar-fill {
+  background: linear-gradient(90deg, #34d399, #10b981);
+}
+.energy-pop .energy-alt-pct {
+  color: #047857;
+}
+.energy-pop .energy-alt-option p.muted {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.energy-pop > p.muted {
+  font-size: 12px;
+  line-height: 1.4;
+}
+.energy-pop::-webkit-scrollbar {
+  width: 8px;
+}
+.energy-pop::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 999px;
+}
+
+/* Pop-out content: one big number per row, one short line under it */
+.energy-pop .pop-row {
+  align-items: center;
+}
+.energy-pop .pop-kicker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9a3412;
+}
+.energy-pop .pop-big {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.energy-pop .pop-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+.energy-pop .pop-save {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: #047857;
+  font-variant-numeric: tabular-nums;
+}
+.energy-pop .pop-unit {
+  font-size: 13px;
+  font-weight: 600;
+  margin-left: 1px;
+  opacity: 0.6;
+}
+.energy-pop .pop-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.energy-pop .pop-link {
+  display: block;
+  margin: 4px auto 0;
+  padding: 4px 6px;
+  border: 0;
+  background: none;
+  color: #6b7280;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.energy-pop .pop-link:hover {
+  color: #111827;
+}
+.energy-pop .modal-head {
+  align-items: center;
+}
