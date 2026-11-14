@@ -58,5 +58,7 @@ AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 SMALL_VISION_MODEL_ID = os.getenv("WATTWALK_SMALL_VISION_MODEL_ID", "")
 LARGE_VISION_MODEL_ID = os.getenv("WATTWALK_LARGE_VISION_MODEL_ID", "")
 PLANNER_MODEL_ID = os.getenv("WATTWALK_PLANNER_MODEL_ID", "")
+# Local Ollama server for "ollama/..." model ids (vision and planner).
+OLLAMA_BASE_URL = (os.getenv("OLLAMA_BASE_URL") or "http://localhost:11434").rstrip("/")
 
 TIMEOUTS_S = {"matterport": 30, "vexcel": 20, "ebewe": 15, "bedrock_vision": 45, "explain": 15, "ask_user": 30}

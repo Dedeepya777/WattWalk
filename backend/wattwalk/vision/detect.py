@@ -70,7 +70,7 @@ def _converse(model_id: str, image: bytes, prompt: str) -> tuple[str, dict]:
 # local Ollama server instead of Bedrock. For free development only: the demo and the benchmark
 # use Bedrock (decision D6). Everything else (prompts, parsing, cache, logging) is identical.
 OLLAMA_PREFIX = "ollama/"
-OLLAMA_URL = "http://localhost:11434/api/chat"
+OLLAMA_URL = f"{config.OLLAMA_BASE_URL}/api/chat"
 OLLAMA_TIMEOUT_S = 180  # local models on a laptop are slower than Bedrock
 
 
@@ -92,7 +92,9 @@ def _ollama(model_id: str, image: bytes, prompt: str) -> tuple[str, dict]:
             data = json.loads(resp.read())
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", "replace")[:300]
-        raise UpstreamError("bedrock", False, f"Ollama returned {exc.code}: {detail}") from exc
+        name = model_id.removeprefix(OLLAMA_PREFIX)
+        hint = f" Run: ollama pull {name}" if exc.code == 404 else ""
+        raise UpstreamError("bedrock", False, f"Ollama returned {exc.code}: {detail}.{hint}") from exc
     except (urllib.error.URLError, TimeoutError, OSError) as exc:
         raise UpstreamError("bedrock", True, f"Ollama not reachable at {OLLAMA_URL} (is 'ollama serve' running?): {exc}") from exc
     return data["message"]["content"], {"inputTokens": data.get("prompt_eval_count"), "outputTokens": data.get("eval_count")}

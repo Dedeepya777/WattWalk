@@ -36,14 +36,40 @@ MODEL_FACTORY: Optional[Callable[[], Any]] = None
 RECURSION_LIMIT = 400
 
 
-def make_model():
+# The planner model id picks the provider by prefix, like the vision model ids:
+#   ollama/<model>   local Ollama (free; the model must support tool calling, e.g. qwen3:8b)
+#   gemini/<model>   Google Gemini API (GOOGLE_API_KEY in .env)
+#   anything else    Amazon Bedrock model id (the plan's default)
+OLLAMA_PREFIX = "ollama/"
+GEMINI_PREFIX = "gemini/"
+# Deep Agents sends a long system prompt (planner rules, subagent and file tool descriptions, todos).
+# Ollama's default context window is far smaller and silently drops the start of the prompt.
+OLLAMA_CONTEXT_TOKENS = 16384
+
+
+def make_model(model_id: str | None = None):
     if MODEL_FACTORY is not None:
         return MODEL_FACTORY()
-    if not config.PLANNER_MODEL_ID:
+    model_id = model_id if model_id is not None else config.PLANNER_MODEL_ID
+    if not model_id:
         raise RuntimeError("WATTWALK_PLANNER_MODEL_ID is not set; use WATTWALK_AGENT_MODE=scripted")
+    if model_id.startswith(OLLAMA_PREFIX):
+        from langchain_ollama import ChatOllama
+
+        return ChatOllama(
+            model=model_id.removeprefix(OLLAMA_PREFIX),
+            base_url=config.OLLAMA_BASE_URL,
+            temperature=0,
+            num_ctx=OLLAMA_CONTEXT_TOKENS,
+            reasoning=False,  # no hidden "thinking" pass: faster, and tool calls come back directly
+        )
+    if model_id.startswith(GEMINI_PREFIX):
+        from langchain_google_genai import ChatGoogleGenerativeAI
+
+        return ChatGoogleGenerativeAI(model=model_id.removeprefix(GEMINI_PREFIX), temperature=0)
     from langchain_aws import ChatBedrockConverse
 
-    return ChatBedrockConverse(model=config.PLANNER_MODEL_ID, region_name=config.AWS_REGION, temperature=0)
+    return ChatBedrockConverse(model=model_id, region_name=config.AWS_REGION, temperature=0)
 
 
 def _now() -> str:
@@ -170,11 +196,28 @@ def run(ctx: RunContext, model=None) -> None:
     _finish(ctx)
 
 
+def _complete_walk(ctx: RunContext) -> None:
+    """Run whatever part of the walk the planner skipped, in the scripted order. Each step is skipped
+    when its output already exists, so work the planner did is kept (list_rooms would restart the walk)."""
+    sid = ctx.sid
+    if store.read(sid, "building.json") is None:
+        tools.load_building(ctx)
+    if store.read(sid, "view_tasks.json") is None:
+        tools.list_rooms(ctx)
+    while "No pending views" not in tools.inspect_next_view(ctx):
+        ctx.check_cancel()
+    while "All observations resolved" not in tools.resolve_next(ctx):
+        ctx.check_cancel()
+    tools.build_inventory_tool(ctx)
+
+
 def _finish(ctx: RunContext) -> None:
     """Guardrails: make missing steps visible, then finalise report.md from the planner's file."""
     sid = ctx.sid
     if store.read(sid, "inventory.json") is None:
-        raise RuntimeError("planner finished without an inventory (walker did not run build_inventory_tool)")
+        ctx.emit("planner", "error", "Planner finished without a complete walk; finishing it with the same tools",
+                 {"code": "internal"})
+        _complete_walk(ctx)
     if store.read(sid, "plan_default.json") is None:
         ctx.emit("planner", "error", "Planner skipped retrofit_planner; running plan_upgrades with defaults", {"code": "internal"})
         tools.plan_upgrades(ctx)
