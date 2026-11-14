@@ -1,0 +1,200 @@
+{
+  "schema_version": "1.0.0",
+  "sid": "fixtureUnitA",
+  "request": {
+    "budget_usd": 5000,
+    "objective": "max_bill",
+    "role": "owner",
+    "tenant_pays_electric": true,
+    "stay_months": 12,
+    "overrides": {}
+  },
+  "upgrades": [
+    {
+      "upgrade_id": "led",
+      "name": "Replace bulbs with LED",
+      "cost_low_usd": 40.0,
+      "cost_high_usd": 64.0,
+      "kwh_saved_yr": 446.8,
+      "bill_saved_usd_yr": 134.03,
+      "explanation": "8 bulbs x (60 W - 9 W) x 3 h/day x 365 / 1000 = 446.8 kWh/yr",
+      "asset_ids": [
+        "a_o005",
+        "a_o006",
+        "a_o007",
+        "a_o008"
+      ],
+      "evidence_level": "partly_unverified",
+      "who_pays": {
+        "pays": "owner_or_tenant",
+        "saves": "tenant",
+        "approval": "none"
+      }
+    },
+    {
+      "upgrade_id": "window_film",
+      "name": "Solar control window film",
+      "cost_low_usd": 24.0,
+      "cost_high_usd": 45.0,
+      "kwh_saved_yr": 54.0,
+      "bill_saved_usd_yr": 16.2,
+      "explanation": "3.0 m2 window x 60 kWh/m2/yr x 0.30 = 54.0 kWh/yr (cap not reached: max 50% of cooling)",
+      "asset_ids": [
+        "a_o001",
+        "a_o003"
+      ],
+      "evidence_level": "verified",
+      "who_pays": {
+        "pays": "owner",
+        "saves": "tenant",
+        "approval": "none"
+      }
+    },
+    {
+      "upgrade_id": "fridge",
+      "name": "Efficient replacement refrigerator",
+      "cost_low_usd": 900.0,
+      "cost_high_usd": 1600.0,
+      "kwh_saved_yr": 300.0,
+      "bill_saved_usd_yr": 90.0,
+      "explanation": "1 refrigerator x (700 - 400) kWh/yr = 300.0 kWh/yr",
+      "asset_ids": [
+        "a_o009"
+      ],
+      "evidence_level": "partly_unverified",
+      "who_pays": {
+        "pays": "owner",
+        "saves": "tenant",
+        "approval": "owner_decision"
+      }
+    },
+    {
+      "upgrade_id": "heat_pump",
+      "name": "Replace window AC with ductless heat pump",
+      "cost_low_usd": 3000.0,
+      "cost_high_usd": 6000.0,
+      "kwh_saved_yr": 948.0,
+      "bill_saved_usd_yr": 284.4,
+      "explanation": "1896.0 kWh cooling after earlier upgrades x (1 - 9 / 18) = 948.0 kWh/yr",
+      "asset_ids": [
+        "a_o004"
+      ],
+      "evidence_level": "verified",
+      "who_pays": {
+        "pays": "owner",
+        "saves": "tenant",
+        "approval": "owner_decision"
+      }
+    }
+  ],
+  "totals": {
+    "cost_low_usd": 3964.0,
+    "cost_high_usd": 7709.0,
+    "kwh_saved_yr": 1748.8,
+    "bill_saved_usd_yr": 524.63,
+    "payback_years": 7.56,
+    "baseline_kwh_yr": 3175.6,
+    "after_kwh_yr": 1426.8
+  },
+  "excluded": [],
+  "notes": [
+    "Upper cost estimate $7,709 exceeds the budget $5,000. Choose objective 'conservative' to plan against upper estimates.",
+    "Lighting baseline assumes bulbs of unknown type draw 60 W (assumption).",
+    "Context, not validation: modelled end uses (cooling, lighting, refrigerator) = 48.9 kWh/m2/yr; LA EBEWE reported building site energy = 113.2 kWh/m2/yr (program year 2025; includes gas, common areas and all other end uses). Ratio 0.43.",
+    "12 assumptions are unverified defaults; results are planning estimates."
+  ],
+  "assumptions_used": [
+    {
+      "key": "bulb_w_incandescent",
+      "value": 60,
+      "unit": "W",
+      "status": "unverified_default",
+      "source": ""
+    },
+    {
+      "key": "bulb_w_led",
+      "value": 9,
+      "unit": "W",
+      "status": "unverified_default",
+      "source": ""
+    },
+    {
+      "key": "cooling_kwh_per_m2_yr",
+      "value": 30,
+      "unit": "kWh/m2/yr",
+      "status": "unverified_default",
+      "source": ""
+    },
+    {
+      "key": "eer_heat_pump_new",
+      "value": 18.0,
+      "unit": "EER",
+      "status": "unverified_default",
+      "source": ""
+    },
+    {
+      "key": "eer_window_ac_old",
+      "value": 9.0,
+      "unit": "EER",
+      "status": "unverified_default",
+      "source": ""
+    },
+    {
+      "key": "electricity_rate_usd_per_kwh",
+      "value": 0.3,
+      "unit": "USD/kWh",
+      "status": "unverified_default",
+      "source": ""
+    },
+    {
+      "key": "fridge_kwh_yr_new",
+      "value": 400,
+      "unit": "kWh/yr",
+      "status": "unverified_default",
+      "source": ""
+    },
+    {
+      "key": "fridge_kwh_yr_old",
+      "value": 700,
+      "unit": "kWh/yr",
+      "status": "unverified_default",
+      "source": ""
+    },
+    {
+      "key": "kbtu_per_ft2_to_kwh_per_m2",
+      "value": 3.15459,
+      "unit": "(kWh/m2)/(kBtu/ft2)",
+      "status": "physical_constant",
+      "source": "1 kBtu = 0.293071 kWh; 1 ft2 = 0.092903 m2"
+    },
+    {
+      "key": "lighting_hours_per_day",
+      "value": 3,
+      "unit": "h/day",
+      "status": "unverified_default",
+      "source": ""
+    },
+    {
+      "key": "window_film_cap_fraction",
+      "value": 0.5,
+      "unit": "fraction",
+      "status": "unverified_default",
+      "source": ""
+    },
+    {
+      "key": "window_film_reduction",
+      "value": 0.3,
+      "unit": "fraction",
+      "status": "unverified_default",
+      "source": ""
+    },
+    {
+      "key": "window_solar_cooling_kwh_per_m2_yr",
+      "value": 60,
+      "unit": "kWh/m2 window/yr",
+      "status": "unverified_default",
+      "source": ""
+    }
+  ],
+  "combos_evaluated": 15
+}

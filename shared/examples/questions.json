@@ -1,0 +1,16 @@
+[
+  {
+    "question_id": "q001",
+    "asset_id": "a_o007",
+    "attr": "bulb_type",
+    "text": "What type of bulb is in the bedroom ceiling light?",
+    "choices": [
+      "led",
+      "cfl",
+      "incandescent",
+      "unknown"
+    ],
+    "status": "expired",
+    "answer": null
+  }
+]

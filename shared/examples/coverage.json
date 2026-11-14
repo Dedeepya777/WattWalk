@@ -1,0 +1,80 @@
+{
+  "panos_total": 7,
+  "panos_reviewed": 7,
+  "rooms_total": 6,
+  "rooms_reviewed": 6,
+  "assets_unique": 9,
+  "observations_total": 10,
+  "attrs_known": 13,
+  "attrs_unknown": 7,
+  "faces_rejected": 1,
+  "not_visible": [
+    "thermostat",
+    "water_heater"
+  ],
+  "rooms": [
+    {
+      "room_id": "r_living",
+      "room_label": "Living Room",
+      "status": "reviewed",
+      "panos_reviewed": [
+        "p01",
+        "p02"
+      ],
+      "notes": [
+        "Room area 24.0 m2 >= 20 m2, so two panoramas were inspected"
+      ]
+    },
+    {
+      "room_id": "r_bed",
+      "room_label": "Bedroom",
+      "status": "reviewed",
+      "panos_reviewed": [
+        "p03"
+      ],
+      "notes": [
+        "Ceiling light bulb type unresolved after high-res crop, large model and user question"
+      ]
+    },
+    {
+      "room_id": "r_kitchen",
+      "room_label": "Kitchen",
+      "status": "reviewed",
+      "panos_reviewed": [
+        "p04"
+      ],
+      "notes": []
+    },
+    {
+      "room_id": "r_bath",
+      "room_label": "Bathroom",
+      "status": "partial",
+      "panos_reviewed": [
+        "p05"
+      ],
+      "notes": [
+        "1 of 4 faces rejected as too dark (brightness 31); no other panorama inside this room"
+      ]
+    },
+    {
+      "room_id": "r_hall",
+      "room_label": "Hallway",
+      "status": "reviewed",
+      "panos_reviewed": [
+        "p06"
+      ],
+      "notes": []
+    },
+    {
+      "room_id": "r_closet",
+      "room_label": "Closet",
+      "status": "reviewed",
+      "panos_reviewed": [
+        "p07"
+      ],
+      "notes": [
+        "No energy-relevant assets found"
+      ]
+    }
+  ]
+}

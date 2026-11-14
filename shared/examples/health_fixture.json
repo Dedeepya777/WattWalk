@@ -1,0 +1,11 @@
+{
+  "status": "degraded",
+  "schema_version": "1.0.0",
+  "integrations": {
+    "matterport": "fixture",
+    "vexcel": "fixture",
+    "costar_kit": "fixture",
+    "ebewe": "fixture",
+    "bedrock": "unavailable"
+  }
+}

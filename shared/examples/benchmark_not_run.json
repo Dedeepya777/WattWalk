@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0.0",
+  "status": "not_run",
+  "dataset": {
+    "n_images": 0,
+    "labeled_by": "",
+    "created_at": null
+  },
+  "modes": [],
+  "notes": [
+    "No benchmark has been run. Person 2 replaces this file with measured results from eval/benchmark.py."
+  ]
+}

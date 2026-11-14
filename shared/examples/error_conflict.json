@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "conflict",
+    "message": "An audit for fixtureUnitA is already running.",
+    "retryable": true,
+    "details": {
+      "sid": "fixtureUnitA"
+    }
+  }
+}

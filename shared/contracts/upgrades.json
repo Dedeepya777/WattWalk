@@ -1,0 +1,78 @@
+{
+  "schema_version": "1.0.0",
+  "owner": "person1",
+  "cost_status": "unverified_default",
+  "stage_order": ["load", "equipment", "controls"],
+  "authorizer_meaning": {
+    "tenant": "A tenant may do this without asking (for example swapping bulbs).",
+    "tenant_with_approval": "A tenant may do this with landlord approval; an owner may do it directly.",
+    "owner": "Only the equipment or building owner can decide."
+  },
+  "upgrades": [
+    {
+      "id": "window_film",
+      "name": "Solar control window film",
+      "applies_to": ["window"],
+      "cost_basis": "per_m2_window",
+      "cost_low_usd": 8, "cost_high_usd": 15,
+      "authorizer": "tenant_with_approval",
+      "stage": "load",
+      "depends_on_attrs": ["area_m2"],
+      "skip_if_all": null,
+      "requires_labels": [],
+      "excludes": []
+    },
+    {
+      "id": "led",
+      "name": "Replace bulbs with LED",
+      "applies_to": ["ceiling_light", "lamp"],
+      "cost_basis": "per_bulb",
+      "cost_low_usd": 5, "cost_high_usd": 8,
+      "authorizer": "tenant",
+      "stage": "load",
+      "depends_on_attrs": ["bulb_type"],
+      "skip_if_all": {"attr": "bulb_type", "equals": "led"},
+      "requires_labels": [],
+      "excludes": []
+    },
+    {
+      "id": "fridge",
+      "name": "Efficient replacement refrigerator",
+      "applies_to": ["refrigerator"],
+      "cost_basis": "per_asset",
+      "cost_low_usd": 900, "cost_high_usd": 1600,
+      "authorizer": "owner",
+      "stage": "equipment",
+      "depends_on_attrs": ["age_years"],
+      "skip_if_all": null,
+      "requires_labels": [],
+      "excludes": []
+    },
+    {
+      "id": "heat_pump",
+      "name": "Replace window AC with ductless heat pump",
+      "applies_to": ["window_ac"],
+      "cost_basis": "per_unit_flat",
+      "cost_low_usd": 3000, "cost_high_usd": 6000,
+      "authorizer": "owner",
+      "stage": "equipment",
+      "depends_on_attrs": [],
+      "skip_if_all": null,
+      "requires_labels": [],
+      "excludes": []
+    },
+    {
+      "id": "smart_thermostat",
+      "name": "Smart thermostat",
+      "applies_to": ["thermostat"],
+      "cost_basis": "per_unit_flat",
+      "cost_low_usd": 150, "cost_high_usd": 300,
+      "authorizer": "tenant_with_approval",
+      "stage": "controls",
+      "depends_on_attrs": ["thermostat_type"],
+      "skip_if_all": {"attr": "thermostat_type", "equals": "smart"},
+      "requires_labels": ["thermostat"],
+      "excludes": []
+    }
+  ]
+}

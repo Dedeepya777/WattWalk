@@ -1,0 +1,18 @@
+{
+  "sid": "fixtureUnitA",
+  "status": "failed",
+  "mode": "live",
+  "started_at": "2026-11-14T10:00:00Z",
+  "finished_at": "2026-11-14T10:00:42Z",
+  "error": {
+    "error": {
+      "code": "upstream_auth",
+      "message": "Matterport rejected the API key (HTTP 401).",
+      "retryable": false,
+      "details": {
+        "integration": "matterport"
+      }
+    }
+  },
+  "replay_of": null
+}

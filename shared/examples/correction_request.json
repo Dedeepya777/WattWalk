@@ -1,0 +1,13 @@
+{
+  "asset_id": "a_o005",
+  "field": "bulb_type",
+  "value": "led",
+  "plan_request": {
+    "budget_usd": 5000,
+    "objective": "max_bill",
+    "role": "owner",
+    "tenant_pays_electric": true,
+    "stay_months": 12,
+    "overrides": {}
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "error": {
+    "code": "upstream_unavailable",
+    "message": "Vexcel did not respond within 20 s; roof layer marked unavailable.",
+    "retryable": true,
+    "details": {
+      "integration": "vexcel",
+      "timeout_s": 20
+    }
+  }
+}

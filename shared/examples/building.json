@@ -1,0 +1,47 @@
+{
+  "address": "100 Example St, Los Angeles, CA 90000",
+  "city": "Los Angeles",
+  "costar_property_id": "illustrative-0001",
+  "year_built": {
+    "value": 1974,
+    "source": "reported_in_data",
+    "note": "CoStar kit record (illustrative)",
+    "evidence_obs_ids": []
+  },
+  "units": {
+    "value": 42,
+    "source": "reported_in_data",
+    "note": "CoStar kit record (illustrative)",
+    "evidence_obs_ids": []
+  },
+  "asking_rent_usd_month": {
+    "value": 2350,
+    "source": "reported_in_data",
+    "note": "CoStar kit record (illustrative)",
+    "evidence_obs_ids": []
+  },
+  "unit_floor_area_m2": {
+    "value": 65.0,
+    "source": "visible_in_scan",
+    "note": "sum of Matterport room areas",
+    "evidence_obs_ids": []
+  },
+  "ebewe": {
+    "site_eui_kbtu_ft2": 35.9,
+    "gfa_ft2": 38000,
+    "program_year": 2025,
+    "year_built": 1974,
+    "property_type": "Multifamily Housing"
+  },
+  "roof": {
+    "status": "fixture",
+    "attributes": {},
+    "ortho_ref": "vexcel/ortho.jpg"
+  },
+  "layer_status": {
+    "matterport": "fixture",
+    "costar": "fixture",
+    "vexcel": "fixture",
+    "ebewe": "fixture"
+  }
+}

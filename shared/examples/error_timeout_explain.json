@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "timeout",
+    "message": "The explanation model did not respond within 15 s. The template explanation is still available.",
+    "retryable": true,
+    "details": {
+      "timeout_s": 15
+    }
+  }
+}

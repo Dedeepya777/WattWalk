@@ -1,0 +1,8 @@
+{
+  "budget_usd": 5000,
+  "objective": "conservative",
+  "role": "owner",
+  "tenant_pays_electric": true,
+  "stay_months": 12,
+  "overrides": {}
+}

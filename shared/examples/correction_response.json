@@ -1,0 +1,612 @@
+{
+  "schema_version": "1.0.0",
+  "inventory": [
+    {
+      "id": "a_o001",
+      "label": "window",
+      "scope": "unit",
+      "room_id": "r_living",
+      "observation_ids": [
+        "o001",
+        "o002"
+      ],
+      "attrs": {
+        "panes": {
+          "value": null,
+          "source": "needs_verification",
+          "note": "glazing not determinable from image",
+          "evidence_obs_ids": [
+            "o001",
+            "o002"
+          ]
+        },
+        "shading": {
+          "value": "blinds",
+          "source": "visible_in_scan",
+          "note": "",
+          "evidence_obs_ids": [
+            "o001",
+            "o002"
+          ]
+        },
+        "width_m": {
+          "value": 1.5,
+          "source": "visible_in_scan",
+          "note": "estimated from image",
+          "evidence_obs_ids": [
+            "o001",
+            "o002"
+          ]
+        },
+        "height_m": {
+          "value": 1.2,
+          "source": "visible_in_scan",
+          "note": "estimated from image",
+          "evidence_obs_ids": [
+            "o001",
+            "o002"
+          ]
+        },
+        "area_m2": {
+          "value": 1.8,
+          "source": "visible_in_scan",
+          "note": "width_m x height_m",
+          "evidence_obs_ids": [
+            "o001",
+            "o002"
+          ]
+        }
+      },
+      "anchor": {
+        "x": 2.904,
+        "y": 0.073,
+        "z": 1.738
+      },
+      "next_step": "Confirm glazing (single or double pane) from a close photo or on site",
+      "disagreement": false
+    },
+    {
+      "id": "a_o003",
+      "label": "window",
+      "scope": "unit",
+      "room_id": "r_bed",
+      "observation_ids": [
+        "o003"
+      ],
+      "attrs": {
+        "panes": {
+          "value": null,
+          "source": "needs_verification",
+          "note": "glazing not determinable from image",
+          "evidence_obs_ids": [
+            "o003"
+          ]
+        },
+        "shading": {
+          "value": "none",
+          "source": "visible_in_scan",
+          "note": "",
+          "evidence_obs_ids": [
+            "o003"
+          ]
+        },
+        "width_m": {
+          "value": 1.0,
+          "source": "visible_in_scan",
+          "note": "estimated from image",
+          "evidence_obs_ids": [
+            "o003"
+          ]
+        },
+        "height_m": {
+          "value": 1.2,
+          "source": "visible_in_scan",
+          "note": "estimated from image",
+          "evidence_obs_ids": [
+            "o003"
+          ]
+        },
+        "area_m2": {
+          "value": 1.2,
+          "source": "visible_in_scan",
+          "note": "width_m x height_m",
+          "evidence_obs_ids": [
+            "o003"
+          ]
+        }
+      },
+      "anchor": {
+        "x": 7.895,
+        "y": 0.1,
+        "z": 1.72
+      },
+      "next_step": "Confirm glazing (single or double pane) from a close photo or on site",
+      "disagreement": false
+    },
+    {
+      "id": "a_o004",
+      "label": "window_ac",
+      "scope": "unit",
+      "room_id": "r_bed",
+      "observation_ids": [
+        "o004"
+      ],
+      "attrs": {},
+      "anchor": {
+        "x": 7.28,
+        "y": 0.094,
+        "z": 1.562
+      },
+      "next_step": "Photo of the AC unit label to confirm efficiency (EER)",
+      "disagreement": false
+    },
+    {
+      "id": "a_o005",
+      "label": "ceiling_light",
+      "scope": "unit",
+      "room_id": "r_living",
+      "observation_ids": [
+        "o005"
+      ],
+      "attrs": {
+        "bulb_type": {
+          "value": "led",
+          "source": "provided_by_user",
+          "note": "user correction",
+          "evidence_obs_ids": []
+        },
+        "bulb_count": {
+          "value": 2,
+          "source": "visible_in_scan",
+          "note": "",
+          "evidence_obs_ids": [
+            "o005"
+          ]
+        }
+      },
+      "anchor": {
+        "x": 3.002,
+        "y": 3.145,
+        "z": 2.6
+      },
+      "next_step": "Photo of a bulb, or answer the bulb-type question",
+      "disagreement": false
+    },
+    {
+      "id": "a_o006",
+      "label": "ceiling_light",
+      "scope": "unit",
+      "room_id": "r_living",
+      "observation_ids": [
+        "o006"
+      ],
+      "attrs": {
+        "bulb_type": {
+          "value": null,
+          "source": "needs_verification",
+          "note": "bulb hidden inside fixture; high-res crop did not resolve",
+          "evidence_obs_ids": [
+            "o006"
+          ]
+        },
+        "bulb_count": {
+          "value": 2,
+          "source": "visible_in_scan",
+          "note": "",
+          "evidence_obs_ids": [
+            "o006"
+          ]
+        }
+      },
+      "anchor": {
+        "x": 4.368,
+        "y": 1.998,
+        "z": 2.6
+      },
+      "next_step": "Photo of a bulb, or answer the bulb-type question",
+      "disagreement": false
+    },
+    {
+      "id": "a_o007",
+      "label": "ceiling_light",
+      "scope": "unit",
+      "room_id": "r_bed",
+      "observation_ids": [
+        "o007"
+      ],
+      "attrs": {
+        "bulb_type": {
+          "value": null,
+          "source": "needs_verification",
+          "note": "unresolved after high-res crop and large model; user question expired",
+          "evidence_obs_ids": [
+            "o007"
+          ]
+        },
+        "bulb_count": {
+          "value": 2,
+          "source": "visible_in_scan",
+          "note": "",
+          "evidence_obs_ids": [
+            "o007"
+          ]
+        }
+      },
+      "anchor": {
+        "x": 8.002,
+        "y": 3.22,
+        "z": 2.6
+      },
+      "next_step": "Photo of a bulb, or answer the bulb-type question",
+      "disagreement": false
+    },
+    {
+      "id": "a_o008",
+      "label": "ceiling_light",
+      "scope": "unit",
+      "room_id": "r_kitchen",
+      "observation_ids": [
+        "o008"
+      ],
+      "attrs": {
+        "bulb_type": {
+          "value": null,
+          "source": "needs_verification",
+          "note": "bulb hidden inside fixture; high-res crop did not resolve",
+          "evidence_obs_ids": [
+            "o008"
+          ]
+        },
+        "bulb_count": {
+          "value": 2,
+          "source": "visible_in_scan",
+          "note": "",
+          "evidence_obs_ids": [
+            "o008"
+          ]
+        }
+      },
+      "anchor": {
+        "x": 2.002,
+        "y": 6.345,
+        "z": 2.6
+      },
+      "next_step": "Photo of a bulb, or answer the bulb-type question",
+      "disagreement": false
+    },
+    {
+      "id": "a_o009",
+      "label": "refrigerator",
+      "scope": "unit",
+      "room_id": "r_kitchen",
+      "observation_ids": [
+        "o009"
+      ],
+      "attrs": {
+        "style": {
+          "value": "top_freezer",
+          "source": "visible_in_scan",
+          "note": "",
+          "evidence_obs_ids": [
+            "o009"
+          ]
+        },
+        "age_years": {
+          "value": null,
+          "source": "needs_verification",
+          "note": "age not determinable from appearance",
+          "evidence_obs_ids": [
+            "o009"
+          ]
+        }
+      },
+      "anchor": {
+        "x": 0.094,
+        "y": 4.505,
+        "z": 0.241
+      },
+      "next_step": "Photo of the refrigerator nameplate (model number)",
+      "disagreement": false
+    },
+    {
+      "id": "a_o010",
+      "label": "range_gas",
+      "scope": "unit",
+      "room_id": "r_kitchen",
+      "observation_ids": [
+        "o010"
+      ],
+      "attrs": {},
+      "anchor": {
+        "x": 3.902,
+        "y": 4.779,
+        "z": 0.615
+      },
+      "next_step": "",
+      "disagreement": false
+    }
+  ],
+  "coverage": {
+    "panos_total": 7,
+    "panos_reviewed": 7,
+    "rooms_total": 6,
+    "rooms_reviewed": 6,
+    "assets_unique": 9,
+    "observations_total": 10,
+    "attrs_known": 14,
+    "attrs_unknown": 6,
+    "faces_rejected": 1,
+    "not_visible": [
+      "thermostat",
+      "water_heater"
+    ],
+    "rooms": [
+      {
+        "room_id": "r_living",
+        "room_label": "Living Room",
+        "status": "reviewed",
+        "panos_reviewed": [
+          "p01",
+          "p02"
+        ],
+        "notes": [
+          "Room area 24.0 m2 >= 20 m2, so two panoramas were inspected"
+        ]
+      },
+      {
+        "room_id": "r_bed",
+        "room_label": "Bedroom",
+        "status": "reviewed",
+        "panos_reviewed": [
+          "p03"
+        ],
+        "notes": [
+          "Ceiling light bulb type unresolved after high-res crop, large model and user question"
+        ]
+      },
+      {
+        "room_id": "r_kitchen",
+        "room_label": "Kitchen",
+        "status": "reviewed",
+        "panos_reviewed": [
+          "p04"
+        ],
+        "notes": []
+      },
+      {
+        "room_id": "r_bath",
+        "room_label": "Bathroom",
+        "status": "partial",
+        "panos_reviewed": [
+          "p05"
+        ],
+        "notes": [
+          "1 of 4 faces rejected as too dark (brightness 31); no other panorama inside this room"
+        ]
+      },
+      {
+        "room_id": "r_hall",
+        "room_label": "Hallway",
+        "status": "reviewed",
+        "panos_reviewed": [
+          "p06"
+        ],
+        "notes": []
+      },
+      {
+        "room_id": "r_closet",
+        "room_label": "Closet",
+        "status": "reviewed",
+        "panos_reviewed": [
+          "p07"
+        ],
+        "notes": [
+          "No energy-relevant assets found"
+        ]
+      }
+    ]
+  },
+  "plan": {
+    "schema_version": "1.0.0",
+    "sid": "fixtureUnitA",
+    "request": {
+      "budget_usd": 5000,
+      "objective": "max_bill",
+      "role": "owner",
+      "tenant_pays_electric": true,
+      "stay_months": 12,
+      "overrides": {}
+    },
+    "upgrades": [
+      {
+        "upgrade_id": "led",
+        "name": "Replace bulbs with LED",
+        "cost_low_usd": 30.0,
+        "cost_high_usd": 48.0,
+        "kwh_saved_yr": 335.1,
+        "bill_saved_usd_yr": 100.52,
+        "explanation": "6 bulbs x (60 W - 9 W) x 3 h/day x 365 / 1000 = 335.1 kWh/yr",
+        "asset_ids": [
+          "a_o005",
+          "a_o006",
+          "a_o007",
+          "a_o008"
+        ],
+        "evidence_level": "partly_unverified",
+        "who_pays": {
+          "pays": "owner_or_tenant",
+          "saves": "tenant",
+          "approval": "none"
+        }
+      },
+      {
+        "upgrade_id": "window_film",
+        "name": "Solar control window film",
+        "cost_low_usd": 24.0,
+        "cost_high_usd": 45.0,
+        "kwh_saved_yr": 54.0,
+        "bill_saved_usd_yr": 16.2,
+        "explanation": "3.0 m2 window x 60 kWh/m2/yr x 0.30 = 54.0 kWh/yr (cap not reached: max 50% of cooling)",
+        "asset_ids": [
+          "a_o001",
+          "a_o003"
+        ],
+        "evidence_level": "verified",
+        "who_pays": {
+          "pays": "owner",
+          "saves": "tenant",
+          "approval": "none"
+        }
+      },
+      {
+        "upgrade_id": "fridge",
+        "name": "Efficient replacement refrigerator",
+        "cost_low_usd": 900.0,
+        "cost_high_usd": 1600.0,
+        "kwh_saved_yr": 300.0,
+        "bill_saved_usd_yr": 90.0,
+        "explanation": "1 refrigerator x (700 - 400) kWh/yr = 300.0 kWh/yr",
+        "asset_ids": [
+          "a_o009"
+        ],
+        "evidence_level": "partly_unverified",
+        "who_pays": {
+          "pays": "owner",
+          "saves": "tenant",
+          "approval": "owner_decision"
+        }
+      },
+      {
+        "upgrade_id": "heat_pump",
+        "name": "Replace window AC with ductless heat pump",
+        "cost_low_usd": 3000.0,
+        "cost_high_usd": 6000.0,
+        "kwh_saved_yr": 948.0,
+        "bill_saved_usd_yr": 284.4,
+        "explanation": "1896.0 kWh cooling after earlier upgrades x (1 - 9 / 18) = 948.0 kWh/yr",
+        "asset_ids": [
+          "a_o004"
+        ],
+        "evidence_level": "verified",
+        "who_pays": {
+          "pays": "owner",
+          "saves": "tenant",
+          "approval": "owner_decision"
+        }
+      }
+    ],
+    "totals": {
+      "cost_low_usd": 3954.0,
+      "cost_high_usd": 7693.0,
+      "kwh_saved_yr": 1637.1,
+      "bill_saved_usd_yr": 491.12,
+      "payback_years": 8.05,
+      "baseline_kwh_yr": 3063.9,
+      "after_kwh_yr": 1426.8
+    },
+    "excluded": [],
+    "notes": [
+      "Upper cost estimate $7,693 exceeds the budget $5,000. Choose objective 'conservative' to plan against upper estimates.",
+      "Lighting baseline assumes bulbs of unknown type draw 60 W (assumption).",
+      "Context, not validation: modelled end uses (cooling, lighting, refrigerator) = 47.1 kWh/m2/yr; LA EBEWE reported building site energy = 113.2 kWh/m2/yr (program year 2025; includes gas, common areas and all other end uses). Ratio 0.42.",
+      "12 assumptions are unverified defaults; results are planning estimates."
+    ],
+    "assumptions_used": [
+      {
+        "key": "bulb_w_incandescent",
+        "value": 60,
+        "unit": "W",
+        "status": "unverified_default",
+        "source": ""
+      },
+      {
+        "key": "bulb_w_led",
+        "value": 9,
+        "unit": "W",
+        "status": "unverified_default",
+        "source": ""
+      },
+      {
+        "key": "cooling_kwh_per_m2_yr",
+        "value": 30,
+        "unit": "kWh/m2/yr",
+        "status": "unverified_default",
+        "source": ""
+      },
+      {
+        "key": "eer_heat_pump_new",
+        "value": 18.0,
+        "unit": "EER",
+        "status": "unverified_default",
+        "source": ""
+      },
+      {
+        "key": "eer_window_ac_old",
+        "value": 9.0,
+        "unit": "EER",
+        "status": "unverified_default",
+        "source": ""
+      },
+      {
+        "key": "electricity_rate_usd_per_kwh",
+        "value": 0.3,
+        "unit": "USD/kWh",
+        "status": "unverified_default",
+        "source": ""
+      },
+      {
+        "key": "fridge_kwh_yr_new",
+        "value": 400,
+        "unit": "kWh/yr",
+        "status": "unverified_default",
+        "source": ""
+      },
+      {
+        "key": "fridge_kwh_yr_old",
+        "value": 700,
+        "unit": "kWh/yr",
+        "status": "unverified_default",
+        "source": ""
+      },
+      {
+        "key": "kbtu_per_ft2_to_kwh_per_m2",
+        "value": 3.15459,
+        "unit": "(kWh/m2)/(kBtu/ft2)",
+        "status": "physical_constant",
+        "source": "1 kBtu = 0.293071 kWh; 1 ft2 = 0.092903 m2"
+      },
+      {
+        "key": "lighting_hours_per_day",
+        "value": 3,
+        "unit": "h/day",
+        "status": "unverified_default",
+        "source": ""
+      },
+      {
+        "key": "window_film_cap_fraction",
+        "value": 0.5,
+        "unit": "fraction",
+        "status": "unverified_default",
+        "source": ""
+      },
+      {
+        "key": "window_film_reduction",
+        "value": 0.3,
+        "unit": "fraction",
+        "status": "unverified_default",
+        "source": ""
+      },
+      {
+        "key": "window_solar_cooling_kwh_per_m2_yr",
+        "value": 60,
+        "unit": "kWh/m2 window/yr",
+        "status": "unverified_default",
+        "source": ""
+      }
+    ],
+    "combos_evaluated": 15
+  },
+  "changed_asset_ids": [
+    "a_o005"
+  ]
+}

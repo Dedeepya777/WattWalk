@@ -1,0 +1,5 @@
+{
+  "upgrade_id": "heat_pump",
+  "generated_by": "template",
+  "text": "The existing window AC is assumed to run at EER 9 (unverified default; its label was not read). A ductless heat pump at EER 18 would cut the remaining cooling electricity in half: 1896.0 kWh cooling after earlier upgrades x (1 - 9 / 18) = 948.0 kWh/yr. At $0.30/kWh that is $284.40 per year. Cost range $3,000 to $6,000; the owner decides and the tenant receives the bill savings."
+}
