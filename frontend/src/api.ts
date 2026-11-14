@@ -10,6 +10,7 @@
  * transports API values.
  */
 import type {
+  AiAlternativesResponse,
   AnswerRequest,
   ApiError,
   AssetEnergyResponse,
@@ -484,6 +485,28 @@ export async function getAssetEnergy(sid: string): Promise<AssetEnergyResponse> 
     return clone(assetEnergy);
   }
   return request<AssetEnergyResponse>(`/audits/${encodeURIComponent(sid)}/energy`);
+}
+
+/** 2-3 rough upgrade ideas for one asset from DeepSeek (saved per audit; refresh asks again). */
+export async function postResearchAlternatives(
+  sid: string,
+  assetId: string,
+  refresh = false,
+): Promise<AiAlternativesResponse> {
+  if (isFixtureMode) {
+    throw new ApiFailure(503, {
+      error: {
+        code: "upstream_unavailable",
+        message: "Finding more alternatives needs the live backend with DEEPSEEK_API_KEY.",
+        retryable: false,
+      },
+    });
+  }
+  const query = refresh ? "?refresh=true" : "";
+  return request<AiAlternativesResponse>(
+    `/audits/${encodeURIComponent(sid)}/assets/${encodeURIComponent(assetId)}/alternatives/research${query}`,
+    { method: "POST" },
+  );
 }
 
 export async function postPlan(sid: string, req: PlanRequest): Promise<PlanResponse> {

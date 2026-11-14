@@ -13,6 +13,7 @@ import { FIXTURE_SID } from "../fixtures";
 import { energySummary, labelText, unknownAttrCount } from "../format";
 import { buildScale, pinColor, toHex, type Rgb } from "./energyColor";
 import { HeatGlow } from "./HeatGlow";
+import { afterRow, chosenAlternative } from "./afterUpgrades";
 import { useAppDispatch, useAppState } from "../state";
 import {
   SDK_CONNECT_TIMEOUT_MS,
@@ -135,6 +136,19 @@ export function Viewer3D({ readiness, attempt, onReady, onFailed, onRetry }: Vie
     () => new Map((state.energy?.assets ?? []).map((row) => [row.asset_id, row])),
     [state.energy],
   );
+  // Upgrades picked in an item's card show straight away: the glow is drawn from the item after the
+  // upgrade, on today's colour scale (so it shrinks and cools), with a badge naming the upgrade.
+  const { glowEnergyById, upgradedTitles } = useMemo(() => {
+    const titles = new Map<string, string>();
+    const rows = new Map(
+      [...energyById].map(([id, row]) => {
+        const alt = chosenAlternative(row, state.aiAlternatives[id], state.chosenUpgrades[id]);
+        if (alt) titles.set(id, alt.title);
+        return [id, afterRow(row, alt)];
+      }),
+    );
+    return { glowEnergyById: rows, upgradedTitles: titles };
+  }, [energyById, state.aiAlternatives, state.chosenUpgrades]);
   const energyScale = useMemo(
     () => buildScale(state.energy?.assets ?? [], state.pinColorMode),
     [state.energy, state.pinColorMode],
@@ -439,7 +453,8 @@ export function Viewer3D({ readiness, attempt, onReady, onFailed, onRetry }: Vie
           frame={iframeRef.current}
           inventory={inventory}
           panos={panos}
-          energyById={energyById}
+          energyById={glowEnergyById}
+          upgraded={upgradedTitles}
           scale={energyScale}
           onCount={setGlowCount}
         />
