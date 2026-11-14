@@ -154,3 +154,32 @@ seen from three panoramas is three assets until anchors land.
   `SECOND_LOOK_LABELS = {}` if the team prefers the plan's single detection call.
 - HARD_LABELS are read from `eval/hard_labels.json`, which the benchmark writes (the `Benchmark`
   contract has no per-label field).
+
+## Benchmark: how to run it (plan 14, fix plan P2-1)
+
+Labels are written by a person, never by a model. Crops and faces stay local (gitignored); only the
+CSVs and `eval/results.json` are committed. Run from the repository root with the venv active, after
+live audits of at least 3 apartments (each audit leaves its crops in `audits/<sid>/crops/`):
+
+1. Label crops, one apartment at a time, until you have about 60 (at least 15 light fixtures and 10
+   windows, every other label you meet at least twice). Type `skip` for a crop you do not want:
+   ```bash
+   cd backend
+   python -m wattwalk.eval.label_tool --sid 2ibibwUGQAe
+   python -m wattwalk.eval.label_tool --sid r1NfhYW4TAr
+   python -m wattwalk.eval.label_tool --sid H7CHGZ8m3Dg
+   ```
+   The model's guess is hidden on purpose (seeing it makes people agree with it).
+2. Label the full faces those crops came from (every vocabulary object you can see, `;`-separated):
+   ```bash
+   python -m wattwalk.eval.label_tool --faces
+   ```
+3. Run the three modes (small_only, large_only, adaptive) with no cache. Without Bedrock, pick a real
+   small/large pair, for example the local 3B and 7B models (`ollama pull qwen2.5vl:3b` first):
+   ```bash
+   python -m wattwalk.eval.benchmark --labels ../eval/labels.csv --faces ../eval/face_labels.csv --no-cache \
+       --small-model ollama/qwen2.5vl:3b --large-model ollama/qwen2.5vl:7b --labeled-by "<your initials>"
+   ```
+   This writes `eval/results.json` (Benchmark contract, `status: measured`) and `eval/hard_labels.json`
+   (labels where the small model is at least 0.15 behind the large one; the router loads it).
+4. If time is short, 30 crops is acceptable: the file states `n_images` honestly.

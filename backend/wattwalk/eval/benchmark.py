@@ -1,7 +1,11 @@
 """Adaptive-routing benchmark (plan 14). Owner: Person 2.
 
-    python -m wattwalk.eval.benchmark --labels eval/labels.csv [--face-labels eval/face_labels.csv]
+    python -m wattwalk.eval.benchmark --labels eval/labels.csv [--faces eval/face_labels.csv] [--no-cache]
+                                      [--small-model ID] [--large-model ID]
                                       [--labeled-by "Person 2"] [--out eval/results.json]
+
+--small-model / --large-model override the .env model ids for this run, for example
+ollama/qwen2.5vl:3b vs ollama/qwen2.5vl:7b, or gemini/gemini-2.5-flash-lite vs gemini/gemini-2.5-flash.
 
 Compares small_only, large_only and adaptive (small first, large when the key attribute stays
 unknown or the label is hard) on hand-labeled crops. The LLM cache is disabled for the measured run.
@@ -156,6 +160,10 @@ def run_modes(crops: list[CropLabel], faces: dict[tuple, list[str]], detect: Det
     return modes, preds_by_mode
 
 
+# Filled from config at run time; --small-model / --large-model override them.
+MODEL_IDS: dict[str, str] = {}
+
+
 def _bedrock_fns():
     """Real model calls with the cache disabled."""
     from ..data.matterport import get_face_image
@@ -164,7 +172,7 @@ def _bedrock_fns():
     from ..vision.prompts import attr_prompt, detect_prompt
 
     def model(tier: str) -> str:
-        return config.SMALL_VISION_MODEL_ID if tier == "small" else config.LARGE_VISION_MODEL_ID
+        return MODEL_IDS["small"] if tier == "small" else MODEL_IDS["large"]
 
     def face_path(face: tuple[str, str, int]) -> Path:
         sid, pano, f = face
@@ -187,7 +195,12 @@ def _bedrock_fns():
     return detect, read
 
 
-def run(labels_csv: Path, face_labels_csv: Path | None = None, labeled_by: str = "Person 2") -> Benchmark:
+def run(labels_csv: Path, face_labels_csv: Path | None = None, labeled_by: str = "Person 2",
+        small_model: str | None = None, large_model: str | None = None) -> Benchmark:
+    MODEL_IDS["small"] = small_model or config.SMALL_VISION_MODEL_ID
+    MODEL_IDS["large"] = large_model or config.LARGE_VISION_MODEL_ID
+    if not MODEL_IDS["small"] or not MODEL_IDS["large"]:
+        raise SystemExit("set both model ids (.env or --small-model/--large-model)")
     crops = load_labels(labels_csv)
     faces = load_face_labels(face_labels_csv or EVAL_DIR / "face_labels.csv")
     detect, read = _bedrock_fns()
@@ -202,6 +215,7 @@ def run(labels_csv: Path, face_labels_csv: Path | None = None, labeled_by: str =
         modes=modes,
         notes=[f"{len(crops)} hand-labeled crops from {apartments} apartments; {len(faces)} faces for detection.",
                "LLM cache disabled for this run.",
+               f"Small model {MODEL_IDS['small']}; large model {MODEL_IDS['large']}.",
                "Adaptive used an empty HARD_LABELS set; labels marked hard by this run: " + (", ".join(hard) or "none") + ".",
                "Token counts are compute proxies, not energy measurements."])
 
@@ -209,11 +223,14 @@ def run(labels_csv: Path, face_labels_csv: Path | None = None, labeled_by: str =
 def main(argv: list[str] | None = None) -> None:
     p = argparse.ArgumentParser(prog="python -m wattwalk.eval.benchmark")
     p.add_argument("--labels", type=Path, default=EVAL_DIR / "labels.csv")
-    p.add_argument("--face-labels", type=Path, default=EVAL_DIR / "face_labels.csv")
+    p.add_argument("--face-labels", "--faces", dest="face_labels", type=Path, default=EVAL_DIR / "face_labels.csv")
+    p.add_argument("--no-cache", action="store_true", help="accepted for clarity: measured runs never use the cache")
+    p.add_argument("--small-model", help="override WATTWALK_SMALL_VISION_MODEL_ID for this run")
+    p.add_argument("--large-model", help="override WATTWALK_LARGE_VISION_MODEL_ID for this run")
     p.add_argument("--labeled-by", default="Person 2")
     p.add_argument("--out", type=Path, default=EVAL_DIR / "results.json")
     args = p.parse_args(argv)
-    result = run(args.labels, args.face_labels, args.labeled_by)
+    result = run(args.labels, args.face_labels, args.labeled_by, args.small_model, args.large_model)
     args.out.write_text(result.model_dump_json(indent=2), encoding="utf-8")
     for m in result.modes:
         print(f"{m.mode:11} precision {m.detection_precision} recall {m.detection_recall} attr {m.attr_accuracy} "
