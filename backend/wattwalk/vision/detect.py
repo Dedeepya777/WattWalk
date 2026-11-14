@@ -109,6 +109,7 @@ GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:ge
 GEMINI_TIMEOUT_S = 60
 GEMINI_MAX_TOKENS = 8192   # some Gemini models spend output tokens on internal reasoning first
 GEMINI_RETRIES = 3
+GEMINI_MAX_RETRY_WAIT_S = 90  # longer waits mean a daily quota, not a per-minute one
 _gemini_lock = threading.Lock()
 _gemini_last = 0.0
 
@@ -155,8 +156,15 @@ def _gemini(model_id: str, image: bytes, prompt: str) -> tuple[str, dict]:
             break
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", "replace")
+            wait = _retry_after_s(detail, 10.0 * (attempt + 1))
+            if exc.code == 429 and (wait > GEMINI_MAX_RETRY_WAIT_S or "PerDay" in detail):
+                # A daily quota (free tier: 20 requests per model per day) is not worth waiting for.
+                raise UpstreamError("bedrock", False,
+                                    f"Gemini daily quota used up for {model} (resets in about {wait / 3600:.0f} h). "
+                                    "Use another model id (for example ollama/...) or enable billing on the key.",
+                                    429) from exc
             if exc.code in (429, 500, 503) and attempt < GEMINI_RETRIES:
-                time.sleep(_retry_after_s(detail, 10.0 * (attempt + 1)))
+                time.sleep(wait)
                 continue
             short = detail[:300].replace(config.GOOGLE_API_KEY, "[key]")
             raise UpstreamError("bedrock", exc.code in (429, 500, 503),

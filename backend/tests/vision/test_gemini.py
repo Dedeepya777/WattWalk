@@ -91,3 +91,17 @@ def test_gemini_needs_key(monkeypatch):
 
 def test_gemini_detection_size_is_1000():
     assert detect.detect_px("gemini/gemini-2.5-flash") == 1000
+
+
+def test_gemini_daily_quota_fails_fast(gemini, monkeypatch):
+    attempts = []
+
+    def fake_urlopen(req, timeout):
+        attempts.append(1)
+        raise _http_error(429, '{"quotaId": "GenerateRequestsPerDayPerProjectPerModel-FreeTier", '
+                               '"retryDelay": "56869s"}')
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+    with pytest.raises(UpstreamError, match="daily quota") as err:
+        detect._call_model("gemini/m", b"x", "p")
+    assert len(attempts) == 1 and err.value.retryable is False
