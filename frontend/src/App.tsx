@@ -27,7 +27,7 @@ import type { StartAuditRequest, WattEvent } from "./contracts";
 import { useAppDispatch, useAppState, type RequestError } from "./state";
 import { FloorPlan2D } from "./viewer/FloorPlan2D";
 import { Viewer3D } from "./viewer/Viewer3D";
-import { isSdkFrameCalibrated } from "./viewer/coords";
+import { SDK_KEY } from "./viewer/mpSdk";
 
 function toRequestError(error: unknown): RequestError {
   if (error instanceof ApiFailure) {
@@ -330,9 +330,9 @@ export default function App() {
                 className={state.viewMode === "3d" ? "segmented-button active" : "segmented-button"}
                 aria-pressed={state.viewMode === "3d"}
                 title={
-                  isSdkFrameCalibrated()
-                    ? "3D tour with tags"
-                    : "3D tour (pins stay on the 2D plan until the Showcase SDK frame is calibrated)"
+                  SDK_KEY
+                    ? "3D tour with asset pins (aligned per model on its panoramas)"
+                    : "3D tour only (set VITE_MATTERPORT_SDK_KEY to show asset pins in 3D)"
                 }
                 onClick={() => dispatch({ type: "view", view: "3d" })}
               >
