@@ -17,7 +17,9 @@ from ..contracts import Attr, BBox, ModelCall, ModelGeometry, Observation, Pano,
 from ..errors import UpstreamError
 from ..inventory import THRESHOLD_M, same_object
 from . import fixture
-from .deps import anchor_from_bbox, get_face_image
+# Direct imports: a missing or broken module must fail loudly, never fall back to fixture data.
+from ..data.matterport import get_face_image  # Person 1
+from ..spatial.geometry import anchor_from_bbox  # Person 4
 from .detect import (call_vision, clean_attrs, detect_px, image_ok, now_iso, parse_attrs, parse_detections,
                      second_look_label)
 from .images import BRIGHTNESS_MAX, BRIGHTNESS_MIN, crop, downscale, quality, rejection_reason

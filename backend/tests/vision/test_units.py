@@ -5,6 +5,7 @@ import itertools
 import random
 
 import numpy as np
+import pytest
 from PIL import Image
 
 from wattwalk.contracts import ModelGeometry
@@ -304,3 +305,69 @@ def test_second_look_relabels_only_to_offered_vocab_labels():
     assert second_look_label({"object": "refrigerator"}, "window") is None # in VOCAB but not offered
     assert second_look_label({"object": "lamp"}, "lamp") == "lamp"
     assert second_look_label({}, "lamp") == "lamp"
+
+
+def test_no_silent_fallback(monkeypatch):
+    """A broken dependency must crash the import with the real error, never fall back to fixture data."""
+    import importlib
+    import sys
+
+    for name in [m for m in sys.modules if m.startswith("wattwalk.vision.") and m != "wattwalk.vision.types"]:
+        monkeypatch.delitem(sys.modules, name)
+    monkeypatch.setitem(sys.modules, "wattwalk.spatial.geometry", None)  # import now raises ImportError
+    with pytest.raises(ImportError):
+        importlib.import_module("wattwalk.vision.walk")
+
+
+def test_no_temporary_markers_left():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[2] / "wattwalk"
+    hits = [str(p) for d in ("vision", "inventory", "eval") for p in (root / d).rglob("*.py")
+            if "TEMPORARY" in p.read_text(encoding="utf-8")]
+    assert hits == []
+
+
+def _fake_registry(monkeypatch):
+    import sys
+    import types
+
+    recorded = []
+    registry = types.ModuleType("wattwalk.health_registry")
+    registry.record = lambda integration, ok, detail="": recorded.append((integration, ok, detail))
+    monkeypatch.setitem(sys.modules, "wattwalk.health_registry", registry)
+    return recorded
+
+
+def test_records_health_on_success_and_failure(monkeypatch):
+    from wattwalk.errors import UpstreamError
+    from wattwalk.vision import detect
+
+    recorded = _fake_registry(monkeypatch)
+    monkeypatch.setattr(detect, "_converse", lambda m, i, p: ("{}", {}))
+    detect._call_model("bedrock-model", b"x", "p")
+
+    def fail(m, i, p):
+        raise UpstreamError("bedrock", True, "throttled", 429)
+
+    monkeypatch.setattr(detect, "_converse", fail)
+    with pytest.raises(UpstreamError):
+        detect._call_model("bedrock-model", b"x", "p")
+    assert recorded == [("bedrock", True, ""), ("bedrock", False, "UpstreamError: HTTP 429")]
+
+
+def test_probe_never_raises(monkeypatch):
+    from wattwalk.vision import detect, probes
+
+    recorded = _fake_registry(monkeypatch)
+
+    def boom(m, i, p):
+        raise RuntimeError("client exploded")
+
+    monkeypatch.setattr(detect, "_converse", boom)
+    ok, detail = probes.probe_bedrock("bedrock-model")
+    assert ok is False and "client exploded" in detail
+    assert probes.probe_vision("") == (False, "no small vision model id configured")
+    monkeypatch.setattr(detect, "_converse", lambda m, i, p: ('{"ok": true}', {}))
+    assert probes.probe_vision("bedrock-model")[0] is True
+    assert recorded[-1] == ("bedrock", True, "")

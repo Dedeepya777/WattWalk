@@ -200,11 +200,33 @@ def detect_px(model_id: str) -> int:
 
 
 def _call_model(model_id: str, image: bytes, prompt: str) -> tuple[str, dict]:
-    if model_id.startswith(OLLAMA_PREFIX):
-        return _ollama(model_id, image, prompt)
-    if model_id.startswith(GEMINI_PREFIX):
-        return _gemini(model_id, image, prompt)
-    return _converse(model_id, image, prompt)
+    """One real model call (cache misses only), recorded for the health endpoint."""
+    try:
+        if model_id.startswith(OLLAMA_PREFIX):
+            result = _ollama(model_id, image, prompt)
+        elif model_id.startswith(GEMINI_PREFIX):
+            result = _gemini(model_id, image, prompt)
+        else:
+            result = _converse(model_id, image, prompt)
+    except UpstreamError as exc:
+        record_health(False, f"{type(exc).__name__}: HTTP {exc.http_status}" if exc.http_status else type(exc).__name__)
+        raise
+    record_health(True)
+    return result
+
+
+def record_health(ok: bool, detail: str = "") -> None:
+    """Report the vision model's last real call to Person 3's health registry (fix plan P2-3 / P3-4).
+
+    The integration key is "bedrock" (the Health contract's name for the vision model, whatever the
+    provider). Until health_registry.py exists there is nothing to report to; once it exists, errors
+    inside record() surface normally.
+    """
+    try:
+        from .. import health_registry
+    except ImportError:
+        return
+    health_registry.record("bedrock", ok, detail)
 
 
 def extract_json(text: str) -> dict | None:

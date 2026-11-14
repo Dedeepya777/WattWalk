@@ -71,13 +71,14 @@ Edge sharpness (mean |Laplacian| / mean gradient on edge pixels) separates them:
 the same faces Gaussian-blurred 0.020 to 0.028. With the combined rule, 0 of 68 real faces are rejected
 and 66 of 68 blurred copies still are (the 2 that pass are blank walls with no edges at all).
 
-## Temporary stand-ins (remove at M2)
+## Calls into other modules
 
-`deps.py` falls back when other people's modules are missing:
-- `get_face_image` (Person 1): reads `audits/cache/faces/<sid>/<pano>_<face>_<res>.jpg`.
-- `get_geometry` (Person 1): reads the fixture geometry files.
-- `anchor_from_bbox` (Person 4): returns `(None, "none")`.
-- `backend/wattwalk/store.py` (Person 3) is a minimal stand-in until the shared baseline lands.
+Vision imports the real functions directly: `wattwalk.data.matterport.get_face_image` and
+`get_geometry` (Person 1), `wattwalk.spatial.geometry.anchor_from_bbox` and `face_forward_xy`
+(Person 4). There are no stand-ins: if one of those modules fails to import, importing
+`wattwalk.vision.walk` fails with the real error (`test_no_silent_fallback`). Fixture behaviour comes
+only from `config.effective_vision_mode() == "fixture"` in `walk.py`. Cached faces in
+`audits/cache/faces/` are reused by Person 1's loader.
 
 ## Real-scan results with the local model (Qwen2.5-VL 7B, Nov 14)
 
@@ -153,3 +154,32 @@ seen from three panoramas is three assets until anchors land.
   `SECOND_LOOK_LABELS = {}` if the team prefers the plan's single detection call.
 - HARD_LABELS are read from `eval/hard_labels.json`, which the benchmark writes (the `Benchmark`
   contract has no per-label field).
+
+## Benchmark: how to run it (plan 14, fix plan P2-1)
+
+Labels are written by a person, never by a model. Crops and faces stay local (gitignored); only the
+CSVs and `eval/results.json` are committed. Run from the repository root with the venv active, after
+live audits of at least 3 apartments (each audit leaves its crops in `audits/<sid>/crops/`):
+
+1. Label crops, one apartment at a time, until you have about 60 (at least 15 light fixtures and 10
+   windows, every other label you meet at least twice). Type `skip` for a crop you do not want:
+   ```bash
+   cd backend
+   python -m wattwalk.eval.label_tool --sid 2ibibwUGQAe
+   python -m wattwalk.eval.label_tool --sid r1NfhYW4TAr
+   python -m wattwalk.eval.label_tool --sid H7CHGZ8m3Dg
+   ```
+   The model's guess is hidden on purpose (seeing it makes people agree with it).
+2. Label the full faces those crops came from (every vocabulary object you can see, `;`-separated):
+   ```bash
+   python -m wattwalk.eval.label_tool --faces
+   ```
+3. Run the three modes (small_only, large_only, adaptive) with no cache. Without Bedrock, pick a real
+   small/large pair, for example the local 3B and 7B models (`ollama pull qwen2.5vl:3b` first):
+   ```bash
+   python -m wattwalk.eval.benchmark --labels ../eval/labels.csv --faces ../eval/face_labels.csv --no-cache \
+       --small-model ollama/qwen2.5vl:3b --large-model ollama/qwen2.5vl:7b --labeled-by "<your initials>"
+   ```
+   This writes `eval/results.json` (Benchmark contract, `status: measured`) and `eval/hard_labels.json`
+   (labels where the small model is at least 0.15 behind the large one; the router loads it).
+4. If time is short, 30 crops is acceptable: the file states `n_images` honestly.
