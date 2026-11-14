@@ -326,3 +326,48 @@ def test_no_temporary_markers_left():
     hits = [str(p) for d in ("vision", "inventory", "eval") for p in (root / d).rglob("*.py")
             if "TEMPORARY" in p.read_text(encoding="utf-8")]
     assert hits == []
+
+
+def _fake_registry(monkeypatch):
+    import sys
+    import types
+
+    recorded = []
+    registry = types.ModuleType("wattwalk.health_registry")
+    registry.record = lambda integration, ok, detail="": recorded.append((integration, ok, detail))
+    monkeypatch.setitem(sys.modules, "wattwalk.health_registry", registry)
+    return recorded
+
+
+def test_records_health_on_success_and_failure(monkeypatch):
+    from wattwalk.errors import UpstreamError
+    from wattwalk.vision import detect
+
+    recorded = _fake_registry(monkeypatch)
+    monkeypatch.setattr(detect, "_converse", lambda m, i, p: ("{}", {}))
+    detect._call_model("bedrock-model", b"x", "p")
+
+    def fail(m, i, p):
+        raise UpstreamError("bedrock", True, "throttled", 429)
+
+    monkeypatch.setattr(detect, "_converse", fail)
+    with pytest.raises(UpstreamError):
+        detect._call_model("bedrock-model", b"x", "p")
+    assert recorded == [("bedrock", True, ""), ("bedrock", False, "UpstreamError: HTTP 429")]
+
+
+def test_probe_never_raises(monkeypatch):
+    from wattwalk.vision import detect, probes
+
+    recorded = _fake_registry(monkeypatch)
+
+    def boom(m, i, p):
+        raise RuntimeError("client exploded")
+
+    monkeypatch.setattr(detect, "_converse", boom)
+    ok, detail = probes.probe_bedrock("bedrock-model")
+    assert ok is False and "client exploded" in detail
+    assert probes.probe_vision("") == (False, "no small vision model id configured")
+    monkeypatch.setattr(detect, "_converse", lambda m, i, p: ('{"ok": true}', {}))
+    assert probes.probe_vision("bedrock-model")[0] is True
+    assert recorded[-1] == ("bedrock", True, "")
