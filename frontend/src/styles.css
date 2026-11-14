@@ -2126,3 +2126,80 @@ select:disabled {
 @media (prefers-reduced-motion: reduce) {
   .modal.energy-alt-card.energy-alt-from-glow { animation: none; }
 }
+
+/* Energy pop-out next to a 3D pin: a compact card that grows out of the clicked point */
+.energy-pop-catcher {
+  position: fixed;
+  inset: 0;
+  z-index: 85;
+  background: transparent;
+}
+.energy-pop {
+  position: fixed;
+  isolation: isolate;
+  max-height: 72vh;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow), 0 0 0 1px rgba(255, 255, 255, 0.03);
+  padding: 12px 14px;
+}
+.energy-pop.energy-pop-measuring {
+  opacity: 0;
+}
+/* The pressed button becomes the card: a circle the size and colour of the button, centred on it,
+   grows until it covers the card (clip-path reveal, so nothing is stretched); the button's colour
+   fades into the card background and the details fade in behind the growing edge. */
+.energy-pop.energy-pop-in {
+  animation: energy-pop-reveal 560ms cubic-bezier(0.45, 0, 0.2, 1) both;
+}
+.energy-pop.energy-pop-in::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(circle at var(--ox) var(--oy), var(--seed) 0%, transparent 70%);
+  animation: energy-pop-seed 520ms ease-out both;
+}
+.energy-pop.energy-pop-in > * {
+  animation: energy-pop-content 300ms ease-out 170ms both;
+}
+@keyframes energy-pop-reveal {
+  from { clip-path: circle(var(--r0) at var(--ox) var(--oy)); }
+  to { clip-path: circle(var(--r1) at var(--ox) var(--oy)); }
+}
+@keyframes energy-pop-seed {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes energy-pop-content {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.energy-pop-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+/* compact layout inside the pop-out */
+.energy-pop .energy-alt-with-glow {
+  grid-template-columns: 64px 1fr;
+}
+.energy-pop .energy-alt-glow-box {
+  width: 64px;
+  height: 64px;
+}
+.energy-pop .energy-alt-glow {
+  max-width: 60px;
+  max-height: 60px;
+}
+.energy-pop h2 {
+  font-size: 15px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .energy-pop.energy-pop-in,
+  .energy-pop.energy-pop-in::before,
+  .energy-pop.energy-pop-in > * { animation: none; }
+}

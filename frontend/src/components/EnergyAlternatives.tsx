@@ -27,7 +27,9 @@ function heatText(range: [number, number] | null): string {
   return formatRange(range, "kWh");
 }
 
-const GLOW_MAX = 84; // px, today's glow
+const GLOW_MAX = 84; // px, today's glow (centred card)
+const POP_WIDTH = 380; // px, the pop-out next to a 3D pin
+const POP_MARGIN = 12;
 
 const mid = (r: [number, number] | null) => (r ? (r[0] + r[1]) / 2 : null);
 
@@ -180,16 +182,36 @@ export function EnergyAlternatives() {
   const heatScale = buildScale(state.energy?.assets ?? [], "heat");
   const origin = state.focusOrigin;
   const cardRef = useRef<HTMLDivElement | null>(null);
-  const [fromOrigin, setFromOrigin] = useState<{ x: number; y: number } | null>(null);
+  const [place, setPlace] = useState<{ left: number; top: number; ox: number; oy: number; r1: number } | null>(null);
 
-  // Measure the card before the first paint and start it at the clicked glow (offset from its centre).
+  // Pop-out mode (opened from a 3D pin or glow): measure before the first paint, sit beside the clicked
+  // point (right of it, or left if there is no room), stay on screen, and grow out of that point.
   useLayoutEffect(() => {
     if (!assetId || !origin || !cardRef.current) {
-      setFromOrigin(null);
+      setPlace(null);
       return;
     }
-    const rect = cardRef.current.getBoundingClientRect();
-    setFromOrigin({ x: origin.x - (rect.left + rect.width / 2), y: origin.y - (rect.top + rect.height / 2) });
+    const cardRect = cardRef.current.getBoundingClientRect();
+    const h = cardRect.height;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    // Put the card's "Today" glow exactly on the pressed button, so the button becomes that glow and the
+    // card grows out around it. Clamp to the screen (the reveal still starts at the button).
+    const todayGlow = cardRef.current.querySelector(".energy-alt-now .energy-alt-glow-box");
+    let gx = 46;
+    let gy = 110;
+    if (todayGlow) {
+      const g = todayGlow.getBoundingClientRect();
+      gx = g.left - cardRect.left + g.width / 2;
+      gy = g.top - cardRect.top + g.height / 2;
+    }
+    const left = Math.max(POP_MARGIN, Math.min(origin.x - gx, vw - POP_WIDTH - POP_MARGIN));
+    const top = Math.max(POP_MARGIN, Math.min(origin.y - gy, vh - h - POP_MARGIN));
+    const ox = origin.x - left;
+    const oy = origin.y - top;
+    // radius that just covers the farthest corner of the card from the button
+    const r1 = Math.max(...[[0, 0], [POP_WIDTH, 0], [0, h], [POP_WIDTH, h]].map(([cx, cy]) => Math.hypot(cx - ox, cy - oy)));
+    setPlace({ left, top, ox, oy, r1 });
   }, [assetId, origin]);
 
   useEffect(() => {
@@ -203,16 +225,34 @@ export function EnergyAlternatives() {
 
   if (!assetId || !row) return null;
 
+  const popout = Boolean(origin);
+  const cardClass = popout
+    ? `energy-pop${place ? " energy-pop-in" : " energy-pop-measuring"}`
+    : "modal energy-alt-card";
+  const cardStyle = popout
+    ? ({
+        left: place?.left ?? 0,
+        top: place?.top ?? 0,
+        width: POP_WIDTH,
+        // read by the reveal animation in styles.css
+        ["--ox" as string]: place ? `${place.ox}px` : undefined,
+        ["--oy" as string]: place ? `${place.oy}px` : undefined,
+        ["--r0" as string]: `${origin?.r ?? 14}px`,
+        ["--r1" as string]: place ? `${Math.ceil(place.r1) + 2}px` : undefined,
+        ["--seed" as string]: origin?.color ?? "#f97316",
+      } as React.CSSProperties)
+    : undefined;
+
   return (
-    <div className="modal-backdrop energy-alt-backdrop" role="presentation" onClick={close}>
+    <div
+      className={popout ? "energy-pop-catcher" : "modal-backdrop energy-alt-backdrop"}
+      role="presentation"
+      onClick={close}
+    >
       <div
         ref={cardRef}
-        className={`modal energy-alt-card${origin ? (fromOrigin ? " energy-alt-from-glow" : " energy-alt-measuring") : ""}`}
-        style={
-          fromOrigin
-            ? ({ "--from-x": `${fromOrigin.x}px`, "--from-y": `${fromOrigin.y}px` } as React.CSSProperties)
-            : undefined
-        }
+        className={cardClass}
+        style={cardStyle}
         role="dialog"
         aria-modal="true"
         aria-labelledby="energy-alt-title"
@@ -225,9 +265,20 @@ export function EnergyAlternatives() {
               {room ?? "Unknown room"} · {row.asset_id}
             </p>
           </div>
-          <button className="button small" onClick={close} aria-label="Close">
-            ×
-          </button>
+          <div className="energy-pop-actions">
+            <button
+              className="button small"
+              onClick={() => {
+                dispatch({ type: "focusEnergy", assetId: null });
+                dispatch({ type: "selectAsset", assetId: row.asset_id });
+              }}
+            >
+              See evidence
+            </button>
+            <button className="button small" onClick={close} aria-label="Close">
+              ×
+            </button>
+          </div>
         </div>
         {row.estimated ? <NowRow row={row} scale={heatScale} /> : <p className="muted">Today: not estimated ({row.note}).</p>}
         {row.alternatives.length === 0 ? (

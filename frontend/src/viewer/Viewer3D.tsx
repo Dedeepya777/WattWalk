@@ -11,7 +11,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Asset, AssetEnergy } from "../contracts";
 import { FIXTURE_SID } from "../fixtures";
 import { energySummary, labelText, unknownAttrCount } from "../format";
-import { buildScale, pinColor, type Rgb } from "./energyColor";
+import { buildScale, pinColor, toHex, type Rgb } from "./energyColor";
 import { HeatGlow } from "./HeatGlow";
 import { useAppDispatch, useAppState } from "../state";
 import {
@@ -121,6 +121,8 @@ export function Viewer3D({ readiness, attempt, onReady, onFailed, onRetry }: Vie
   const realModel = selectedSid !== FIXTURE_SID && isModelId(selectedSid);
   const panos = useMemo(() => audit?.panos ?? [], [audit?.panos]);
   const inventory = useMemo(() => audit?.inventory ?? [], [audit?.inventory]);
+  const inventoryRef = useRef(inventory);
+  inventoryRef.current = inventory;
   const roomLabels = useMemo(
     () => new Map((audit?.rooms ?? []).map((room) => [room.id, room.label])),
     [audit?.rooms],
@@ -281,13 +283,66 @@ export function Viewer3D({ readiness, attempt, onReady, onFailed, onRetry }: Vie
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sdkLive, panoKey, inventoryKey, energyKey]);
 
-  // 3. Clicking a tag opens the evidence card.
+  // 3. Clicking a tag opens the energy pop-out next to the pin (the evidence sidebar is one click
+  //    away inside it). Without energy data for the asset it falls back to the evidence card.
+  const poseRef = useRef<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
+  useEffect(() => {
+    const sdk = sdkRef.current;
+    if (!sdk || phase.kind !== "ready") return undefined;
+    let sub: { cancel?: () => void } | null = null;
+    try {
+      sub = sdk.Camera.pose.subscribe((pose: unknown) => {
+        poseRef.current = pose;
+      });
+    } catch {
+      sub = null;
+    }
+    return () => sub?.cancel?.();
+  }, [phase.kind]);
+
+  const pinScreenPoint = (asset: Asset): { x: number; y: number } | null => {
+    const sdk = sdkRef.current;
+    const frame = iframeRef.current;
+    const pose = poseRef.current;
+    if (!sdk || !frame || !pose || !asset.anchor || phase.kind !== "ready") return null;
+    try {
+      const down = CEILING_LABELS.has(asset.label);
+      const base = modelToSdk(phase.fit, asset.anchor);
+      const stem = modelDirToSdk(phase.fit, { x: 0, y: 0, z: down ? -STEM_M : STEM_M });
+      const disc = { x: base.x + stem.x, y: base.y + stem.y, z: base.z + stem.z };
+      const rect = frame.getBoundingClientRect();
+      const s = sdk.Conversion.worldToScreen(disc, pose, { w: rect.width, h: rect.height });
+      if (!s || !Number.isFinite(s.x) || !Number.isFinite(s.y)) return null;
+      return { x: rect.left + s.x, y: rect.top + s.y };
+    } catch {
+      return null;
+    }
+  };
+  const pinScreenPointRef = useRef(pinScreenPoint);
+  pinScreenPointRef.current = pinScreenPoint;
+  const energyScaleRef = useRef(energyScale);
+  energyScaleRef.current = energyScale;
+  const energyByIdRef = useRef(energyById);
+  energyByIdRef.current = energyById;
+
   useEffect(() => {
     const sdk = sdkRef.current;
     if (!sdk || phase.kind !== "ready") return undefined;
     const subscription = onTagSelected(sdk, (tagId) => {
       const assetId = tagToAsset.current.get(tagId);
-      if (assetId) dispatch({ type: "selectAsset", assetId });
+      if (!assetId) return;
+      const asset = inventoryRef.current.find((item) => item.id === assetId);
+      if (asset && energyByIdRef.current.has(assetId)) {
+        const point = pinScreenPointRef.current(asset);
+        const color = pinColor(energyByIdRef.current.get(assetId), energyScaleRef.current);
+        dispatch({
+          type: "focusEnergy",
+          assetId,
+          origin: point ? { ...point, r: 12, color: color ? toHex(color) : undefined } : null,
+        });
+      } else {
+        dispatch({ type: "selectAsset", assetId });
+      }
     });
     return subscription.ok ? subscription.value : undefined;
   }, [dispatch, phase.kind]);

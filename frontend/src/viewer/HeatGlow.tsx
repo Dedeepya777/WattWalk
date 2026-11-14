@@ -210,7 +210,10 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, scale,
             aria-label={`${g.name}: compare alternatives`}
             title={`${g.name}: compare alternatives`}
             onClick={(event) =>
-              dispatch({ type: "focusEnergy", assetId: g.id, origin: { x: event.clientX, y: event.clientY } })
+              dispatch({ type: "focusEnergy", assetId: g.id, origin: (() => {
+                  const b = event.currentTarget.getBoundingClientRect();
+                  return { x: b.left + b.width / 2, y: b.top + b.height / 2, r: b.width / 2, color: g.color };
+                })() })
             }
           />
         );

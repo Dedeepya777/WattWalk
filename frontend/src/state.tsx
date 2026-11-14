@@ -48,7 +48,7 @@ export interface AppState {
   /** Asset whose energy alternatives card is open, or null. */
   focusAssetId: string | null;
   /** Screen point the alternatives card grows from (a clicked 3D glow), or null for the centre. */
-  focusOrigin: { x: number; y: number } | null;
+  focusOrigin: { x: number; y: number; r?: number; color?: string } | null;
   openQuestion: Question | null;
   health: Health | null;
   healthError: string | null;
@@ -102,7 +102,7 @@ export type Action =
   | { type: "plan"; plan: PlanResponse | null }
   | { type: "energy"; energy: AssetEnergyResponse | null }
   | { type: "pinColor"; mode: PinColorMode }
-  | { type: "focusEnergy"; assetId: string | null; origin?: { x: number; y: number } | null }
+  | { type: "focusEnergy"; assetId: string | null; origin?: { x: number; y: number; r?: number; color?: string } | null }
   | { type: "planRequest"; request: PlanRequest }
   | { type: "planLoading"; loading: boolean }
   | { type: "planError"; error: RequestError | null }
