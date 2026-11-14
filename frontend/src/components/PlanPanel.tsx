@@ -3,14 +3,16 @@ import { useEffect, useState } from "react";
 import { ApiFailure, consumeFixtureNotice, postExplain } from "../api";
 import type { PlanRequest, UpgradeLine } from "../contracts";
 import {
-  evidenceText,
+  evidenceNote,
   formatCostRange,
+  formatCostShort,
   formatCurrency,
   formatKwh,
   formatNumber,
   formatPayback,
+  paybackText,
   reasonText,
-  whoPaysText,
+  whoPaysSentence,
 } from "../format";
 import { useAppDispatch, useAppState } from "../state";
 import { ExplainBox } from "./ExplainBox";
@@ -282,23 +284,30 @@ export function PlanPanel() {
             <p className="empty">No upgrades selected for this budget and role.</p>
           ) : (
             <ul className="upgrade-list">
-              {plan.upgrades.map((line) => (
+              {plan.upgrades.map((line) => {
+                const payback = paybackText(line.cost_low_usd, line.cost_high_usd, line.bill_saved_usd_yr);
+                return (
                 <li key={line.upgrade_id} className="upgrade-line">
                   <div className="upgrade-head">
-                    <strong>{line.name}</strong>
-                    <span className={`badge ${line.evidence_level === "verified" ? "badge-ok" : "badge-warn"}`}>
-                      {evidenceText(line.evidence_level)}
+                    <strong className="upgrade-name">{line.name}</strong>
+                    <span className="upgrade-saving" title={formatKwh(line.kwh_saved_yr)}>
+                      {formatCurrency(line.bill_saved_usd_yr)}
+                      <small>/yr saved</small>
                     </span>
                   </div>
-                  <div className="upgrade-numbers">
-                    <span>{formatCostRange(line.cost_low_usd, line.cost_high_usd)}</span>
-                    <span>{formatKwh(line.kwh_saved_yr)}</span>
-                    <span>{formatCurrency(line.bill_saved_usd_yr, true)}/yr</span>
+                  <p className="upgrade-cost">
+                    Costs {formatCostShort(line.cost_low_usd, line.cost_high_usd)}
+                    {payback ? ` · ${payback.toLowerCase()}` : ""}
+                  </p>
+                  <p className="who-pays">{whoPaysSentence(line.who_pays)}</p>
+                  <div className="upgrade-foot">
+                    <span className={`evidence-note ${line.evidence_level === "verified" ? "seen" : "estimated"}`}>
+                      {evidenceNote(line.evidence_level)}
+                    </span>
+                    <button className="link-button" onClick={() => void showExplain(line)}>
+                      {explainFor === line.upgrade_id ? "Hide" : "Why this?"}
+                    </button>
                   </div>
-                  <p className="who-pays">{whoPaysText(line.who_pays)}</p>
-                  <button className="link-button" onClick={() => void showExplain(line)}>
-                    {explainFor === line.upgrade_id ? "Hide explanation" : "Explain"}
-                  </button>
                   {explainFor === line.upgrade_id ? (
                     <ExplainBox
                       formula={line.explanation}
@@ -310,7 +319,8 @@ export function PlanPanel() {
                     />
                   ) : null}
                 </li>
-              ))}
+                );
+              })}
             </ul>
           )}
 

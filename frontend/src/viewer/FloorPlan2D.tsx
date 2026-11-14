@@ -78,9 +78,10 @@ function offsetFor(index: number): Vec2 {
 
 function heatColor(share: number, max: number): string {
   const t = max > 0 ? Math.min(1, Math.max(0, share / max)) : 0;
+  // Light theme: cool pale blue for little heat, warm orange for the most; dark room labels stay readable.
   const hue = 212 - 182 * t;
-  const lightness = 26 + 30 * t;
-  return `hsl(${hue.toFixed(0)} 66% ${lightness.toFixed(0)}%)`;
+  const lightness = 88 - 22 * t;
+  return `hsl(${hue.toFixed(0)} 80% ${lightness.toFixed(0)}%)`;
 }
 
 export function FloorPlan2D() {
