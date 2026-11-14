@@ -1,11 +1,14 @@
 """Shared fixtures for Person 3's API and agent tests."""
 from __future__ import annotations
 
+import contextlib
 import json
+import socket
+import threading
 import time
 
+import httpx
 import pytest
-from fastapi.testclient import TestClient
 
 from wattwalk import config
 
@@ -22,11 +25,40 @@ def env(tmp_path, monkeypatch):
     return tmp_path
 
 
+@contextlib.contextmanager
+def live_server(app):
+    """Serve the app with real uvicorn in a background thread on a free local port.
+
+    Starlette's TestClient does not stream responses in older versions (it runs the app to completion
+    before returning, e.g. Starlette 0.36 used by fastapi 0.110), so SSE events emitted while a run
+    waits on a question never reached the test. A real server streams on every version.
+    """
+    import uvicorn
+
+    sock = socket.socket()
+    sock.bind(("127.0.0.1", 0))
+    port = sock.getsockname()[1]
+    sock.close()
+    server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning", lifespan="on"))
+    thread = threading.Thread(target=server.run, daemon=True)
+    thread.start()
+    t0 = time.monotonic()
+    while not server.started:
+        if not thread.is_alive() or time.monotonic() - t0 > 10:
+            raise RuntimeError("test server did not start")
+        time.sleep(0.01)
+    try:
+        yield f"http://127.0.0.1:{port}"
+    finally:
+        server.should_exit = True
+        thread.join(timeout=10)
+
+
 @pytest.fixture
 def client(env):
     from wattwalk.api.app import app
 
-    with TestClient(app) as c:
+    with live_server(app) as base_url, httpx.Client(base_url=base_url, timeout=30.0) as c:
         yield c
 
 

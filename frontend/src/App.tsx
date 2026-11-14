@@ -314,11 +314,10 @@ export default function App() {
                 type="button"
                 className={state.viewMode === "3d" ? "segmented-button active" : "segmented-button"}
                 aria-pressed={state.viewMode === "3d"}
-                disabled={!isSdkFrameCalibrated()}
                 title={
                   isSdkFrameCalibrated()
                     ? "3D tour with tags"
-                    : "3D is disabled until the Showcase SDK frame is calibrated"
+                    : "3D tour (pins stay on the 2D plan until the Showcase SDK frame is calibrated)"
                 }
                 onClick={() => dispatch({ type: "view", view: "3d" })}
               >
