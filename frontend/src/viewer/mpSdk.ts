@@ -131,6 +131,17 @@ export async function goToTag(sdk: MpSdk, tagId: string): Promise<void> {
   }
 }
 
+/** SDK errors embed the application key ("<key>@<page> - reason"); keep only the reason. */
+export function sdkErrorText(error: unknown, key = SDK_KEY): string {
+  let text = error instanceof Error ? error.message : String(error);
+  if (key) text = text.split(key).join("[key]");
+  const reason = text.split(" - ").pop()?.trim();
+  if (/referrer mismatch/i.test(text)) {
+    return `this SDK key is not allowed on ${window.location.host}. Add it to the key's allowed domains in Matterport (Settings > Developer Tools).`;
+  }
+  return reason || text;
+}
+
 function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
   return new Promise((resolve, reject) => {
     const timer = window.setTimeout(() => reject(new Error(message)), ms);

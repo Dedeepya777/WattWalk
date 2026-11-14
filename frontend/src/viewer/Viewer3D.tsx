@@ -20,6 +20,7 @@ import {
   onTagSelected,
   readSweeps,
   removeTags,
+  sdkErrorText,
   type MpSdk,
   type TagSpec,
 } from "./mpSdk";
@@ -109,8 +110,8 @@ export function Viewer3D() {
         sdkRef.current = sdk;
         setPhase({ kind: "aligning" });
       })
-      .catch((error: Error) => {
-        if (!cancelled) setPhase({ kind: "error", message: error.message });
+      .catch((error: unknown) => {
+        if (!cancelled) setPhase({ kind: "error", message: sdkErrorText(error) });
       });
     return () => {
       cancelled = true;
@@ -173,7 +174,7 @@ export function Viewer3D() {
         setPhase({ kind: "ready", fit, matched: pairs.length, total: panos.length });
       } catch (error) {
         if (!cancelled) {
-          setPhase({ kind: "error", message: error instanceof Error ? error.message : String(error) });
+          setPhase({ kind: "error", message: sdkErrorText(error) });
         }
       }
     })();
