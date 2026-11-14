@@ -23,6 +23,40 @@ const NEARBY_M = 5; // also draw assets this close in another room (open-plan sp
 const LABEL_GAP_X = 80; // px: skip a label that would overlap one already placed
 const LABEL_GAP_Y = 22;
 const LABEL_FROM = 0.45; // label glows in the upper part of the scale only (avoids clutter)
+const CHANGE_MS = 1000; // a glow eases to its new size and colour when an upgrade is picked or unpicked
+
+function hexToRgb(hex: string): [number, number, number] {
+  const n = parseInt(hex.slice(1, 7), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+function mixHex(a: string, b: string, t: number): string {
+  const x = hexToRgb(a);
+  const y = hexToRgb(b);
+  return `#${x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, "0")).join("")}`;
+}
+
+const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+interface Change {
+  fromT: number;
+  fromColor: string;
+  toT: number;
+  toColor: string;
+  start: number;
+}
+
+/** Strength and colour of a glow at `now`, part-way through a change if one is running. */
+function current(change: Change | undefined, t: number, color: string, now: number) {
+  if (!change) return { t, color, running: false };
+  const p = Math.min(1, (now - change.start) / CHANGE_MS);
+  const e = ease(p);
+  return {
+    t: change.fromT + (change.toT - change.fromT) * e,
+    color: mixHex(change.fromColor, change.toColor, e),
+    running: p < 1,
+  };
+}
 
 interface Glow {
   id: string;
@@ -77,6 +111,8 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, upgrad
   const poseRef = useRef<Pose | null>(null);
   const roomRef = useRef<string | null>(null);
   const frameRequest = useRef<number | null>(null);
+  const shownRef = useRef(new Map<string, { t: number; color: string }>());
+  const changesRef = useRef(new Map<string, Change>());
 
   const roomOfPano = useMemo(() => new Map(panos.map((p) => [p.id, p.room_id ?? null])), [panos]);
 
@@ -103,6 +139,24 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, upgrad
     });
   }, [energyById, fit, inventory, scale, upgraded]);
 
+  // When an item's strength or colour changes (an upgrade picked or unpicked), ease from what is shown
+  // now to the new look instead of jumping.
+  useEffect(() => {
+    const now = performance.now();
+    const shown = shownRef.current;
+    const changes = changesRef.current;
+    for (const s of sources) {
+      // The glow under an open card is hidden: start its change when the card closes, so it is seen.
+      if (s.id === focusAssetId) continue;
+      const before = shown.get(s.id);
+      if (before && (Math.abs(before.t - s.strength) > 1e-6 || before.color !== s.color)) {
+        const at = current(changes.get(s.id), before.t, before.color, now);
+        changes.set(s.id, { fromT: at.t, fromColor: at.color, toT: s.strength, toColor: s.color, start: now });
+      }
+      shown.set(s.id, { t: s.strength, color: s.color });
+    }
+  }, [sources, focusAssetId]);
+
   // Keep the overlay exactly over the tour frame.
   useEffect(() => {
     if (!frame) return undefined;
@@ -123,6 +177,8 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, upgrad
       const size = { w: box.width, h: box.height };
       const room = roomRef.current;
       const next: Glow[] = [];
+      const now = performance.now();
+      let animating = false;
       for (const s of sources) {
         const d = { x: s.world.x - pose.position.x, y: s.world.y - pose.position.y, z: s.world.z - pose.position.z };
         const dist = Math.hypot(d.x, d.y, d.z);
@@ -136,9 +192,12 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, upgrad
           screen = null;
         }
         if (!screen || screen.x < -200 || screen.y < -200 || screen.x > size.w + 200 || screen.y > size.h + 200) continue;
-        const radiusM = 0.4 + 2.0 * s.strength;
+        const look = current(changesRef.current.get(s.id), s.strength, s.color, now);
+        if (look.running) animating = true;
+        else changesRef.current.delete(s.id);
+        const radiusM = 0.4 + 2.0 * look.t;
         const r = Math.min(size.h * 0.7, Math.max(14, (radiusM * size.h * 0.9) / dist));
-        next.push({ id: s.id, name: s.name, x: screen.x, y: screen.y, r, color: s.color, label: s.label, upgrade: s.upgrade });
+        next.push({ id: s.id, name: s.name, x: screen.x, y: screen.y, r, color: look.color, label: s.label, upgrade: s.upgrade });
       }
       // Draw big glows first so small ones stay visible on top; label the biggest first and skip a
       // label that would overlap one already placed.
@@ -154,6 +213,7 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, upgrad
       }
       setGlows(next);
       onCount?.(next.length);
+      if (animating) schedule();
     };
     const schedule = () => {
       if (frameRequest.current === null) frameRequest.current = window.requestAnimationFrame(draw);
@@ -182,7 +242,7 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, upgrad
       if (frameRequest.current !== null) window.cancelAnimationFrame(frameRequest.current);
       frameRequest.current = null;
     };
-  }, [box, onCount, roomOfPano, sdk, sources]);
+  }, [box, focusAssetId, onCount, roomOfPano, sdk, sources]);
 
   return (
     <div className="heat-glow-layer" style={{ left: box.left, top: box.top, width: box.width, height: box.height }}>
