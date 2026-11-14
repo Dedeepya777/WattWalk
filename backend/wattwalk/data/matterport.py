@@ -6,6 +6,7 @@ See plan/plan.md section 13.1, Appendix A.1.2.
 from __future__ import annotations
 
 import json
+import re
 import time
 from pathlib import Path
 from typing import Any, Literal
@@ -30,6 +31,24 @@ from wattwalk.errors import UpstreamError
 MATTERPORT_GRAPHQL_URL = "https://api.matterport.com/api/models/graph"
 
 _SKYBOX_CACHE: dict[tuple[str, str], tuple[float, dict[str, list[str]]]] = {}
+# Signed skybox URLs carry their expiry ("t=2-<signature>-<unix expiry>-..."); measured lifetime is
+# 300 s. Reuse a cached list only while every URL in it has at least this much life left.
+SKYBOX_MIN_LIFE_S = 60
+SKYBOX_FALLBACK_TTL_S = 240  # when an expiry cannot be read from the URLs
+# Status codes Matterport's CDN returns for a stale or invalid signed URL: refresh the URLs once.
+STALE_URL_STATUSES = (401, 403, 410)
+
+
+def _url_expiry(url: str) -> int | None:
+    m = re.search(r"[?&]t=\d+-[0-9a-fA-F]+-(\d{9,})-", url)
+    return int(m.group(1)) if m else None
+
+
+def _skybox_cache_valid(cached_time: float, urls: dict[str, list[str]], now: float) -> bool:
+    expiries = [e for vs in urls.values() for u in vs if (e := _url_expiry(u)) is not None]
+    if expiries:
+        return min(expiries) - now > SKYBOX_MIN_LIFE_S
+    return now - cached_time < SKYBOX_FALLBACK_TTL_S
 
 
 def _record_health(ok: bool, detail: str = "") -> None:
@@ -98,7 +117,7 @@ def skybox_urls(sid: str, resolution: str) -> dict[str, list[str]]:
     cache_key = (sid, resolution)
     if cache_key in _SKYBOX_CACHE:
         cached_time, cached_urls = _SKYBOX_CACHE[cache_key]
-        if now - cached_time < 600:
+        if _skybox_cache_valid(cached_time, cached_urls, now):
             return cached_urls
 
     if resolution not in ("2k", "4k"):
@@ -368,8 +387,8 @@ def get_face_image(sid: str, pano_id: str, face: int, resolution: Literal["2k", 
     img_url = pano_urls[face]
     try:
         resp = requests.get(img_url, timeout=30)
-        if resp.status_code in (401, 403):
-            # Clear URL cache and retry once with fresh signed URLs
+        if resp.status_code in STALE_URL_STATUSES:
+            # Stale or invalid signed URL (410 Gone once it expires): fetch fresh URLs and retry once
             _SKYBOX_CACHE.pop((sid, resolution), None)
             urls = skybox_urls(sid, resolution)
             pano_urls = urls.get(pano_id, [])
