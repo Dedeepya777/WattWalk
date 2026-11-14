@@ -84,7 +84,7 @@ export const initialState: AppState = {
   testModels: [],
   modelsError: null,
   viewMode: "2d",
-  pinColorMode: "details",
+  pinColorMode: "heat",
   benchmark: null,
   benchmarkError: null,
   correctionDiff: [],

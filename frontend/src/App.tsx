@@ -466,7 +466,6 @@ export default function App() {
   }, []);
 
   const sdkNoKey = sdkReadiness.kind === "no_key";
-  const heatAvailable = (state.audit?.heat_shares.length ?? 0) > 0;
   const errorBanner = state.healthError ?? state.auditError?.message ?? null;
 
   return (
@@ -521,14 +520,14 @@ export default function App() {
                     ? sdkNoKeyTooltip()
                     : sdkReadiness.kind === "failed"
                       ? sdkReadiness.reason
-                      : "3D tour with asset pins (aligned per model on its panoramas)"
+                      : "3D tour with each item's heat shown as a glow; click a glow for its cost and upgrades"
                 }
                 onClick={() => dispatch({ type: "view", view: "3d" })}
               >
                 {sdkReadiness.kind === "checking" ? (
                   <span className="spinner" aria-hidden="true" />
                 ) : null}
-                3D
+                Heat map
               </button>
               <button
                 type="button"
@@ -537,16 +536,6 @@ export default function App() {
                 onClick={() => dispatch({ type: "view", view: "2d" })}
               >
                 2D plan
-              </button>
-              <button
-                type="button"
-                className={state.viewMode === "heat" ? "segmented-button active" : "segmented-button"}
-                aria-pressed={state.viewMode === "heat"}
-                disabled={!heatAvailable}
-                title={heatAvailable ? "Room heat shares" : "Heat shares appear after the walk"}
-                onClick={() => dispatch({ type: "view", view: "heat" })}
-              >
-                Heat map
               </button>
             </div>
             <PinColorControls />
