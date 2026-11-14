@@ -2329,3 +2329,64 @@ select:disabled {
   background: #d1d5db;
   border-radius: 999px;
 }
+
+/* Pop-out content: one big number per row, one short line under it */
+.energy-pop .pop-row {
+  align-items: center;
+}
+.energy-pop .pop-kicker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9a3412;
+}
+.energy-pop .pop-big {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.energy-pop .pop-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+.energy-pop .pop-save {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: #047857;
+  font-variant-numeric: tabular-nums;
+}
+.energy-pop .pop-unit {
+  font-size: 13px;
+  font-weight: 600;
+  margin-left: 1px;
+  opacity: 0.6;
+}
+.energy-pop .pop-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.energy-pop .pop-link {
+  display: block;
+  margin: 4px auto 0;
+  padding: 4px 6px;
+  border: 0;
+  background: none;
+  color: #6b7280;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.energy-pop .pop-link:hover {
+  color: #111827;
+}
+.energy-pop .modal-head {
+  align-items: center;
+}

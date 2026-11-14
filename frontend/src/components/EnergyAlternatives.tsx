@@ -118,6 +118,51 @@ function NowRow({ row, scale }: { row: AssetEnergy; scale: EnergyScale | null })
   );
 }
 
+/** Pop-out: today's cost as the one big number, heat as a short line under it. */
+function PopNow({ row, scale }: { row: AssetEnergy; scale: EnergyScale | null }) {
+  const heat = mid(row.heat_kwh_yr);
+  const cools = row.heat_kwh_yr !== null && row.heat_kwh_yr[0] < 0;
+  return (
+    <section className="energy-alt-now energy-alt-with-glow pop-row">
+      <Glow size={GLOW_MAX} color={glowColor(heat, scale)} />
+      <div>
+        <div className="pop-kicker">Today</div>
+        <div className="pop-big">
+          {formatRange(row.usd_yr, "", true)}
+          <span className="pop-unit">/yr</span>
+        </div>
+        <div className="pop-sub">
+          {row.heat_kwh_yr ? `${heatText(row.heat_kwh_yr)}${cools ? "" : " of heat"} a year` : ""}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** Pop-out: the upgrade, what it saves (big), and cost and payback in one line. */
+function PopAlt({ alt, row, scale }: { alt: EnergyAlternative; row: AssetEnergy; scale: EnergyScale | null }) {
+  const afterHeat = mid(alt.heat_kwh_yr);
+  return (
+    <li className="energy-alt-option energy-alt-with-glow pop-row">
+      {afterHeat !== null ? (
+        <Glow size={glowSize(afterHeat, mid(row.heat_kwh_yr))} color={glowColor(afterHeat, scale)} />
+      ) : (
+        <div className="energy-alt-glow-box" aria-hidden="true" />
+      )}
+      <div>
+        <div className="pop-title">{alt.title}</div>
+        <div className="pop-save">
+          Save {formatRange(alt.saves_usd_yr, "", true)}
+          <span className="pop-unit">/yr</span>
+        </div>
+        <div className="pop-sub">
+          {formatRange(alt.cost_usd, "", true)} · pays back in {formatPayback(alt.payback_years)}
+        </div>
+      </div>
+    </li>
+  );
+}
+
 function AlternativeRow({ alt, row, scale, index }: {
   alt: EnergyAlternative;
   row: AssetEnergy;
@@ -267,13 +312,14 @@ export function EnergyAlternatives() {
       >
         <div className="modal-head">
           <div>
-            <h2 id="energy-alt-title">{labelText(row.label)}: alternatives</h2>
+            <h2 id="energy-alt-title">{popout ? labelText(row.label) : `${labelText(row.label)}: alternatives`}</h2>
             <p className="muted small">
-              {room ?? "Unknown room"} · {row.asset_id}
+              {room ?? "Unknown room"}
+              {popout ? "" : ` · ${row.asset_id}`}
             </p>
           </div>
           <div className="energy-pop-actions">
-            <button
+            {popout ? null : <button
               className="button small"
               onClick={() => {
                 dispatch({ type: "focusEnergy", assetId: null });
@@ -281,13 +327,17 @@ export function EnergyAlternatives() {
               }}
             >
               See evidence
-            </button>
+            </button>}
             <button className="button small" onClick={close} aria-label="Close">
               ×
             </button>
           </div>
         </div>
-        {row.estimated ? <NowRow row={row} scale={heatScale} /> : <p className="muted">Today: not estimated ({row.note}).</p>}
+        {row.estimated ? (
+          popout ? <PopNow row={row} scale={heatScale} /> : <NowRow row={row} scale={heatScale} />
+        ) : (
+          <p className="muted">Today: not estimated ({row.note}).</p>
+        )}
         {row.alternatives.length === 0 ? (
           <p className="empty">
             {row.label === "lamp" || row.label === "ceiling_light"
@@ -296,15 +346,31 @@ export function EnergyAlternatives() {
           </p>
         ) : (
           <ul className="energy-alt-list">
-            {row.alternatives.map((alt, index) => (
-              <AlternativeRow key={alt.upgrade_id} alt={alt} row={row} scale={heatScale} index={index} />
-            ))}
+            {row.alternatives.map((alt, index) =>
+              popout ? (
+                <PopAlt key={alt.upgrade_id} alt={alt} row={row} scale={heatScale} />
+              ) : (
+                <AlternativeRow key={alt.upgrade_id} alt={alt} row={row} scale={heatScale} index={index} />
+              ),
+            )}
           </ul>
         )}
-        <p className="muted small">
-          Ranges come from the same assumptions as the upgrade plan. Upgrade costs are installed cost
-          ranges from the plan's upgrade library.
-        </p>
+        {popout ? (
+          <button
+            className="pop-link"
+            onClick={() => {
+              dispatch({ type: "focusEnergy", assetId: null });
+              dispatch({ type: "selectAsset", assetId: row.asset_id });
+            }}
+          >
+            See photos and details →
+          </button>
+        ) : (
+          <p className="muted small">
+            Ranges come from the same assumptions as the upgrade plan. Upgrade costs are installed cost
+            ranges from the plan's upgrade library.
+          </p>
+        )}
       </div>
     </div>
   );
