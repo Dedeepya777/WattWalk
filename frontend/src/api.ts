@@ -12,6 +12,7 @@
 import type {
   AnswerRequest,
   ApiError,
+  AssetEnergyResponse,
   AuditResponse,
   AuditStatus,
   Benchmark,
@@ -31,6 +32,7 @@ import type {
 import {
   DEFAULT_PLAN_REQUEST,
   FIXTURE_SID,
+  assetEnergy,
   auditResponse,
   benchmark,
   coverage,
@@ -469,6 +471,19 @@ export function subscribeEvents(
     // Leave scheduled timers alone: a new subscription during the same run
     // should continue playback.  reset/start clear them explicitly.
   };
+}
+
+/** Energy and heat per inventory asset. 404 until the audit has an inventory. */
+export async function getAssetEnergy(sid: string): Promise<AssetEnergyResponse> {
+  if (isFixtureMode) {
+    if (sid !== FIXTURE_SID) {
+      throw new ApiFailure(404, {
+        error: { code: "not_found", message: "Fixture mode only provides fixtureUnitA.", retryable: false },
+      });
+    }
+    return clone(assetEnergy);
+  }
+  return request<AssetEnergyResponse>(`/audits/${encodeURIComponent(sid)}/energy`);
 }
 
 export async function postPlan(sid: string, req: PlanRequest): Promise<PlanResponse> {

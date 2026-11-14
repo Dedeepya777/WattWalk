@@ -6,16 +6,66 @@ import {
   fileUrl,
   postCorrection,
 } from "../api";
-import type { AssetLabel, CorrectionRequest, PlanResponse } from "../contracts";
+import type { AssetEnergy, AssetLabel, CorrectionRequest, PlanResponse } from "../contracts";
 import {
   attrText,
   attrValueText,
   formatKwh,
+  formatRange,
   labelText,
   unknownAttrCount,
 } from "../format";
 import { useAppDispatch, useAppState } from "../state";
 import { SourceChip } from "./SourceChip";
+
+/** Energy and heat of one asset (GET /audits/{sid}/energy). Ranges widen when details were not seen. */
+function EnergySection({ row }: { row: AssetEnergy | null }) {
+  if (!row) {
+    return (
+      <section>
+        <h3>Energy and heat</h3>
+        <p className="empty">Estimates appear once the inventory is ready.</p>
+      </section>
+    );
+  }
+  if (!row.estimated) {
+    return (
+      <section>
+        <h3>Energy and heat</h3>
+        <p className="muted">Not estimated: {row.note}</p>
+      </section>
+    );
+  }
+  const heat = row.heat_kwh_yr;
+  const removes = heat !== null && heat[0] < 0;
+  const heatAbs: [number, number] | null = heat ? [Math.abs(heat[0]), Math.abs(heat[1])] : null;
+  return (
+    <section>
+      <h3>Energy and heat</h3>
+      <dl className="energy-grid">
+        <dt>Electricity per year</dt>
+        <dd>{formatRange(row.kwh_yr, "kWh")}</dd>
+        <dt>Cost per year</dt>
+        <dd>{formatRange(row.usd_yr, "", true)}</dd>
+        <dt>{removes ? "Heat moved outside per year" : "Heat into the room per year"}</dt>
+        <dd>{formatRange(heatAbs, "kWh")}</dd>
+        {row.power_w ? (
+          <>
+            <dt>Power while running</dt>
+            <dd>{formatRange(row.power_w, "W")}</dd>
+          </>
+        ) : null}
+      </dl>
+      <p className="muted small">{row.basis}</p>
+      {row.assumed.length > 0 ? (
+        <p className="muted small">
+          Assumed, not seen in the scan: {row.assumed.map((key) => attrText(key)).join(", ")}
+        </p>
+      ) : null}
+      {row.note ? <p className="muted small">{row.note}</p> : null}
+    </section>
+  );
+}
 
 const STRING_FIELDS: Partial<Record<AssetLabel, Record<string, string[]>>> = {
   window: {
@@ -248,6 +298,8 @@ export function EvidenceCard() {
             </p>
           ) : null}
         </section>
+
+        <EnergySection row={state.energy?.assets.find((row) => row.asset_id === asset.id) ?? null} />
 
         <section>
           <h3>Next step</h3>

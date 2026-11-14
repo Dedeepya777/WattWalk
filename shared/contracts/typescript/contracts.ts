@@ -168,6 +168,33 @@ export interface ModelCallSummary {
 
 export interface HeatShare { room_id: string; share: number; weight: number; }
 
+/** A (low, high) range. */
+export type Range2 = [number, number];
+
+/** Energy and heat of one inventory asset (GET /audits/{sid}/energy). heat_kwh_yr < 0 removes heat. */
+export interface AssetEnergy {
+  asset_id: string;
+  label: AssetLabel;
+  room_id: string | null;
+  estimated: boolean;
+  kwh_yr: Range2 | null;
+  usd_yr: Range2 | null;
+  heat_kwh_yr: Range2 | null;
+  power_w: Range2 | null;
+  basis: string;
+  assumed: string[];
+  note: string;
+}
+
+export interface AssetEnergyResponse {
+  schema_version: "1.0.0";
+  sid: string;
+  assets: AssetEnergy[];
+  total_kwh_yr: Range2;
+  total_usd_yr: Range2;
+  unassigned_cooling_kwh_yr: number;
+}
+
 export interface Question {
   question_id: string;
   asset_id: string | null;

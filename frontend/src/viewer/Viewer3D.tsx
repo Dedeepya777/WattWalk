@@ -8,9 +8,11 @@
  * accepted (0.1 m RMS gate).  All SDK calls go through sdkAdapter.ts.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { Asset } from "../contracts";
+import type { Asset, AssetEnergy } from "../contracts";
 import { FIXTURE_SID } from "../fixtures";
-import { labelText, unknownAttrCount } from "../format";
+import { energySummary, labelText, unknownAttrCount } from "../format";
+import { buildScale, pinColor, type Rgb } from "./energyColor";
+import { HeatGlow } from "./HeatGlow";
 import { useAppDispatch, useAppState } from "../state";
 import {
   SDK_CONNECT_TIMEOUT_MS,
@@ -78,16 +80,23 @@ export interface Viewer3DProps {
   onRetry: () => void;
 }
 
-function tagSpec(asset: Asset, fit: SdkFrameFit, roomLabel: string): TagSpec | null {
+function tagSpec(
+  asset: Asset,
+  fit: SdkFrameFit,
+  roomLabel: string,
+  energy?: AssetEnergy,
+  energyColor?: Rgb | null,
+): TagSpec | null {
   if (!asset.anchor) return null;
   const unknown = unknownAttrCount(asset.attrs);
   const down = CEILING_LABELS.has(asset.label);
+  const energyText = energy ? energySummary(energy) : "";
   return {
     label: labelText(asset.label),
-    description: `${roomLabel}${unknown > 0 ? ` \u00b7 ${unknown} unknown detail${unknown === 1 ? "" : "s"}` : ""}`,
+    description: `${roomLabel}${unknown > 0 ? ` \u00b7 ${unknown} unknown detail${unknown === 1 ? "" : "s"}` : ""}${energyText ? `\n${energyText}` : ""}`,
     anchorPosition: modelToSdk(fit, asset.anchor),
     stemVector: modelDirToSdk(fit, { x: 0, y: 0, z: down ? -STEM_M : STEM_M }),
-    color: unknown > 0 ? UNKNOWN : KNOWN,
+    color: energyColor ?? (unknown > 0 ? UNKNOWN : KNOWN),
   };
 }
 
@@ -107,6 +116,7 @@ export function Viewer3D({ readiness, attempt, onReady, onFailed, onRetry }: Vie
   );
   const [loadedSid, setLoadedSid] = useState<string | null>(null);
   const [tagCount, setTagCount] = useState(0);
+  const [glowCount, setGlowCount] = useState<number | null>(null);
 
   const realModel = selectedSid !== FIXTURE_SID && isModelId(selectedSid);
   const panos = useMemo(() => audit?.panos ?? [], [audit?.panos]);
@@ -119,6 +129,15 @@ export function Viewer3D({ readiness, attempt, onReady, onFailed, onRetry }: Vie
   const inventoryKey = inventory
     .map((a) => `${a.id}:${a.anchor?.x},${a.anchor?.y},${a.anchor?.z}:${unknownAttrCount(a.attrs)}`)
     .join("|");
+  const energyById = useMemo(
+    () => new Map((state.energy?.assets ?? []).map((row) => [row.asset_id, row])),
+    [state.energy],
+  );
+  const energyScale = useMemo(
+    () => buildScale(state.energy?.assets ?? [], state.pinColorMode),
+    [state.energy, state.pinColorMode],
+  );
+  const energyKey = `${state.pinColorMode}|${(state.energy?.assets ?? []).map((row) => `${row.asset_id}:${row.usd_yr}`).join("|")}`;
   const sdkLive = phase.kind === "aligning" || phase.kind === "ready";
 
   // Clear the connection and tag maps when the selected scan changes (or the tab unmounts).
@@ -222,7 +241,8 @@ export function Viewer3D({ readiness, attempt, onReady, onFailed, onRetry }: Vie
         const placed = inventory
           .map((asset) => ({
             asset,
-            spec: tagSpec(asset, alignment.fit, roomLabels.get(asset.room_id ?? "") ?? "Unknown room"),
+            spec: tagSpec(asset, alignment.fit, roomLabels.get(asset.room_id ?? "") ?? "Unknown room",
+              energyById.get(asset.id), pinColor(energyById.get(asset.id), energyScale)),
           }))
           .filter((item): item is { asset: Asset; spec: TagSpec } => item.spec !== null);
         const added = await addTags(sdk, placed.map((item) => item.spec));
@@ -259,7 +279,7 @@ export function Viewer3D({ readiness, attempt, onReady, onFailed, onRetry }: Vie
     };
     // Keyed on sdkLive (not phase) so the "ready" update after placing tags does not re-run this.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sdkLive, panoKey, inventoryKey]);
+  }, [sdkLive, panoKey, inventoryKey, energyKey]);
 
   // 3. Clicking a tag opens the evidence card.
   useEffect(() => {
@@ -351,8 +371,25 @@ export function Viewer3D({ readiness, attempt, onReady, onFailed, onRetry }: Vie
         allow="fullscreen; xr-spatial-tracking"
         onLoad={() => setLoadedSid(selectedSid)}
       />
+      {phase.kind === "ready" && energyScale && sdkRef.current ? (
+        <HeatGlow
+          sdk={sdkRef.current}
+          fit={phase.fit}
+          frame={iframeRef.current}
+          inventory={inventory}
+          panos={panos}
+          energyById={energyById}
+          scale={energyScale}
+          onCount={setGlowCount}
+        />
+      ) : null}
       <p className={`viewer-tour-note pins-${phase.kind}`} role="status">
         {statusText(phase, tagCount, inventory.length)}
+        {phase.kind === "ready" && energyScale
+          ? ` \u00b7 Heat glow: ${glowCount === null ? "starting" : `${glowCount} source${glowCount === 1 ? "" : "s"} in view`}`
+          : phase.kind === "ready" && state.pinColorMode === "details"
+            ? " \u00b7 Choose Pins: Heat or Cost to see the heat glow"
+            : ""}
       </p>
       {phase.kind === "misaligned" || phase.kind === "error" ? (
         <div className="button-row viewer-tour-actions">

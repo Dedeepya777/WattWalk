@@ -273,6 +273,36 @@
         "weight": {"type": "number", "minimum": 0}
       }
     },
+    "Range2": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
+    "AssetEnergy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["asset_id", "label", "room_id", "estimated", "kwh_yr", "usd_yr", "heat_kwh_yr", "power_w", "basis", "assumed", "note"],
+      "properties": {
+        "asset_id": {"$ref": "#/$defs/Id"},
+        "label": {"$ref": "#/$defs/AssetLabel"},
+        "room_id": {"anyOf": [{"$ref": "#/$defs/Id"}, {"type": "null"}]},
+        "estimated": {"type": "boolean"},
+        "kwh_yr": {"anyOf": [{"$ref": "#/$defs/Range2"}, {"type": "null"}]},
+        "usd_yr": {"anyOf": [{"$ref": "#/$defs/Range2"}, {"type": "null"}]},
+        "heat_kwh_yr": {"anyOf": [{"$ref": "#/$defs/Range2"}, {"type": "null"}], "description": "Negative for a unit that moves heat outside."},
+        "power_w": {"anyOf": [{"$ref": "#/$defs/Range2"}, {"type": "null"}]},
+        "basis": {"type": "string"},
+        "assumed": {"type": "array", "items": {"type": "string"}},
+        "note": {"type": "string"}
+      }
+    },
+    "AssetEnergyResponse": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "sid", "assets", "total_kwh_yr", "total_usd_yr", "unassigned_cooling_kwh_yr"],
+      "properties": {
+        "schema_version": {"$ref": "#/$defs/SchemaVersion"},
+        "sid": {"$ref": "#/$defs/Id"},
+        "assets": {"type": "array", "items": {"$ref": "#/$defs/AssetEnergy"}},
+        "total_kwh_yr": {"$ref": "#/$defs/Range2"},
+        "total_usd_yr": {"$ref": "#/$defs/Range2"},
+        "unassigned_cooling_kwh_yr": {"type": "number", "minimum": 0}
+      }
+    },
     "Question": {
       "type": "object", "additionalProperties": false,
       "required": ["question_id", "asset_id", "attr", "text", "choices", "status", "answer"],

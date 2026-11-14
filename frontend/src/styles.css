@@ -1879,3 +1879,90 @@ select:disabled {
     transition: none;
   }
 }
+
+/* Energy and heat section of the evidence card */
+.energy-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0 0 8px;
+}
+.energy-grid dt {
+  color: var(--muted);
+}
+.energy-grid dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Pin colour switch and legend (components/PinColorControls.tsx) */
+.pin-color-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.segmented-label {
+  padding: 0 6px;
+  align-self: center;
+}
+.energy-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.energy-legend-bar {
+  display: inline-block;
+  width: 90px;
+  height: 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border-soft);
+}
+.energy-legend-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.energy-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid #0b1015;
+}
+
+/* Heat glow over the 3D tour (viewer/HeatGlow.tsx) */
+.viewer-tour {
+  position: relative;
+}
+.heat-glow-layer {
+  position: absolute;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 2;
+}
+.heat-glow {
+  position: absolute;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: heat-glow-pulse 3.2s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+.heat-glow-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.9), 0 0 2px rgba(0, 0, 0, 0.9);
+  white-space: nowrap;
+  transform: translateY(18px);
+}
+@keyframes heat-glow-pulse {
+  0%, 100% { transform: scale(0.93); opacity: 0.85; }
+  50% { transform: scale(1.07); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .heat-glow { animation: none; }
+}

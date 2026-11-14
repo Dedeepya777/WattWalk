@@ -5,6 +5,7 @@
  * @examples Vite alias.  Nothing is recomputed: this file only types and groups
  * the illustrative JSON so api.ts can serve it.
  */
+import type { AssetEnergyResponse } from "./contracts";
 import type {
   Asset,
   AuditResponse,
@@ -27,6 +28,7 @@ import type {
   WattEvent,
 } from "./contracts";
 
+import assetEnergyJson from "@examples/asset_energy_response.json";
 import auditResponseJson from "@examples/audit_response.json";
 import auditEmptyRunningJson from "@examples/audit_response_empty_running.json";
 import auditStatusRunningJson from "@examples/audit_status_running.json";
@@ -76,6 +78,7 @@ export const questions = questionsJson as unknown as Question[];
 export const auditStatusRunning = auditStatusRunningJson as unknown as AuditStatus;
 export const auditEmptyRunning = auditEmptyRunningJson as unknown as AuditResponse;
 export const auditResponse = auditResponseJson as unknown as AuditResponse;
+export const assetEnergy = assetEnergyJson as unknown as AssetEnergyResponse;
 export const correctionRequest = correctionRequestJson as unknown as CorrectionRequest;
 export const correctionResponse = correctionResponseJson as unknown as CorrectionResponse;
 export const explainRequest = explainRequestJson as unknown as ExplainRequest;

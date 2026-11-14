@@ -37,6 +37,7 @@ if C is not None:
         "start_audit_request": C.StartAuditRequest, "correction_request": C.CorrectionRequest,
         "correction_response": C.CorrectionResponse, "explain_request": C.ExplainRequest,
         "explain_response": C.ExplainResponse, "answer_request": C.AnswerRequest,
+        "asset_energy_response": C.AssetEnergyResponse,
     }
     lists = {"observations": C.Observation, "inventory": C.Asset, "heat_shares": C.HeatShare,
              "model_calls": C.ModelCall, "questions": C.Question, "test_models": C.TestModel}
