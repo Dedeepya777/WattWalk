@@ -2004,3 +2004,86 @@ select:disabled {
   color: var(--green);
   font-weight: 700;
 }
+
+/* Alternatives card: entrance, glows and bars (step 3) */
+.energy-alt-backdrop {
+  animation: energy-alt-fade 180ms ease-out both;
+}
+.modal.energy-alt-card {
+  animation: energy-alt-in 280ms cubic-bezier(0.2, 0.9, 0.25, 1.15) both;
+}
+.energy-alt-option {
+  animation: energy-alt-rise 320ms ease-out both;
+}
+.energy-alt-with-glow {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+.energy-alt-glow-box {
+  width: 96px;
+  height: 96px;
+  display: grid;
+  place-items: center;
+}
+.energy-alt-glow {
+  display: block;
+  border-radius: 50%;
+  transition: width 900ms cubic-bezier(0.3, 0.7, 0.2, 1), height 900ms cubic-bezier(0.3, 0.7, 0.2, 1);
+  animation: heat-glow-pulse 3.2s ease-in-out infinite;
+}
+.energy-alt-body {
+  min-width: 0;
+}
+.energy-alt-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 2px;
+}
+.energy-alt-bar-track {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--panel-3);
+  border: 1px solid var(--border-soft);
+  overflow: hidden;
+}
+.energy-alt-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--green), var(--accent));
+  transition: width 900ms cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+.energy-alt-pct {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--green);
+  min-width: 82px;
+  text-align: right;
+}
+@keyframes energy-alt-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes energy-alt-in {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes energy-alt-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .energy-alt-backdrop,
+  .modal.energy-alt-card,
+  .energy-alt-option,
+  .energy-alt-glow {
+    animation: none;
+  }
+  .energy-alt-glow,
+  .energy-alt-bar-fill {
+    transition: none;
+  }
+}

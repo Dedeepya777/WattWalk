@@ -3,10 +3,11 @@
  * the upgrades that apply to it, from GET /audits/{sid}/energy. Opened from the evidence card's
  * "Compare alternatives" button. Plain on purpose: the expanding animation and the glows come later.
  */
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { AssetEnergy, EnergyAlternative } from "../contracts";
 import { formatRange, labelText } from "../format";
 import { useAppDispatch, useAppState } from "../state";
+import { REMOVES_HEAT, buildScale, gradient, position, toHex, type EnergyScale } from "../viewer/energyColor";
 
 /** "4–6 months" under a year, else "1.5–2.8 years". */
 export function formatPayback(range: [number, number] | null): string {
@@ -26,9 +27,73 @@ function heatText(range: [number, number] | null): string {
   return formatRange(range, "kWh");
 }
 
-function NowRow({ row }: { row: AssetEnergy }) {
+const GLOW_MAX = 84; // px, today's glow
+
+const mid = (r: [number, number] | null) => (r ? (r[0] + r[1]) / 2 : null);
+
+/** Glow colour for a heat value on the apartment's heat scale (cyan when it removes heat). */
+function glowColor(heat: number | null, scale: EnergyScale | null): string {
+  if (heat === null) return "#6b7280";
+  if (heat < 0) return toHex(REMOVES_HEAT);
+  if (!scale || heat <= 0) return toHex(gradient(0));
+  return toHex(gradient(position(heat, scale)));
+}
+
+/** Glow diameter: today's is GLOW_MAX; others scale by the square root of their heat (area ~ heat). */
+function glowSize(heat: number | null, todayHeat: number | null): number {
+  if (heat === null || todayHeat === null || todayHeat === 0) return GLOW_MAX * 0.5;
+  const ratio = Math.min(1, Math.max(0, Math.abs(heat) / Math.abs(todayHeat)));
+  return Math.max(14, GLOW_MAX * Math.sqrt(ratio));
+}
+
+function Glow({ size, color, from }: { size: number; color: string; from?: number }) {
+  // Starts at `from` (today's size) and transitions to `size` once the card has opened.
+  const [current, setCurrent] = useState(from ?? size);
+  useEffect(() => {
+    const id = window.requestAnimationFrame(() => setCurrent(size));
+    return () => window.cancelAnimationFrame(id);
+  }, [size]);
   return (
-    <section className="energy-alt-now">
+    <div className="energy-alt-glow-box" aria-hidden="true">
+      <span
+        className="energy-alt-glow"
+        style={{
+          width: current,
+          height: current,
+          background: `radial-gradient(circle, ${color}e6 0%, ${color}8c 30%, ${color}33 55%, ${color}00 72%)`,
+        }}
+      />
+    </div>
+  );
+}
+
+/** Bar from 100% (today) sliding to the share left after the upgrade, with the change in %. */
+function ChangeBar({ before, after, unit }: { before: number | null; after: number | null; unit: string }) {
+  const share = before && after !== null && before > 0 ? Math.max(0, Math.min(1, after / before)) : null;
+  const [width, setWidth] = useState(100);
+  useEffect(() => {
+    if (share === null) return undefined;
+    const id = window.setTimeout(() => setWidth(share * 100), 120);
+    return () => window.clearTimeout(id);
+  }, [share]);
+  if (share === null) return null;
+  const pct = Math.round((share - 1) * 100);
+  return (
+    <div className="energy-alt-bar-row" aria-label={`${unit} ${pct}% compared with today`}>
+      <div className="energy-alt-bar-track">
+        <div className="energy-alt-bar-fill" style={{ width: `${width}%` }} />
+      </div>
+      <span className="energy-alt-pct">{pct === 0 ? "same" : `${pct}% ${unit}`}</span>
+    </div>
+  );
+}
+
+function NowRow({ row, scale }: { row: AssetEnergy; scale: EnergyScale | null }) {
+  const heat = mid(row.heat_kwh_yr);
+  return (
+    <section className="energy-alt-now energy-alt-with-glow">
+      <Glow size={GLOW_MAX} color={glowColor(heat, scale)} />
+      <div className="energy-alt-body">
       <h3>Today</h3>
       <dl className="energy-grid">
         <dt>Cost per year</dt>
@@ -42,14 +107,28 @@ function NowRow({ row }: { row: AssetEnergy }) {
           </>
         ) : null}
       </dl>
+      </div>
     </section>
   );
 }
 
-function AlternativeRow({ alt }: { alt: EnergyAlternative }) {
+function AlternativeRow({ alt, row, scale, index }: {
+  alt: EnergyAlternative;
+  row: AssetEnergy;
+  scale: EnergyScale | null;
+  index: number;
+}) {
   const mayBeZero = alt.saves_usd_yr[0] <= 0;
+  const todayHeat = mid(row.heat_kwh_yr);
+  const afterHeat = mid(alt.heat_kwh_yr);
   return (
-    <li className="energy-alt-option">
+    <li className="energy-alt-option energy-alt-with-glow" style={{ animationDelay: `${120 + index * 90}ms` }}>
+      {afterHeat !== null ? (
+        <Glow size={glowSize(afterHeat, todayHeat)} from={GLOW_MAX} color={glowColor(afterHeat, scale)} />
+      ) : (
+        <div className="energy-alt-glow-box" aria-hidden="true" />
+      )}
+      <div className="energy-alt-body">
       <div className="energy-alt-option-head">
         <strong>{alt.title}</strong>
         <span className="muted small">{alt.who}</span>
@@ -83,7 +162,9 @@ function AlternativeRow({ alt }: { alt: EnergyAlternative }) {
           {mayBeZero && alt.payback_years ? " (best case)" : ""}
         </dd>
       </dl>
+      <ChangeBar before={mid(row.usd_yr)} after={mid(alt.usd_yr)} unit="cost" />
       <p className="muted small">{alt.basis}</p>
+      </div>
     </li>
   );
 }
@@ -96,6 +177,7 @@ export function EnergyAlternatives() {
   const asset = assetId ? state.audit?.inventory.find((item) => item.id === assetId) ?? null : null;
   const room = asset?.room_id ? state.audit?.rooms.find((r) => r.id === asset.room_id)?.label : undefined;
   const close = () => dispatch({ type: "focusEnergy", assetId: null });
+  const heatScale = buildScale(state.energy?.assets ?? [], "heat");
 
   useEffect(() => {
     if (!assetId) return undefined;
@@ -109,7 +191,7 @@ export function EnergyAlternatives() {
   if (!assetId || !row) return null;
 
   return (
-    <div className="modal-backdrop" role="presentation" onClick={close}>
+    <div className="modal-backdrop energy-alt-backdrop" role="presentation" onClick={close}>
       <div
         className="modal energy-alt-card"
         role="dialog"
@@ -128,7 +210,7 @@ export function EnergyAlternatives() {
             ×
           </button>
         </div>
-        {row.estimated ? <NowRow row={row} /> : <p className="muted">Today: not estimated ({row.note}).</p>}
+        {row.estimated ? <NowRow row={row} scale={heatScale} /> : <p className="muted">Today: not estimated ({row.note}).</p>}
         {row.alternatives.length === 0 ? (
           <p className="empty">
             {row.label === "lamp" || row.label === "ceiling_light"
@@ -137,8 +219,8 @@ export function EnergyAlternatives() {
           </p>
         ) : (
           <ul className="energy-alt-list">
-            {row.alternatives.map((alt) => (
-              <AlternativeRow key={alt.upgrade_id} alt={alt} />
+            {row.alternatives.map((alt, index) => (
+              <AlternativeRow key={alt.upgrade_id} alt={alt} row={row} scale={heatScale} index={index} />
             ))}
           </ul>
         )}
