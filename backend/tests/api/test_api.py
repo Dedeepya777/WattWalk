@@ -260,3 +260,25 @@ def test_asset_energy_endpoint(client):
     assert r.json() == example("asset_energy_response.json")
     got = r.json()
     assert {a["asset_id"] for a in got["assets"]} == {a["id"] for a in client.get(f"/audits/{SID}").json()["inventory"]}
+
+
+def test_research_alternatives_endpoint(client, monkeypatch):
+    from wattwalk.engine import ai_alternatives as ai
+
+    run_fixture(client)
+    window = next(a for a in client.get(f"/audits/{SID}").json()["inventory"] if a["label"] == "window")
+    url = f"/audits/{SID}/assets/{window['id']}/alternatives/research"
+    monkeypatch.setattr(config, "DEEPSEEK_API_KEY", "")
+    r = client.post(url)
+    assert r.status_code == 503 and "DEEPSEEK_API_KEY" in r.json()["error"]["message"]
+    assert client.post(f"/audits/{SID}/assets/nope/alternatives/research").status_code == 404
+
+    reply = {"ideas": [{"title": "Thermal curtains", "why": "", "kwh_cut_pct": [10, 20],
+                        "cost_usd": [60, 150], "who": "tenant"}]}
+    monkeypatch.setattr(ai, "_ask_deepseek", lambda model_id: (lambda prompt: json.dumps(reply)))
+    r = client.post(url)
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["asset_id"] == window["id"] and body["cached"] is False
+    assert [a["title"] for a in body["alternatives"]] == ["Thermal curtains"]
+    assert client.post(url).json()["cached"] is True

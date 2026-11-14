@@ -203,6 +203,19 @@ export interface AssetEnergy {
   alternatives: EnergyAlternative[];
 }
 
+/** POST /audits/{sid}/assets/{asset_id}/alternatives/research: rough AI upgrade ideas for one asset. */
+export interface AiAlternativesResponse {
+  schema_version: "1.0.0";
+  sid: string;
+  asset_id: string;
+  model_id: string;
+  cached: boolean;
+  today_kwh_yr: Range2 | null;
+  today_usd_yr: Range2 | null;
+  alternatives: EnergyAlternative[];
+  note: string;
+}
+
 export interface AssetEnergyResponse {
   schema_version: "1.0.0";
   sid: string;

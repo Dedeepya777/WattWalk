@@ -287,6 +287,23 @@ class AssetEnergy(_Strict):
     alternatives: list[EnergyAlternative] = Field(default_factory=list)
 
 
+class AiAlternativesResponse(_Strict):
+    """POST /audits/{sid}/assets/{asset_id}/alternatives/research: 2-3 extra upgrade ideas for one asset
+    suggested by a language model (rough, not sourced). The model suggests the idea, a share of energy
+    cut and a price range; the saving and payback are computed by the energy engine from the asset's
+    energy. today_kwh_yr/today_usd_yr are the model's estimate of the asset today, set only when the
+    engine has no sourced estimate for it. cached is true when the answer was saved earlier."""
+    schema_version: Literal["1.0.0"] = SCHEMA_VERSION
+    sid: str
+    asset_id: str
+    model_id: str
+    cached: bool
+    today_kwh_yr: Optional[Range2] = None
+    today_usd_yr: Optional[Range2] = None
+    alternatives: list[EnergyAlternative]
+    note: str = ""
+
+
 class AssetEnergyResponse(_Strict):
     """GET /audits/{sid}/energy. unassigned_cooling_kwh_yr is cooling energy no scanned asset accounts
     for (a central system with no cooling unit in the scan)."""

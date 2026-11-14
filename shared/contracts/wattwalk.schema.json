@@ -322,6 +322,21 @@
         "unassigned_cooling_kwh_yr": {"type": "number", "minimum": 0}
       }
     },
+    "AiAlternativesResponse": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "sid", "asset_id", "model_id", "cached", "today_kwh_yr", "today_usd_yr", "alternatives", "note"],
+      "properties": {
+        "schema_version": {"$ref": "#/$defs/SchemaVersion"},
+        "sid": {"$ref": "#/$defs/Id"},
+        "asset_id": {"type": "string"},
+        "model_id": {"type": "string"},
+        "cached": {"type": "boolean"},
+        "today_kwh_yr": {"anyOf": [{"$ref": "#/$defs/Range2"}, {"type": "null"}]},
+        "today_usd_yr": {"anyOf": [{"$ref": "#/$defs/Range2"}, {"type": "null"}]},
+        "alternatives": {"type": "array", "items": {"$ref": "#/$defs/EnergyAlternative"}},
+        "note": {"type": "string"}
+      }
+    },
     "Question": {
       "type": "object", "additionalProperties": false,
       "required": ["question_id", "asset_id", "attr", "text", "choices", "status", "answer"],

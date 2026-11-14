@@ -27,6 +27,7 @@ from ..agent import tools
 from ..agent.verify import verify_audit  # noqa: F401  (re-exported for convenience)
 from ..engine.asset_energy import energy_response
 from ..contracts import (
+    AiAlternativesResponse,
     AnswerRequest,
     AssetEnergyResponse,
     Asset,
@@ -303,6 +304,22 @@ def asset_energy(sid: str) -> AssetEnergyResponse:
     """Energy and heat per inventory asset (engine/asset_energy.py); recomputed on every call."""
     inv, b = _inventory_and_building(sid)
     return energy_response(sid, inv, b)
+
+
+@app.post("/audits/{sid}/assets/{asset_id}/alternatives/research", response_model=AiAlternativesResponse)
+async def research_alternatives(sid: str, asset_id: str, refresh: bool = False) -> AiAlternativesResponse:
+    """2-3 rough upgrade ideas for one asset from DeepSeek (engine/ai_alternatives.py), saved per audit."""
+    from ..engine import ai_alternatives as ai
+
+    inv, b = _inventory_and_building(sid)
+    if asset_id not in {a.id for a in inv}:
+        raise E.not_found(f"Audit {sid} has no asset {asset_id}.", sid=sid, asset_id=asset_id)
+    try:
+        return await asyncio.to_thread(ai.research, sid, asset_id, inv, b, None, refresh)
+    except ai.ResearchUnavailable as e:
+        raise E.ApiError(503, "unavailable", str(e), False, {"fix": "Add DEEPSEEK_API_KEY to .env and restart."})
+    except ai.ResearchFailed as e:
+        raise E.ApiError(502, "upstream_error", f"Could not get alternatives: {e}", True)
 
 
 @app.post("/audits/{sid}/explain", response_model=ExplainResponse)
