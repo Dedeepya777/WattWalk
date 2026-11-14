@@ -83,29 +83,20 @@ def skybox_urls(sid: str, resolution: str) -> dict[str, list[str]]:
         if now - cached_time < 600:
             return cached_urls
 
-    query = """
-    query GetSkybox($id: ID!, $resolution: String!) {
-      model(id: $id) {
-        panos {
-          id
-          skybox(resolution: $resolution) {
-            children {
-              url
-            }
-          }
-        }
-      }
-    }
-    """
-    data = graph(query, {"id": sid, "resolution": resolution})
-    panos_data = data.get("model", {}).get("panos", [])
+    if resolution not in ("2k", "4k"):
+        raise ValueError(f"resolution must be 2k or 4k, got {resolution!r}")
+    # Plan F.2: the resolution is a literal in the query string; children is a list of 6 signed URLs
+    # in face order 0 to 5. A pano whose skybox status is not "available" has no faces.
+    query = 'query Skybox($id: ID!) { model(id: $id) { panoLocations { id skybox(resolution: "%s") { status children } } } }' % resolution
+    data = graph(query, {"id": sid})
+    panos_data = (data.get("model") or {}).get("panoLocations") or []
     result: dict[str, list[str]] = {}
     for p in panos_data:
         p_id = p.get("id")
-        children = p.get("skybox", {}).get("children", [])
-        urls = [c.get("url", "") for c in children]
+        sky = p.get("skybox") or {}
         if p_id:
-            result[p_id] = urls
+            children = sky.get("children") or []
+            result[p_id] = [str(u) for u in children] if sky.get("status") == "available" else []
 
     _SKYBOX_CACHE[cache_key] = (now, result)
     return result
@@ -143,6 +134,27 @@ def _chain_edges_to_polygon(edges: list[dict[str, Any]]) -> list[Vec2]:
     return [Vec2(x=pt[0], y=pt[1]) for pt in points]
 
 
+def _ring_from_edge_ids(edge_ids: list[str], edges: dict[str, tuple[str, str]],
+                        vertices: dict[str, tuple[float, float]]) -> list[tuple[float, float]]:
+    """Chain a room's boundary edges into a ring of vertex positions (plan 8.1.1): start with the first
+    edge, then repeatedly append the unused edge that shares the ring's last vertex."""
+    pairs = [edges[e] for e in edge_ids if e in edges]
+    if not pairs:
+        return []
+    ring = list(pairs[0])
+    used = {0}
+    while True:
+        nxt = next((i for i, (a, b) in enumerate(pairs) if i not in used and ring[-1] in (a, b)), None)
+        if nxt is None:
+            break
+        a, b = pairs[nxt]
+        used.add(nxt)
+        ring.append(b if a == ring[-1] else a)
+    if len(ring) > 1 and ring[-1] == ring[0]:
+        ring.pop()
+    return [vertices[v] for v in ring if v in vertices]
+
+
 def get_geometry(sid: str) -> ModelGeometry:
     """Retrieve 3D model geometry (rooms, panos, walls) from fixture or live Matterport API."""
     mode = config.effective_data_mode()
@@ -171,49 +183,22 @@ def get_geometry(sid: str) -> ModelGeometry:
             data = json.load(f)
         return ModelGeometry.model_validate(data)
 
-    # Query live Matterport GraphQL API
+    # Query live Matterport GraphQL API (plan Appendix F.1). Walls and vertex positions live on floors;
+    # rooms reference boundary edge ids; classifications is a list with confidences.
     query = """
-    query GetModelGeometry($id: ID!) {
+    query Geometry($id: ID!) {
       model(id: $id) {
-        id
-        name
-        address {
-          formattedAddress
-        }
-        geolocation {
-          latitude
-          longitude
-        }
-        floors {
-          id
-          rooms {
-            id
-            classification
-            dimensions {
-              areaFloor
-              height
-            }
-            boundary {
-              edges {
-                type
-                vertices {
-                  x
-                  y
-                  z
-                }
-              }
-            }
-          }
-        }
-        panoLocations {
-          id
-          label
-          position {
-            x
-            y
-            z
-          }
-        }
+        id name
+        address { address locality administrativeArea postalCode }
+        geolocation { lat long }
+        floors { id label
+                 vertices { id position { x y } }
+                 edges { id type thickness vertices { id } } }
+        rooms { id floor { id }
+                classifications { label confidence }
+                boundary { edges { id } }
+                dimensions(units: metric) { areaFloor width depth height } }
+        panoLocations { id label position { x y z } }
       }
     }
     """
@@ -223,74 +208,68 @@ def get_geometry(sid: str) -> ModelGeometry:
         raise UpstreamError("matterport", retryable=False, message=f"Model {sid} not found in Matterport API", http_status=404)
 
     idx = lookup(sid)
-    addr_str = ""
-    if model_data.get("address"):
-        addr_str = model_data["address"].get("formattedAddress") or ""
+    addr_str = ((model_data.get("address") or {}).get("address") or "").strip()
     if not addr_str and idx:
         addr_str = idx.address
 
     lat = None
     lon = None
-    geo = model_data.get("geolocation")
-    if geo:
-        lat = geo.get("latitude")
-        lon = geo.get("longitude")
+    geo = model_data.get("geolocation") or {}
+    try:
+        lat = float(geo["lat"]) if geo.get("lat") not in (None, "") else None
+        lon = float(geo["long"]) if geo.get("long") not in (None, "") else None
+    except (TypeError, ValueError):
+        lat = lon = None
     if lat is None and idx:
         lat = idx.lat
         lon = idx.lon
 
-    rooms: list[Room] = []
+    # Vertex positions and edges per floor; every edge of type "wall" is a WallSegment (plan 7.4).
+    vertices: dict[str, tuple[float, float]] = {}
+    edges: dict[str, tuple[str, str]] = {}
     walls: list[WallSegment] = []
-    shapely_rooms: list[tuple[Room, Polygon]] = []
-
-    floors = model_data.get("floors", [])
-    for floor in floors:
+    for floor in model_data.get("floors") or []:
         floor_id = floor.get("id", "f1")
-        for r in floor.get("rooms", []):
-            classification = r.get("classification", "")
-            if classification == "Void":
+        floor_vertices = {v["id"]: (float(v["position"]["x"]), float(v["position"]["y"]))
+                          for v in floor.get("vertices") or [] if v.get("position")}
+        vertices.update(floor_vertices)
+        for e in floor.get("edges") or []:
+            ids = [v["id"] for v in e.get("vertices") or []]
+            if len(ids) != 2:
                 continue
+            edges[e["id"]] = (ids[0], ids[1])
+            if e.get("type") == "wall" and ids[0] in floor_vertices and ids[1] in floor_vertices:
+                (ax, ay), (bx, by) = floor_vertices[ids[0]], floor_vertices[ids[1]]
+                walls.append(WallSegment(a=Vec2(x=ax, y=ay), b=Vec2(x=bx, y=by), floor_id=floor_id))
 
-            edges = r.get("boundary", {}).get("edges", [])
-            for edge in edges:
-                if edge.get("type") == "wall":
-                    v = edge.get("vertices", [])
-                    if len(v) >= 2:
-                        walls.append(
-                            WallSegment(
-                                a=Vec2(x=float(v[0]["x"]), y=float(v[0]["y"])),
-                                b=Vec2(x=float(v[1]["x"]), y=float(v[1]["y"])),
-                                floor_id=floor_id,
-                            )
-                        )
+    rooms: list[Room] = []
+    shapely_rooms: list[tuple[Room, Polygon]] = []
+    for r in model_data.get("rooms") or []:
+        classes = sorted(r.get("classifications") or [], key=lambda c: -(c.get("confidence") or 0))
+        label = (classes[0].get("label") if classes else None) or "Unlabelled"
+        if label == "Void":
+            continue  # layout artifacts (plan 7.4)
+        ring = _ring_from_edge_ids([e["id"] for e in (r.get("boundary") or {}).get("edges") or []], edges, vertices)
+        if len(ring) < 3:
+            continue  # no polygon: excluded (plan 8.1.1)
+        sh_poly = Polygon(ring).buffer(0)  # repairs self-intersections (plan 8.1.1)
+        dims = r.get("dimensions") or {}
+        area_floor = dims.get("areaFloor")
+        area_m2 = float(area_floor) if area_floor else round(float(sh_poly.area), 2)
+        height_val = dims.get("height")
+        room_obj = Room(
+            id=r["id"],
+            label=label,
+            floor_id=(r.get("floor") or {}).get("id", "f1"),
+            area_m2=area_m2,
+            height_m=float(height_val) if height_val else None,
+            polygon=[Vec2(x=x, y=y) for x, y in ring],
+            pano_ids=[],
+        )
+        rooms.append(room_obj)
+        shapely_rooms.append((room_obj, sh_poly))
 
-            poly_vecs = _chain_edges_to_polygon(edges)
-            coords = [(p.x, p.y) for p in poly_vecs]
-            sh_poly = Polygon(coords)
-
-            dims = r.get("dimensions", {})
-            area_floor = dims.get("areaFloor")
-            if area_floor is not None and area_floor > 0:
-                area_m2 = float(area_floor)
-            else:
-                area_m2 = round(float(sh_poly.area), 2)
-
-            height_val = dims.get("height")
-            height_m = float(height_val) if height_val is not None else None
-
-            room_obj = Room(
-                id=r.get("id", f"r_{len(rooms)+1}"),
-                label=classification or f"Room {len(rooms)+1}",
-                floor_id=floor_id,
-                area_m2=area_m2,
-                height_m=height_m,
-                polygon=poly_vecs,
-                pano_ids=[],
-            )
-            rooms.append(room_obj)
-            shapely_rooms.append((room_obj, sh_poly))
-
-    # Assign panos to rooms by point-in-polygon
+    # Assign each pano to the smallest room containing it (rooms can overlap at their edges)
     panos: list[Pano] = []
     for pl in model_data.get("panoLocations", []):
         pos = pl.get("position", {})
@@ -300,11 +279,10 @@ def get_geometry(sid: str) -> ModelGeometry:
         pt = Point(px, py)
 
         assigned_room_id: str | None = None
-        for room_obj, sh_poly in shapely_rooms:
-            if sh_poly.contains(pt) or sh_poly.covers(pt):
-                assigned_room_id = room_obj.id
-                room_obj.pano_ids.append(pl.get("id", ""))
-                break
+        containing = sorted((ro for ro, poly in shapely_rooms if poly.covers(pt)), key=lambda ro: ro.area_m2)
+        if containing:
+            assigned_room_id = containing[0].id
+            containing[0].pano_ids.append(pl.get("id", ""))
 
         pano_obj = Pano(
             id=pl.get("id", ""),
