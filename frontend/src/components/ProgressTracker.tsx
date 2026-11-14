@@ -43,7 +43,7 @@ export function ProgressTracker() {
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={progress.percent}
-        aria-valuetext={`${progress.percent}% – ${progress.stage}`}
+        aria-valuetext={`${progress.percent}% \u2013 ${progress.stage}`}
       >
         <div
           className={running ? "progress-fill running" : "progress-fill"}
@@ -55,9 +55,9 @@ export function ProgressTracker() {
         <span>
           {clock(elapsed)} elapsed
           {running && progress.etaS !== null
-            ? ` · about ${clock(progress.etaS)} left in this stage`
+            ? ` \u00b7 about ${clock(progress.etaS)} left in this stage`
             : running && progress.estimating
-              ? " · estimating time left…"
+              ? " \u00b7 estimating time left\u2026"
               : ""}
         </span>
       </div>
