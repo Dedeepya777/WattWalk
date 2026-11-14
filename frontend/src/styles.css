@@ -2171,7 +2171,7 @@ select:disabled {
   }
   to {
     left: var(--bx1); top: var(--by1); width: var(--bw1); height: var(--bh1);
-    border-radius: 14px; background-color: var(--panel); border: 1px solid var(--border);
+    border-radius: 16px; background-color: #ffffff; border: 1px solid #e5e7eb;
   }
 }
 @keyframes energy-pop-settle {
@@ -2216,4 +2216,116 @@ select:disabled {
 .energy-pop .energy-alt-bar-fill {
   animation: none;
   transition: none;
+}
+
+/* Energy pop-out: light card. The colour variables are redefined inside the card so every shared
+   class (buttons, grids, muted text) turns light without touching the rest of the dark UI. */
+.energy-pop {
+  color-scheme: light;
+  --panel: #ffffff;
+  --panel-3: #f1f5f9;
+  --border: #e5e7eb;
+  --border-soft: #eef0f3;
+  --text: #111827;
+  --muted: #6b7280;
+  --green: #059669;
+  --accent: #10b981;
+  color: var(--text);
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 16px 16px 12px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35), 0 4px 14px rgba(15, 23, 42, 0.18);
+}
+.energy-pop .modal-head {
+  align-items: flex-start;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.energy-pop h2 {
+  margin: 0 0 2px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.energy-pop h3 {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9a3412;
+}
+.energy-pop .button {
+  background: #ffffff;
+  border-color: #d1d5db;
+  color: #374151;
+  border-radius: 999px;
+  font-weight: 600;
+}
+.energy-pop .button:hover:not(:disabled) {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+.energy-pop .energy-alt-now {
+  background: linear-gradient(135deg, #fff7ed, #fef2f2);
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+.energy-pop .energy-alt-list {
+  gap: 10px;
+}
+.energy-pop .energy-alt-option {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+.energy-pop .energy-alt-option-head strong {
+  font-size: 14px;
+}
+.energy-pop .energy-grid {
+  gap: 3px 12px;
+}
+.energy-pop .energy-grid dd {
+  font-weight: 600;
+  text-align: right;
+}
+.energy-pop .energy-alt-saves {
+  justify-self: end;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #d1fae5;
+  color: #065f46;
+}
+.energy-pop .energy-alt-bar-track {
+  height: 6px;
+  background: #eef2f7;
+  border: 0;
+}
+.energy-pop .energy-alt-bar-fill {
+  background: linear-gradient(90deg, #34d399, #10b981);
+}
+.energy-pop .energy-alt-pct {
+  color: #047857;
+}
+.energy-pop .energy-alt-option p.muted {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.energy-pop > p.muted {
+  font-size: 12px;
+  line-height: 1.4;
+}
+.energy-pop::-webkit-scrollbar {
+  width: 8px;
+}
+.energy-pop::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 999px;
 }
