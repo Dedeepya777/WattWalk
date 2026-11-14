@@ -7,6 +7,9 @@ import path from "node:path";
 // the mode banner show the committed face-basis calibration status.
 export default defineConfig({
   plugins: [react()],
+  // Read the repo-root .env (the one .env.example describes). Vite exposes only VITE_* names
+  // to the browser, so the backend's API keys stay server-side.
+  envDir: "..",
   resolve: {
     alias: {
       "@examples": path.resolve(__dirname, "../shared/examples"),
