@@ -19,6 +19,7 @@ export type AgentName = "planner" | "walker" | "exterior_analyst" | "retrofit_pl
 
 export interface Vec2 { x: number; y: number; }
 export interface Vec3 { x: number; y: number; z: number; }
+export interface Quat { x: number; y: number; z: number; w: number; }
 export interface BBox { x0: number; y0: number; x1: number; y1: number; }
 
 export interface Attr {
@@ -46,7 +47,7 @@ export interface Room {
   pano_ids: string[];
 }
 
-export interface Pano { id: string; label: string; position: Vec3; room_id: string | null; }
+export interface Pano { id: string; label: string; position: Vec3; room_id: string | null; rotation?: Quat | null; }
 export interface WallSegment { a: Vec2; b: Vec2; floor_id: string; }
 
 export interface ModelGeometry {

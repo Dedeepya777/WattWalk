@@ -64,10 +64,13 @@ def anchor_from_bbox(pano: Pano, face: int, bbox: BBox, face_px: int,
 _DEFAULT_FORWARD = {1: (0.0, 1.0), 2: (1.0, 0.0), 3: (0.0, -1.0), 4: (-1.0, 0.0)}
 
 
-def face_forward_xy() -> dict[int, tuple[float, float]]:
+def face_forward_xy(pano=None) -> dict[int, tuple[float, float]]:
+    """Horizontal look direction of each horizon face of ``pano`` (uses its rotation when present)."""
     try:
-        from ..spatial.geometry import load_basis  # Person 4
-        basis = load_basis()
-        return {f: (float(basis.forward(f)[0]), float(basis.forward(f)[1])) for f in (1, 2, 3, 4)}
+        from ..spatial import geometry  # Person 4
+        if pano is not None:
+            return geometry.face_forward_xy(pano)
+        basis = geometry.load_basis()
+        return {f: (float(basis.faces[f].forward[0]), float(basis.faces[f].forward[1])) for f in (1, 2, 3, 4)}
     except Exception:  # module missing or a different basis API: fall back to the documented default
         return dict(_DEFAULT_FORWARD)

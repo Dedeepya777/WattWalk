@@ -353,7 +353,7 @@ def _do_neighbor(sid: str, geometry: ModelGeometry, obs: Observation) -> Resolve
     room = _room(geometry, nb.room_id)
     walls = geometry.walls if room is None else [w for w in geometry.walls if w.floor_id == room.floor_id]
     for det in dets:
-        anchor, _method = anchor_from_bbox(nb, face, det.bbox, 2048, walls, room)
+        anchor, _method = anchor_from_bbox(nb, face, det.bbox, 2048, walls, room, label=det.label)
         if obs.anchor is not None and anchor is not None:
             d = ((anchor.x - obs.anchor.x) ** 2 + (anchor.y - obs.anchor.y) ** 2 + (anchor.z - obs.anchor.z) ** 2) ** 0.5
             if d >= THRESHOLD_M.get(obs.label, 0.5):

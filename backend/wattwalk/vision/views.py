@@ -113,5 +113,5 @@ def room_for(geometry: ModelGeometry, pano: Pano, anchor) -> str | None:
 def face_toward(pano: Pano, x: float, y: float) -> int:
     """The horizon face whose centre ray points closest to (x, y)."""
     dx, dy = x - pano.position.x, y - pano.position.y
-    forwards = face_forward_xy()
+    forwards = face_forward_xy(pano)
     return max(forwards, key=lambda f: forwards[f][0] * dx + forwards[f][1] * dy)

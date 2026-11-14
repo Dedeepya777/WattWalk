@@ -7,6 +7,13 @@
     "3": {"forward": [0, -1, 0], "right": [-1, 0, 0], "up": [0, 0, 1]},
     "4": {"forward": [-1, 0, 0], "right": [0, 1, 0], "up": [0, 0, 1]}
   },
+  "pano_local_faces": {
+    "1": {"forward": [1, 0, 0], "right": [0, -1, 0], "up": [0, 0, 1]},
+    "2": {"forward": [0, -1, 0], "right": [-1, 0, 0], "up": [0, 0, 1]},
+    "3": {"forward": [-1, 0, 0], "right": [0, 1, 0], "up": [0, 0, 1]},
+    "4": {"forward": [0, 1, 0], "right": [1, 0, 0], "up": [0, 0, 1]}
+  },
+  "pano_local_note": "Used for panos with a Model API rotation quaternion: these directions are rotated by it. Measured on 2ibibwUGQAe 2026-11-14: three sight lines to one window met within 0.03 m.",
   "calibrated_on": null,
   "residual_m": null
 }

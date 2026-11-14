@@ -18,6 +18,7 @@ from wattwalk import config
 from wattwalk.contracts import (
     ModelGeometry,
     Pano,
+    Quat,
     Room,
     Vec2,
     Vec3,
@@ -134,6 +135,19 @@ def _chain_edges_to_polygon(edges: list[dict[str, Any]]) -> list[Vec2]:
     return [Vec2(x=pt[0], y=pt[1]) for pt in points]
 
 
+def _quat(raw: dict | None) -> Quat | None:
+    """Pano rotation from the Model API; ``None`` when missing or not a usable quaternion."""
+    if not raw:
+        return None
+    try:
+        q = Quat(x=float(raw["x"]), y=float(raw["y"]), z=float(raw["z"]), w=float(raw["w"]))
+    except (KeyError, TypeError, ValueError):
+        return None
+    if abs(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w - 1.0) > 0.05:
+        return None
+    return q
+
+
 def _ring_from_edge_ids(edge_ids: list[str], edges: dict[str, tuple[str, str]],
                         vertices: dict[str, tuple[float, float]]) -> list[tuple[float, float]]:
     """Chain a room's boundary edges into a ring of vertex positions (plan 8.1.1): start with the first
@@ -181,7 +195,11 @@ def get_geometry(sid: str) -> ModelGeometry:
     if cache_path.exists():
         with open(cache_path, "r", encoding="utf-8") as f:
             data = json.load(f)
-        return ModelGeometry.model_validate(data)
+        cached = ModelGeometry.model_validate(data)
+        # Caches written before pano rotations were fetched would anchor every pin with the wrong
+        # face directions; refetch those once.
+        if not cached.panos or any(p.rotation is not None for p in cached.panos):
+            return cached
 
     # Query live Matterport GraphQL API (plan Appendix F.1). Walls and vertex positions live on floors;
     # rooms reference boundary edge ids; classifications is a list with confidences.
@@ -198,7 +216,7 @@ def get_geometry(sid: str) -> ModelGeometry:
                 classifications { label confidence }
                 boundary { edges { id } }
                 dimensions(units: metric) { areaFloor width depth height } }
-        panoLocations { id label position { x y z } }
+        panoLocations { id label position { x y z } rotation { x y z w } }
       }
     }
     """
@@ -289,6 +307,7 @@ def get_geometry(sid: str) -> ModelGeometry:
             label=pl.get("label", ""),
             position=Vec3(x=px, y=py, z=pz),
             room_id=assigned_room_id,
+            rotation=_quat(pl.get("rotation")),
         )
         panos.append(pano_obj)
 

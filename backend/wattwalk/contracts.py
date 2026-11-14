@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import Literal, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_serializer
 
 SCHEMA_VERSION: Literal["1.0.0"] = "1.0.0"
 
@@ -42,6 +42,14 @@ class Vec3(_Strict):
     x: float
     y: float
     z: float
+
+
+class Quat(_Strict):
+    """Unit quaternion (Model API panoLocations.rotation); rotates pano-local directions into the model frame."""
+    x: float
+    y: float
+    z: float
+    w: float
 
 
 class BBox(_Strict):
@@ -84,6 +92,14 @@ class Pano(_Strict):
     label: str
     position: Vec3
     room_id: Optional[str] = None
+    rotation: Optional[Quat] = None
+
+    @model_serializer(mode="wrap")
+    def _omit_missing_rotation(self, handler):  # keeps rotation-less output identical to 1.0.0
+        data = handler(self)
+        if isinstance(data, dict) and data.get("rotation") is None:
+            data.pop("rotation", None)
+        return data
 
 
 class WallSegment(_Strict):
