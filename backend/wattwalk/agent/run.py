@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import logging
 import shutil
 from datetime import datetime, timezone
 
-from .. import config, store
+from .. import config, health_registry, store
 from ..contracts import AuditStatus, Error, ErrorBody
 from ..errors import AuditCancelled, UpstreamError
 from . import context
@@ -25,6 +26,22 @@ class Conflict(Exception):
 
 class NotFound(Exception):
     pass
+
+
+# A 1x1 grey JPEG written as the crop and roof image of the illustrative fixture run, so links resolve.
+PLACEHOLDER_JPEG = base64.b64decode(
+    "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/"
+    "wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q=="
+)
+
+
+def fixture_available(sid: str) -> bool:
+    """A fixture run is possible for the illustrative apartment, or for a real sid whose owners
+    committed both fixtures/live/<sid>/geometry.json (Person 1) and observations.json (Person 2)."""
+    if sid == config.FIXTURE_SID:
+        return True
+    d = config.FIXTURES_DIR / "live" / sid
+    return (d / "geometry.json").is_file() and (d / "observations.json").is_file()
 
 
 def now() -> str:
@@ -54,8 +71,6 @@ def _prepare_fixture(sid: str) -> None:
         # Fixture crop and roof links must resolve without provider imagery.
         import json
 
-        from .providers import PLACEHOLDER_JPEG
-
         for item in json.loads((config.EXAMPLES_DIR / "observations.json").read_text(encoding="utf-8")):
             path = store.audit_path(sid, item["crop_ref"])
             if not path.exists():
@@ -69,8 +84,7 @@ async def start_run(sid: str, mode: Mode) -> AuditStatus:
     if is_running(sid):
         raise Conflict(sid)
     if mode == "fixture":
-        from .providers import fixture_files_present
-        if not fixture_files_present(sid):
+        if not fixture_available(sid):
             raise NotFound(f"No fixture exists for sid {sid}.")
     replay_meta = None
     if mode == "replay":
@@ -94,8 +108,23 @@ async def start_run(sid: str, mode: Mode) -> AuditStatus:
     if not context.register(ctx):
         raise Conflict(sid)
     store.write(sid, "status.json", status)
+    if mode != "replay":
+        store.write(sid, "run_modes.json", run_modes(mode))
     ctx.task = asyncio.create_task(_run(ctx, replay_meta))
     return status
+
+
+def run_modes(mode: Mode) -> dict:
+    """The modes a run actually used (a fixture run forces fixture data and vision and the scripted agent)."""
+    if mode == "fixture":
+        return {"data_mode": "fixture", "vision_mode": "fixture", "agent_mode": "scripted"}
+    return {"data_mode": config.DATA_MODE, "vision_mode": config.VISION_MODE, "agent_mode": config.AGENT_MODE}
+
+
+def replay_label(meta: dict) -> str:
+    """Prefix of the first replay event: when it was recorded and with which modes."""
+    return (f"Replay of run recorded at {meta['recorded_at']} (data {meta.get('data_mode', 'unknown')}, "
+            f"vision {meta.get('vision_mode', 'unknown')}, agent {meta.get('agent_mode', 'unknown')}): ")
 
 
 async def _run(ctx: RunContext, replay_meta: dict | None) -> None:
@@ -106,8 +135,7 @@ async def _run(ctx: RunContext, replay_meta: dict | None) -> None:
     final, err = "completed", None
     try:
         if mode == "replay":
-            bus.emit("system", "status",
-                     f"Replay of run recorded at {replay_meta['recorded_at']}: Audit started (mode replay)",
+            bus.emit("system", "status", replay_label(replay_meta) + "Audit started (mode replay)",
                      {"status": "running", "replay_of": replay_meta["recorded_at"]})
             await replay.play(ctx, replay_meta)
         else:
@@ -124,6 +152,8 @@ async def _run(ctx: RunContext, replay_meta: dict | None) -> None:
         final = "cancelled"
     except UpstreamError as e:
         final, err = "failed", _error(e.code, e.message, e.retryable, {"integration": e.integration})
+        if mode == "live" and e.integration in health_registry.INTEGRATIONS:
+            health_registry.record(e.integration, False, e.message)
     except Exception as e:  # noqa: BLE001
         log.exception("audit %s failed", sid)
         final, err = "failed", _error("internal", (str(e) or type(e).__name__)[:300], False)

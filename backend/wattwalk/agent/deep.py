@@ -2,7 +2,8 @@
 
 Built with deepagents.create_deep_agent (deepagents 0.7.x argument names: system_prompt, subagents,
 backend, permissions; subagents take tool objects). The planner model is ChatBedrockConverse with
-temperature 0. Every planner-tier model call is logged as a ModelCall (tier planner).
+temperature 0, or an OpenRouter model for "openrouter/" ids. Every planner-tier model call is logged as
+a ModelCall (tier planner, agent = the calling subagent). Check a model with: python -m wattwalk.agent.deep ping
 
 Agent files: a FilesystemBackend rooted at audits/{sid}/ in virtual mode. The planner may read the
 audit files and may write only under /agent/ (todo, notes, report draft). /agent/report.md becomes
@@ -36,35 +37,66 @@ MODEL_FACTORY: Optional[Callable[[], Any]] = None
 RECURSION_LIMIT = 400
 
 
+OPENROUTER_PREFIX = "openrouter/"
+
+
 def make_model():
+    """Planner chat model. A Bedrock model id uses ChatBedrockConverse; an id of the form
+    "openrouter/<model>" uses OpenRouter's OpenAI-compatible API (needs OPENROUTER_API_KEY)."""
     if MODEL_FACTORY is not None:
         return MODEL_FACTORY()
-    if not config.PLANNER_MODEL_ID:
+    model_id = config.PLANNER_MODEL_ID
+    if not model_id:
         raise RuntimeError("WATTWALK_PLANNER_MODEL_ID is not set; use WATTWALK_AGENT_MODE=scripted")
+    if model_id.startswith(OPENROUTER_PREFIX):
+        if not config.OPENROUTER_API_KEY:
+            raise RuntimeError("WATTWALK_PLANNER_MODEL_ID is an openrouter/ id but OPENROUTER_API_KEY is not set")
+        try:
+            from langchain_openai import ChatOpenAI
+        except ImportError as e:
+            raise RuntimeError("openrouter/ planner ids need the langchain-openai package: pip install langchain-openai") from e
+
+        return ChatOpenAI(model=model_id.removeprefix(OPENROUTER_PREFIX), base_url=config.OPENROUTER_BASE_URL,
+                          api_key=config.OPENROUTER_API_KEY, temperature=0, max_retries=3, timeout=120,
+                          default_headers={"X-Title": "WattWalk"})
     from langchain_aws import ChatBedrockConverse
 
-    return ChatBedrockConverse(model=config.PLANNER_MODEL_ID, region_name=config.AWS_REGION, temperature=0)
+    return ChatBedrockConverse(model=model_id, region_name=config.AWS_REGION, temperature=0)
 
 
 def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+SUBAGENT_NAMES = {"exterior_analyst", "walker", "retrofit_planner", "verifier"}
+
+
 class PlannerCallLogger(BaseCallbackHandler):
-    """Appends one ModelCall (tier planner) per chat model call, with token usage when reported."""
+    """Appends one ModelCall (tier planner) per chat model call, with token usage when reported.
+
+    The ModelCall agent is the subagent that made the call (LangChain sets metadata lc_agent_name to the
+    subagent's name inside a task delegation), otherwise "planner".
+    """
 
     def __init__(self, sid: str, kind: str = "planner"):
         self.sid, self.kind = sid, kind
         self._t0: dict[Any, float] = {}
+        self._agent: dict[Any, str] = {}
 
-    def on_chat_model_start(self, serialized, messages, *, run_id, **kwargs):
+    def _start(self, run_id, metadata) -> None:
         self._t0[run_id] = time.monotonic()
+        name = (metadata or {}).get("lc_agent_name")
+        self._agent[run_id] = name if name in SUBAGENT_NAMES else "planner"
 
-    def on_llm_start(self, serialized, prompts, *, run_id, **kwargs):
-        self._t0[run_id] = time.monotonic()
+    def on_chat_model_start(self, serialized, messages, *, run_id, metadata=None, **kwargs):
+        self._start(run_id, metadata)
+
+    def on_llm_start(self, serialized, prompts, *, run_id, metadata=None, **kwargs):
+        self._start(run_id, metadata)
 
     def on_llm_end(self, response, *, run_id, **kwargs):
         t0 = self._t0.pop(run_id, time.monotonic())
+        agent = self._agent.pop(run_id, "planner")
         tin = tout = None
         try:
             msg = response.generations[0][0].message
@@ -73,7 +105,7 @@ class PlannerCallLogger(BaseCallbackHandler):
         except (AttributeError, IndexError):
             pass
         store.append_model_calls(self.sid, [ModelCall(
-            id=f"mc_planner_{uuid.uuid4().hex[:10]}", agent="planner", kind=self.kind,
+            id=f"mc_planner_{uuid.uuid4().hex[:10]}", agent=agent, kind=self.kind,
             model_id=config.PLANNER_MODEL_ID or "planner-model", model_tier="planner",
             tokens_in=tin, tokens_out=tout, latency_ms=int((time.monotonic() - t0) * 1000), cache_hit=False, at=_now())])
 
@@ -196,3 +228,40 @@ def reword(text: str) -> str:
     content = out.content if isinstance(out.content, str) else " ".join(
         p.get("text", "") for p in out.content if isinstance(p, dict))
     return content.strip()
+
+
+def ping(model=None) -> bool:
+    """One planner-model call with a trivial tool bound. True if the model answered with a tool call."""
+    def add(a: int, b: int) -> int:
+        """Add two integers."""
+        return a + b
+
+    m = (model or make_model()).bind_tools([StructuredTool.from_function(add)])
+    out = m.invoke("Use the add tool to compute 2 + 3. Reply only with the tool call.")
+    calls = getattr(out, "tool_calls", None) or []
+    return any(c.get("name") == "add" for c in calls)
+
+
+def main(argv: list[str] | None = None) -> int:
+    import argparse
+
+    ap = argparse.ArgumentParser(prog="python -m wattwalk.agent.deep")
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    sub.add_parser("ping", help="check the planner model answers with a tool call")
+    args = ap.parse_args(argv)
+    if args.cmd == "ping":
+        print(f"planner model: {config.PLANNER_MODEL_ID or '(WATTWALK_PLANNER_MODEL_ID not set)'}")
+        try:
+            ok = ping()
+        except Exception as e:  # noqa: BLE001 - report any provider error plainly
+            print(f"FAILED: {type(e).__name__}: {e}")
+            return 2
+        print("OK: tool call returned" if ok else "FAILED: the model answered without a tool call; choose another model")
+        return 0 if ok else 1
+    return 0
+
+
+if __name__ == "__main__":
+    import sys
+
+    sys.exit(main())

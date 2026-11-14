@@ -226,3 +226,26 @@ def test_running_audit_response_shape(client, monkeypatch):
     assert audit["status"]["status"] == "running" and audit["inventory"] == [] and audit["coverage"] is None
     client.post(f"/audits/{SID}/cancel")
     wait_status(client, SID, "cancelled")
+
+
+def test_models_flags_computed_from_files(client, env, monkeypatch):
+    """has_fixture needs both geometry.json and observations.json; has_replay needs a recording."""
+    monkeypatch.setattr(config, "FIXTURES_DIR", env / "fixtures")
+    hero = "r1NfhYW4TAr"
+
+    def flags():
+        return {m["sid"]: (m["has_fixture"], m["has_replay"]) for m in client.get("/models/test").json()}
+
+    sids = [m["sid"] for m in client.get("/models/test").json()]
+    assert sids[0] == hero and sids[-1] == SID
+    assert flags()[hero] == (False, False) and flags()[SID] == (True, False)
+    live = env / "fixtures" / "live" / hero
+    live.mkdir(parents=True)
+    (live / "geometry.json").write_text("{}")
+    assert flags()[hero] == (False, False)  # observations.json still missing
+    (live / "observations.json").write_text("[]")
+    assert flags()[hero] == (True, False)
+    rec = config.DEMO_DIR / "replays" / hero
+    rec.mkdir(parents=True)
+    (rec / "events.jsonl").write_text("")
+    assert flags()[hero] == (True, True)

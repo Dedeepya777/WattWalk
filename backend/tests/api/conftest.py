@@ -22,6 +22,12 @@ def env(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "CACHE_DIR", audits / "cache")
     monkeypatch.setattr(config, "DEMO_DIR", tmp_path / "demo")
     monkeypatch.setitem(config.TIMEOUTS_S, "ask_user", 0.3)
+    # Independent of the developer's local .env (which may be in live mode).
+    monkeypatch.setattr(config, "DATA_MODE", "fixture")
+    monkeypatch.setattr(config, "VISION_MODE", "fixture")
+    monkeypatch.setattr(config, "AGENT_MODE", "scripted")
+    from wattwalk import health_registry
+    health_registry.clear()
     return tmp_path
 
 
