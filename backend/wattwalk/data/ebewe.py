@@ -61,6 +61,17 @@ def normalize_address(address: str) -> str:
     return res.replace("'", "''")
 
 
+def _record_health(ok: bool, detail: str = "") -> None:
+    mode = config.effective_data_mode()
+    if mode == "fixture":
+        return
+    try:
+        from wattwalk import health_registry
+        health_registry.record("ebewe", ok, detail)
+    except (ImportError, AttributeError):
+        pass
+
+
 def lookup(address: str, city: str = "Los Angeles") -> EbeweRecord | None:
     """Look up building energy intensity in LA EBEWE dataset.
 
@@ -86,15 +97,20 @@ def lookup(address: str, city: str = "Los Angeles") -> EbeweRecord | None:
     try:
         resp = requests.get(EBEWE_ENDPOINT, params=params, timeout=timeout)
         if resp.status_code >= 500:
+            _record_health(False, str(resp.status_code))
             raise UpstreamError("ebewe", retryable=True, message=f"EBEWE server error: {resp.status_code}", http_status=resp.status_code)
         resp.raise_for_status()
         records = resp.json()
+        _record_health(True)
     except UpstreamError:
         raise
     except requests.exceptions.Timeout:
+        _record_health(False, "504")
         raise UpstreamError("ebewe", retryable=True, message="EBEWE request timed out", http_status=504)
     except Exception as e:
+        _record_health(False, type(e).__name__)
         raise UpstreamError("ebewe", retryable=True, message=f"EBEWE request failed: {e}")
+
 
     if not records or not isinstance(records, list):
         _EBEWE_CACHE[norm_addr] = None

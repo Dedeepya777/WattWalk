@@ -12,7 +12,7 @@ import os
 import re
 import zipfile
 from contextlib import contextmanager
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Iterator
 
 from wattwalk import config
@@ -21,17 +21,32 @@ from wattwalk.contracts import IntegrationStatus
 _COSTAR_CACHE: dict[str, dict[str, Any]] = {}
 
 
+def _record_health(ok: bool, detail: str = "") -> None:
+    mode = config.effective_data_mode()
+    if mode == "fixture":
+        return
+    try:
+        from wattwalk import health_registry
+        health_registry.record("costar_kit", ok, detail)
+    except (ImportError, AttributeError):
+        pass
+
+
 def kit_status() -> IntegrationStatus:
     """Return status of CoStar data kit integration."""
     mode = config.effective_data_mode()
     if mode == "fixture":
         return "fixture"
 
-    kit_path = Path(config.COSTAR_KIT_ZIP)
-    if not config.COSTAR_KIT_ZIP or not kit_path.exists():
+    if not config.COSTAR_KIT_ZIP:
+        return "unavailable"
+
+    kit_path = Path(config.COSTAR_KIT_ZIP).expanduser()
+    if not kit_path.exists():
         return "unavailable"
 
     return "live"
+
 
 
 def costar_record(costar_property_id: str | None, homes_listing_id: str | None) -> dict[str, Any] | None:
@@ -108,26 +123,48 @@ CONSTRUCTION_COMPLETE = 2  # ConstructionEventType
 @contextmanager
 def _kit_file(rel: str) -> Iterator[Any]:
     """Open a kit file (a path such as "data/apartment-listing.jsonl") as text, from a folder or a zip."""
-    kit = Path(config.COSTAR_KIT_ZIP)
+    if not config.COSTAR_KIT_ZIP:
+        _record_health(False, "missing COSTAR_KIT_ZIP")
+        yield None
+        return
+
+    kit = Path(config.COSTAR_KIT_ZIP).expanduser()
     if kit.is_dir():
-        path = kit / rel
+        rel_parts = PurePosixPath(rel).parts
+        path = kit.joinpath(*rel_parts)
         if not path.exists():
+            _record_health(False, f"missing {rel}")
             yield None
             return
-        with open(path, "r", encoding="utf-8", errors="ignore") as f:
-            yield f
+        try:
+            with open(path, "r", encoding="utf-8", errors="ignore") as f:
+                _record_health(True)
+                yield f
+        except Exception as exc:
+            _record_health(False, type(exc).__name__)
+            yield None
         return
+
     if kit.is_file() and kit.suffix.lower() == ".zip":
         pwd = config.COSTAR_ZIP_PASSWORD.encode("utf-8") if config.COSTAR_ZIP_PASSWORD else None
-        with zipfile.ZipFile(kit, "r") as zf:
-            name = next((n for n in zf.namelist() if n.replace("\\", "/").endswith(rel)), None)
-            if name is None:
-                yield None
-                return
-            with zf.open(name, "r", pwd=pwd) as raw:
-                yield io.TextIOWrapper(raw, encoding="utf-8", errors="ignore")
+        try:
+            with zipfile.ZipFile(kit, "r") as zf:
+                name = next((n for n in zf.namelist() if n.replace("\\", "/").endswith(rel)), None)
+                if name is None:
+                    _record_health(False, f"not in zip: {rel}")
+                    yield None
+                    return
+                with zf.open(name, "r", pwd=pwd) as raw:
+                    _record_health(True)
+                    yield io.TextIOWrapper(raw, encoding="utf-8", errors="ignore")
+        except Exception as exc:
+            _record_health(False, type(exc).__name__)
+            yield None
         return
+
+    _record_health(False, "unsupported format")
     yield None
+
 
 
 def _keys_for_sid(sid: str) -> tuple[list[int], list[int]]:

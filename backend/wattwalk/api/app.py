@@ -6,10 +6,12 @@ Plan, corrections and audit reads never call a model (D3).
 from __future__ import annotations
 
 import asyncio
+import importlib
 import json
 import logging
 import time
 import uuid
+from concurrent.futures import ThreadPoolExecutor, wait
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 
@@ -17,7 +19,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 
-from .. import config, store
+from .. import config, health_registry, store
 from ..agent import ask as ask_mod
 from ..agent import providers as P
 from ..agent import run as runner
@@ -77,26 +79,84 @@ def _status(sid: str) -> AuditStatus:
 
 
 # ----------------------------------------------------------------------------- meta
+# Probe functions owned by Person 1 (data) and Person 2 (vision). Each makes one cheap real call and
+# records its outcome in health_registry itself.
+PROBES = {
+    "matterport": ("wattwalk.data.probes", "probe_matterport"),
+    "vexcel": ("wattwalk.data.probes", "probe_vexcel"),
+    "costar_kit": ("wattwalk.data.probes", "probe_costar_kit"),
+    "ebewe": ("wattwalk.data.probes", "probe_ebewe"),
+    "bedrock": ("wattwalk.vision.probes", "probe_bedrock"),
+}
+PROBE_TIMEOUT_S = 20
+
+
+def _configured() -> dict[str, bool]:
+    return {
+        "matterport": bool(config.MATTERPORT_API_KEY and config.MATTERPORT_API_TOKEN),
+        "vexcel": bool(config.VEXCEL_API_KEY),
+        "costar_kit": bool(config.COSTAR_KIT_ZIP),
+        "ebewe": True,
+        "bedrock": bool(config.SMALL_VISION_MODEL_ID or config.LARGE_VISION_MODEL_ID),
+    }
+
+
+def _is_fixture(name: str) -> bool:
+    mode = config.VISION_MODE if name == "bedrock" else config.DATA_MODE
+    return mode == "fixture"
+
+
 def _integrations() -> HealthIntegrations:
-    data_mode, vision_mode = config.effective_data_mode(), config.effective_vision_mode()
+    conf = _configured()
+    return HealthIntegrations(**{n: health_registry.status(n, conf[n], _is_fixture(n)) for n in health_registry.INTEGRATIONS})
 
-    def layer(configured: bool) -> str:
-        if data_mode == "fixture":
-            return "fixture"
-        return "live" if configured else "unavailable"
 
-    bedrock_configured = bool(config.SMALL_VISION_MODEL_ID or config.LARGE_VISION_MODEL_ID or config.PLANNER_MODEL_ID)
-    return HealthIntegrations(
-        matterport=layer(bool(config.MATTERPORT_API_KEY and config.MATTERPORT_API_TOKEN)),
-        vexcel=layer(bool(config.VEXCEL_API_KEY)),
-        costar_kit=layer(bool(config.COSTAR_KIT_ZIP)),
-        ebewe=layer(True),
-        bedrock="live" if bedrock_configured and (vision_mode == "live" or config.AGENT_MODE == "deep_agents") else "unavailable",
-    )
+def _probe_fn(name: str):
+    module, fn = PROBES[name]
+    try:
+        return getattr(importlib.import_module(module), fn)
+    except (ImportError, AttributeError):
+        return None
+
+
+def run_probes() -> None:
+    """Call every live, configured integration's probe concurrently, capped at PROBE_TIMEOUT_S overall."""
+    conf = _configured()
+    jobs = {}
+    for name in health_registry.INTEGRATIONS:
+        if _is_fixture(name) or not conf[name]:
+            continue
+        fn = _probe_fn(name)
+        if fn is None:
+            log.info("health probe %s: probe not available (%s.%s not merged)", name, *PROBES[name])
+            continue
+        jobs[name] = fn
+    if not jobs:
+        return
+    pool = ThreadPoolExecutor(max_workers=len(jobs), thread_name_prefix="probe")
+    futures = {pool.submit(fn): name for name, fn in jobs.items()}
+    done, pending = wait(futures, timeout=PROBE_TIMEOUT_S)
+    for f in done:
+        name = futures[f]
+        exc = f.exception()
+        if exc is not None:  # a probe should record itself; make sure a crash still counts as a failure
+            health_registry.record(name, False, f"probe raised {type(exc).__name__}: {exc}")
+        entry = health_registry.last(name)
+        log.info("health probe %s: %s", name, entry and ("ok" if entry[0] else "failed") + (f" ({entry[1]})" if entry[1] else ""))
+    for f in pending:
+        name = futures[f]
+        health_registry.record(name, False, f"probe timed out after {PROBE_TIMEOUT_S} s")
+        log.warning("health probe %s: timed out after %s s", name, PROBE_TIMEOUT_S)
+    pool.shutdown(wait=False, cancel_futures=True)
 
 
 @app.get("/health", response_model=Health)
-def health() -> Health:
+def health(probe: bool = False) -> Health:
+    """Plain GET reads the registry only. GET /health?probe=1 first calls each integration's probe."""
+    if probe:
+        run_probes()
+    if config.AGENT_MODE == "deep_agents" and not config.PLANNER_MODEL_ID:
+        log.warning("health: WATTWALK_AGENT_MODE=deep_agents but WATTWALK_PLANNER_MODEL_ID is empty")
     integ = _integrations()
     ok = all(v == "live" for v in integ.model_dump().values())
     return Health(status="ok" if ok else "degraded", integrations=integ)
@@ -106,7 +166,7 @@ def health() -> Health:
 def models_test() -> list[TestModel]:
     out = []
     for m in json.loads(TEST_MODELS_FILE.read_text(encoding="utf-8")):
-        m["has_fixture"] = P.fixture_files_present(m["sid"])
+        m["has_fixture"] = runner.fixture_available(m["sid"])
         m["has_replay"] = replay.has_replay(m["sid"])
         out.append(TestModel.model_validate(m))
     return out
@@ -306,4 +366,4 @@ def files(sid: str, path: str):
 
 @app.get("/", include_in_schema=False)
 def root():
-    return JSONResponse({"service": "wattwalk", "docs": "/docs", "implementations": P.implementation_status()})
+    return JSONResponse({"service": "wattwalk", "docs": "/docs"})

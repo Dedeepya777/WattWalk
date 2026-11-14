@@ -64,5 +64,8 @@ OLLAMA_BASE_URL = (os.getenv("OLLAMA_BASE_URL") or "http://localhost:11434").rst
 # vision calls are spaced at least this many seconds apart.
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
 GEMINI_MIN_INTERVAL_S = float(os.getenv("GEMINI_MIN_INTERVAL_S", "4"))
+# OpenRouter (free hosted models): model ids of the form "openrouter/<model>" are sent here.
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
+OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1").rstrip("/")
 
 TIMEOUTS_S = {"matterport": 30, "vexcel": 20, "ebewe": 15, "bedrock_vision": 45, "explain": 15, "ask_user": 30}

@@ -6,10 +6,11 @@ See plan/plan.md section 7.5, 13.1 to 13.4, and Appendix A.1.3.
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 from typing import Any
 
-from wattwalk import config
+from wattwalk import config, store
 from wattwalk.contracts import (
     Attr,
     Building,
@@ -31,12 +32,27 @@ def get_building(sid: str, geometry: ModelGeometry) -> Building:
             fixture_path = config.EXAMPLES_DIR / "building.json"
             with open(fixture_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
+            # Only keep ortho_ref if the file actually exists in the audit folder
+            audit_file = store.audit_path(sid, "vexcel", "ortho.jpg")
+            if not audit_file.exists():
+                if "roof" in data and isinstance(data["roof"], dict):
+                    data["roof"]["ortho_ref"] = None
             return Building.model_validate(data)
 
         live_fix = config.FIXTURES_DIR / "live" / sid / "building.json"
         if live_fix.exists():
             with open(live_fix, "r", encoding="utf-8") as f:
                 data = json.load(f)
+            if "layer_status" in data:
+                for k in data["layer_status"]:
+                    if data["layer_status"][k] == "live":
+                        data["layer_status"][k] = "fixture"
+            if "roof" in data and isinstance(data["roof"], dict):
+                if data["roof"].get("status") == "live":
+                    data["roof"]["status"] = "fixture"
+                audit_file = store.audit_path(sid, "vexcel", "ortho.jpg")
+                if not audit_file.exists():
+                    data["roof"]["ortho_ref"] = None
             return Building.model_validate(data)
 
     idx = index.lookup(sid)
@@ -71,14 +87,25 @@ def get_building(sid: str, geometry: ModelGeometry) -> Building:
     # 3. Vexcel layer
     lat = geometry.lat or (idx.lat if idx else None)
     lon = geometry.lon or (idx.lon if idx else None)
-    ortho_path = None
+    roof_ortho_ref: str | None = None
     roof_attrs: dict[str, Any] = {}
     layer_vexcel = "unavailable"
     if lat is not None and lon is not None:
         try:
-            ortho_path = vexcel.ortho(sid, lat, lon)
-            roof_attrs = vexcel.roof_attributes(lat, lon) or {}
-            if ortho_path:
+            cache_path = vexcel.ortho(sid, lat, lon)
+            if cache_path and cache_path.exists():
+                try:
+                    dst = store.audit_path(sid, "vexcel", "ortho.jpg")
+                    shutil.copyfile(cache_path, dst)
+                    roof_ortho_ref = "vexcel/ortho.jpg"
+                except Exception:
+                    roof_ortho_ref = None
+
+            attrs = vexcel.roof_attributes(lat, lon)
+            if attrs:
+                roof_attrs = attrs
+
+            if roof_ortho_ref or roof_attrs:
                 layer_vexcel = "live"
         except Exception:
             layer_vexcel = "unavailable"
@@ -129,7 +156,7 @@ def get_building(sid: str, geometry: ModelGeometry) -> Building:
     roof = Roof(
         status=layer_vexcel,
         attributes=roof_attrs,
-        ortho_ref=str(ortho_path) if ortho_path else None,
+        ortho_ref=roof_ortho_ref,
     )
 
     return Building(

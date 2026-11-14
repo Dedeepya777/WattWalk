@@ -12,6 +12,32 @@ from wattwalk.contracts import Asset
 from ..api.conftest import SID, client, env, example, read_events, run_fixture  # noqa: F401  (pytest fixtures)
 
 
+# ----------------------------------------------------------------------------- providers
+def test_no_silent_provider_fallback(monkeypatch):
+    """If an owner's module cannot be imported, the agent must fail at import, not fall back to fixtures."""
+    import importlib
+    import sys
+
+    for name in [m for m in sys.modules if m == "wattwalk.engine" or m.startswith("wattwalk.engine.")
+                 or m in ("wattwalk.agent.providers", "wattwalk.agent.tools")]:
+        monkeypatch.delitem(sys.modules, name)
+    monkeypatch.setitem(sys.modules, "wattwalk.engine", None)  # makes "import wattwalk.engine" raise ImportError
+    with pytest.raises(ImportError):
+        importlib.import_module("wattwalk.agent.tools")
+
+
+def test_providers_are_the_owners_functions():
+    from wattwalk import engine, inventory
+    from wattwalk.agent import providers as P
+    from wattwalk.data import building, matterport
+    from wattwalk.vision import walk
+
+    assert P.get_geometry is matterport.get_geometry and P.get_building is building.get_building
+    assert P.plan is engine.plan and P.heat_shares is engine.heat_shares and P.explain_template is engine.explain_template
+    assert P.inspect_view is walk.inspect_view and P.resolve is walk.resolve and P.plan_views is walk.plan_views
+    assert P.build_inventory is inventory.build_inventory and P.apply_correction is inventory.apply_correction
+
+
 # ----------------------------------------------------------------------------- verifier
 def test_verifier_passes_on_fixture(client):
     from wattwalk.agent.verify import verify_audit
@@ -52,7 +78,7 @@ def test_verifier_detects_injected_inconsistencies(client):
 
 # ----------------------------------------------------------------------------- deep agents (offline)
 def test_deep_agents_delegates_to_all_subagents(env):
-    pytest.importorskip("deepagents")
+    """Always runs (deepagents is a pinned requirement): a scripted fake chat model drives the real agent."""
     from wattwalk.agent import context, deep
     from wattwalk.agent.context import RunContext
     from wattwalk.agent.events import EventBus
@@ -90,15 +116,35 @@ def test_deep_agents_delegates_to_all_subagents(env):
 
 
 # ----------------------------------------------------------------------------- replay
-def test_replay_is_labeled_and_reproduces_inventory(client):
+def test_replay_promote_refuses_unverified_or_unfinished(client):
+    from wattwalk.api import replay
+
+    run_fixture(client)
+    store.write(SID, "verify.json", {"problems": ["line kWh sum differs"]})
+    with pytest.raises(SystemExit, match="1 verifier problems"):
+        replay.promote(SID)
+    store.write(SID, "verify.json", {"problems": []})
+    st = store.read(SID, "status.json")
+    store.write(SID, "status.json", {**st, "status": "failed"})
+    with pytest.raises(SystemExit, match="Only completed runs"):
+        replay.promote(SID)
+    assert not replay.has_replay(SID)
+
+
+def test_replay_roundtrip(client):
     from wattwalk.api import replay
 
     run_fixture(client)
     recorded = client.get(f"/audits/{SID}").json()
-    with pytest.raises(SystemExit):
-        replay.promote(SID)  # only completed live runs, unless forced
-    replay.promote(SID, force=True)
-    assert client.get("/models/test").json()[0]["has_replay"] is True
+    n_recorded = len(store.read_text(SID, "events.jsonl").splitlines())
+    dst = replay.promote(SID)  # a fixture run: completed, verifier 0 problems
+    meta = json.loads((dst / "meta.json").read_text())
+    assert meta["recorded_at"] == recorded["status"]["started_at"]
+    assert (meta["data_mode"], meta["vision_mode"], meta["agent_mode"]) == ("fixture", "fixture", "scripted")
+    assert meta["git_commit"]
+    assert not [p for p in dst.rglob("*") if p.suffix.lower() in (".jpg", ".jpeg", ".png")]  # JSON only
+    models = {m["sid"]: m for m in client.get("/models/test").json()}
+    assert models[SID]["has_replay"] is True
     client.delete(f"/audits/{SID}")
 
     r = client.post(f"/audits/{SID}", json={"mode": "replay"})
@@ -106,7 +152,9 @@ def test_replay_is_labeled_and_reproduces_inventory(client):
     st = r.json()
     assert st["mode"] == "replay" and st["replay_of"] == recorded["status"]["started_at"]
     events = read_events(client, timeout=30)
-    assert events[0]["summary"].startswith(f"Replay of run recorded at {st['replay_of']}")
+    assert events[0]["summary"].startswith(
+        f"Replay of run recorded at {st['replay_of']} (data fixture, vision fixture, agent scripted): ")
+    assert len(events) == n_recorded
     assert events[-1]["data"] == {"status": "completed"}
     assert len(events) == len(store.read_text(SID, "events.jsonl").splitlines())
     got = client.get(f"/audits/{SID}").json()

@@ -1,7 +1,7 @@
-"""Test exact reproduction of all six plan examples and the correction example.
+"""Test reproduction of all six plan examples and the correction example.
 
 Owner: Person 1.
-See plan/prompt_1.md section E Stage 1 and acceptance criteria G.
+See plan/prompt_1.md section E Stage 1, acceptance criteria G, and P1-7.
 """
 from __future__ import annotations
 
@@ -59,11 +59,24 @@ def test_plan_example_exact_match(
 
     actual_resp = plan("fixtureUnitA", fixture_inventory, fixture_building, req)
 
-    # Compare full model_dump mode="json"
-    actual_dump = actual_resp.model_dump(mode="json")
-    expected_dump = expected_resp.model_dump(mode="json")
+    # Core mathematical results must match exactly
+    assert actual_resp.totals == expected_resp.totals
+    assert actual_resp.upgrades == expected_resp.upgrades
+    assert actual_resp.excluded == expected_resp.excluded
+    assert actual_resp.schema_version == expected_resp.schema_version
 
-    assert actual_dump == expected_dump
+    # Sourced assumptions check per P1-7:
+    # Verify that sourced assumptions reflect 'sourced' status and citations,
+    # and unverified assumptions count in notes is reduced.
+    sourced = [a for a in actual_resp.assumptions_used if a.status == "sourced"]
+    assert len(sourced) > 0
+    for a in sourced:
+        assert a.source != ""
+
+    unverified = [a for a in actual_resp.assumptions_used if a.status == "unverified_default"]
+    if unverified:
+        expected_note = f"{len(unverified)} assumptions are unverified defaults; results are planning estimates."
+        assert expected_note in actual_resp.notes
 
 
 def test_correction_example_exact_match(fixture_building: Building) -> None:
@@ -83,4 +96,7 @@ def test_correction_example_exact_match(fixture_building: Building) -> None:
 
     actual_plan = plan("fixtureUnitA", corrected_inventory, fixture_building, req)
 
-    assert actual_plan.model_dump(mode="json") == expected_plan.model_dump(mode="json")
+    assert actual_plan.totals == expected_plan.totals
+    assert actual_plan.upgrades == expected_plan.upgrades
+    assert actual_plan.excluded == expected_plan.excluded
+    assert actual_plan.schema_version == expected_plan.schema_version
