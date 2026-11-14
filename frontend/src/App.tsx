@@ -21,12 +21,12 @@ import { BottomTabs } from "./components/BottomTabs";
 import { BuildingCard } from "./components/BuildingCard";
 import { EnergyAlternatives } from "./components/EnergyAlternatives";
 import { EvidenceCard } from "./components/EvidenceCard";
-import { ModelCallCounter } from "./components/ModelCallCounter";
 import { ModelPicker } from "./components/ModelPicker";
 import { ModeBanner } from "./components/ModeBanner";
 import { PlanPanel } from "./components/PlanPanel";
 import { QuestionDialog } from "./components/QuestionDialog";
 import { StartControls } from "./components/StartControls";
+import { Logo } from "./components/Logo";
 import type { StartAuditRequest, WattEvent } from "./contracts";
 import { useAppDispatch, useAppState, type RequestError } from "./state";
 import { FloorPlan2D } from "./viewer/FloorPlan2D";
@@ -56,6 +56,35 @@ export default function App() {
   const dispatch = useAppDispatch();
   const stateRef = useRef(state);
   stateRef.current = state;
+
+  // Bottom panel (agent log and audit detail tabs) stays hidden until the user opens it, like the
+  // VS Code terminal. Ctrl+` toggles it; the choice is remembered in this browser.
+  const [panelOpen, setPanelOpen] = useState(() => {
+    try {
+      return localStorage.getItem("wattwalk.panelOpen") === "1";
+    } catch {
+      return false;
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem("wattwalk.panelOpen", panelOpen ? "1" : "0");
+    } catch {
+      // storage unavailable (private window): keep the in-memory choice
+    }
+  }, [panelOpen]);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.key === "`") {
+        event.preventDefault();
+        setPanelOpen((open) => !open);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  const lastEvent = state.events.length ? state.events[state.events.length - 1] : null;
+  const auditRunning = state.audit?.status.status === "running";
 
   const stopEventsRef = useRef<(() => void) | null>(null);
   const runNonceRef = useRef(0);
@@ -472,8 +501,11 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
+        <div className="brand" aria-label="WattWalk">
+          <Logo className="brand-logo" />
+          WattWalk
+        </div>
         <ModeBanner />
-        <ModelCallCounter />
       </header>
 
       {errorBanner ? (
@@ -566,10 +598,31 @@ export default function App() {
         </aside>
       </div>
 
-      <div className="bottom-grid">
-        <AgentLog />
-        <BottomTabs />
-      </div>
+      {panelOpen ? (
+        <div className="bottom-grid" id="bottom-panel">
+          <AgentLog />
+          <BottomTabs />
+        </div>
+      ) : null}
+
+      <button
+        type="button"
+        className={`panel-bar ${panelOpen ? "open" : ""}`}
+        aria-expanded={panelOpen}
+        aria-controls="bottom-panel"
+        onClick={() => setPanelOpen((open) => !open)}
+        title="Show or hide activity and details (Ctrl+`)"
+      >
+        <span className="panel-bar-chevron" aria-hidden="true">
+          ⌃
+        </span>
+        <span className="panel-bar-title">Activity &amp; details</span>
+        {auditRunning ? <span className="panel-bar-live" aria-hidden="true" /> : null}
+        <span className="panel-bar-summary">
+          {lastEvent ? lastEvent.summary : "Agent log, inventory, coverage and report"}
+        </span>
+        <span className="panel-bar-hint">{panelOpen ? "Hide" : "Show"} · Ctrl+`</span>
+      </button>
 
       <EvidenceCard />
       <EnergyAlternatives />

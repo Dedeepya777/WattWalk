@@ -146,6 +146,44 @@ export function evidenceText(level: "verified" | "partly_unverified"): string {
   return level === "verified" ? "Verified" : "Partly unverified";
 }
 
+/** Plain-language evidence note for a realtor: what was seen versus estimated. */
+export function evidenceNote(level: "verified" | "partly_unverified"): string {
+  return level === "verified" ? "Everything here was seen in the scan" : "Some details are estimated";
+}
+
+/** "Owner or tenant can pay for it. Tenant keeps the savings. Needs the landlord's OK." */
+export function whoPaysSentence(who: WhoPays): string {
+  const doer =
+    who.pays === "owner_or_tenant" ? "Owner or tenant can pay for it." : `Paid by the ${who.pays}.`;
+  const saver = `${who.saves === "owner" ? "Owner" : "Tenant"} keeps the savings.`;
+  const approval =
+    who.approval === "landlord_approval"
+      ? " Needs the landlord's OK."
+      : who.approval === "owner_decision"
+        ? " Owner's decision."
+        : "";
+  return `${doer} ${saver}${approval}`;
+}
+
+/** "Pays for itself in about 5 months", from the cost midpoint and yearly savings; null when it never does. */
+export function paybackText(costLow: number, costHigh: number, savedPerYear: number): string | null {
+  if (!(savedPerYear > 0)) return null;
+  const months = ((costLow + costHigh) / 2 / savedPerYear) * 12;
+  if (months < 1) return "Pays for itself in under a month";
+  if (months < 18) {
+    const m = Math.round(months);
+    return `Pays for itself in about ${m} month${m === 1 ? "" : "s"}`;
+  }
+  const years = Math.round((months / 12) * 2) / 2;
+  return `Pays for itself in about ${years} years`;
+}
+
+/** "$30–$48" with an en dash, or one amount when low equals high. */
+export function formatCostShort(low: number, high: number): string {
+  if (low === high) return formatCurrency(low);
+  return `${formatCurrency(low)}–${formatCurrency(high)}`;
+}
+
 export function reasonText(code: string): string {
   const map: Record<string, string> = {
     not_authorized: "Not authorized",
