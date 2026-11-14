@@ -5,6 +5,9 @@ model calls; resolve replays the recorded router decisions (high-res crop for th
 escalation for o007, one question for the bedroom light). After every observation is resolved the
 stored observations equal the fixture's observations.json exactly.
 
+Real scans (fixtures/live/<sid>/) replay their recorded router decisions from router_trace.json
+instead of the fixtureUnitA rules, and finish on exactly the saved observation.
+
 Observation ids are the fixture's own ids, so the result matches observations.json id for id.
 Model calls are logged with the illustrative token counts of shared/examples/model_calls.json so
 the model-call counter and summary behave as in a real run; the audit itself is labeled fixture.
@@ -42,6 +45,16 @@ def _final_observations(sid: str) -> tuple[Observation, ...]:
     return tuple(Observation.model_validate(o) for o in json.loads(path.read_text(encoding="utf-8")))
 
 
+@lru_cache(maxsize=8)
+def _trace(sid: str) -> dict[str, list[str]]:
+    """Recorded router actions per observation id (router_trace.json), empty when absent."""
+    path = _fixture_dir(sid) / "router_trace.json"
+    if sid == config.FIXTURE_SID or not path.exists():
+        return {}
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return {oid: list(v.get("actions", [])) for oid, v in data.get("observations", {}).items()}
+
+
 def _rejected(sid: str) -> list[RejectedFace]:
     if sid in FIXTURE_REJECTED:
         return FIXTURE_REJECTED[sid]
@@ -65,8 +78,14 @@ def _call(kind: str, tier: str) -> ModelCall:
     return _call_templates()[(kind, tier)].model_copy(update={"id": "c000", "at": now_iso()})
 
 
-def script(final: Observation) -> list[str]:
-    """Recorded router actions for one fixture observation (plan 4.6.2)."""
+TERMINAL = ("accept", "leave_unknown")
+
+
+def script(final: Observation, sid: str | None = None) -> list[str]:
+    """Router actions for one fixture observation: the recorded trace for real scans, else plan 4.6.2."""
+    recorded = _trace(sid).get(final.id) if sid else None
+    if recorded:
+        return recorded if recorded[-1] in TERMINAL else recorded + ["leave_unknown"]
     key = KEY_ATTR.get(final.label)
     if key and final.attrs.get(key) is not None and final.attrs[key].value is None:
         return ["hires_crop", "escalate_large", "ask_user", "leave_unknown"] if final.escalated else ["hires_crop", "leave_unknown"]
@@ -75,12 +94,12 @@ def script(final: Observation) -> list[str]:
     return ["accept"]
 
 
-def initial(final: Observation) -> Observation:
+def initial(final: Observation, sid: str | None = None) -> Observation:
     """The observation as inspect_view first produced it, before any router action."""
-    steps = script(final)
+    steps = script(final, sid)
     obs = final.model_copy(deep=True)
     key = KEY_ATTR.get(final.label)
-    if "hires_crop" in steps and key:
+    if "hires_crop" in steps and key and key in obs.attrs:
         obs.attrs[key] = obs.attrs[key].model_copy(update={"note": INITIAL_NOTE})
     if final.escalated:
         small = _call_templates()[("detect", "small")].model_id
@@ -99,7 +118,7 @@ def inspect_view(sid: str, geometry: ModelGeometry, room_id: str | None, pano_id
         state.inspected[pano_id] = inspected
         save_state(sid, state)
     log_calls(sid, [_call("detect", "small") for _ in inspected])
-    return InspectResult(observations=[initial(o) for o in finals], faces_inspected=inspected,
+    return InspectResult(observations=[initial(o, sid) for o in finals], faces_inspected=inspected,
                          faces_rejected=[r.face for r in rejected], calls=len(inspected))
 
 
@@ -109,7 +128,8 @@ def resolve(sid: str, geometry: ModelGeometry, observation_id: str, ask: AskFn) 
         raise ValueError(f"unknown observation {observation_id!r} in vision fixture")
     final = finals[observation_id]
     all_obs = store.observations(sid)
-    current = next((o for o in all_obs if o.id == observation_id), None) or initial(final)
+    current = next((o for o in all_obs if o.id == observation_id), None) or initial(final, sid)
+    traced = bool(_trace(sid).get(observation_id))
     key = KEY_ATTR.get(final.label)
 
     with lock(sid):
@@ -117,17 +137,32 @@ def resolve(sid: str, geometry: ModelGeometry, observation_id: str, ask: AskFn) 
         if observation_id in state.final:
             return ResolveResult(observation_id=observation_id, action="accept", final=True, summary=f"{observation_id} already final")
         tried = state.tried.setdefault(observation_id, [])
-        answered = key is not None and tried and current.attrs[key].value is not None
-        steps = script(final)
+        if traced:  # real scans keep their saved values; only an answer given during this replay counts
+            answered = key is not None and key in current.attrs and current.attrs[key].source == "provided_by_user"
+        else:
+            answered = key is not None and key in current.attrs and tried and current.attrs[key].value is not None
+        steps = script(final, sid)
         action = "accept" if answered else (steps[len(tried)] if len(tried) < len(steps) else "leave_unknown")
         tried.append(action)
 
         question = None
         if action == "accept":
-            result = ResolveResult(observation_id=observation_id, action=action, final=True, summary=f"{observation_id} accepted")
+            # A traced (real) run finishes on exactly the saved observation, unless the user answered now.
+            done = final.model_copy(deep=True) if traced and not answered else None
+            result = ResolveResult(observation_id=observation_id, action=action, observation=done, final=True,
+                                   summary=f"{observation_id} accepted")
         elif action == "leave_unknown":
             result = ResolveResult(observation_id=observation_id, action=action, observation=final.model_copy(deep=True), final=True,
                                    summary=f"{observation_id} left unknown ({key or 'attributes'} needs verification)")
+        elif action in ("neighbor_view", "hires_crop", "escalate_large") and (key is None or key not in current.attrs):
+            # Recorded step on an attribute this replay cannot show changing: log it and move on.
+            log_calls(sid, [_call("attr", "large" if action == "escalate_large" else "small")])
+            result = ResolveResult(observation_id=observation_id, action=action, final=False,
+                                   summary=f"{observation_id} {action.replace('_', ' ')} (recorded)")
+        elif action == "neighbor_view":
+            log_calls(sid, [_call("attr", "small")])
+            result = ResolveResult(observation_id=observation_id, action=action, final=False,
+                                   summary=f"{observation_id} neighbor view (recorded): {key} still unknown")
         elif action == "hires_crop":
             log_calls(sid, [_call("attr", "small")])
             note = HIRES_NOTE

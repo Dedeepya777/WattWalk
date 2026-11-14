@@ -2,6 +2,7 @@
 
     python -m wattwalk.vision.cli inspect --sid <sid> --pano <pano> [--save-fixture]
     python -m wattwalk.vision.cli walk --sid <sid> [--save-fixture] [--reset]
+    python -m wattwalk.vision.cli export --sid <sid>      # fixture files from a finished audit, no model calls
 
 walk runs plan_views + inspect_view + resolve and prints a table; no agent, no API.
 Questions are asked on the terminal with the 30 s timeout.
@@ -56,9 +57,19 @@ def _save_fixture(sid: str) -> None:
     folder.mkdir(parents=True, exist_ok=True)
     obs = [o.model_dump(mode="json") for o in store.observations(sid)]
     (folder / "observations.json").write_text(json.dumps(obs, indent=2), encoding="utf-8")
-    meta = {"rejected_faces": [r.model_dump() for r in load_state(sid).rejected_faces]}
+    state = load_state(sid)
+    meta = {"rejected_faces": [r.model_dump() for r in state.rejected_faces]}
     (folder / "vision_meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
-    print(f"saved {len(obs)} observations to {folder} (crops stay in audits/, never committed)")
+    # Router decisions per observation, replayed by fixture resolve (fixture.py) without model calls.
+    ids = {o["id"] for o in obs}
+    trace = {"observations": {oid: {"actions": actions, "question_asked": "ask_user" in actions}
+                              for oid, actions in sorted(state.tried.items()) if oid in ids}}
+    unresolved = sorted(ids - set(state.final))
+    if unresolved:
+        print(f"warning: {len(unresolved)} observations were never finalized: {unresolved[:5]}")
+    (folder / "router_trace.json").write_text(json.dumps(trace, indent=2), encoding="utf-8")
+    print(f"saved {len(obs)} observations and their router trace to {folder} "
+          f"(crops stay in audits/, never committed)")
 
 
 def cmd_inspect(args) -> None:
@@ -112,6 +123,13 @@ def cmd_walk(args) -> None:
         _save_fixture(sid)
 
 
+def cmd_export(args) -> None:
+    """Fixture files from an audit that already finished (live run, agent or CLI): no model calls."""
+    if not store.observations(args.sid):
+        raise SystemExit(f"no observations in {store.audit_dir(args.sid)}: run an audit or 'walk' first")
+    _save_fixture(args.sid)
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="python -m wattwalk.vision.cli")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -125,6 +143,9 @@ def main(argv: list[str] | None = None) -> None:
     w.add_argument("--save-fixture", action="store_true")
     w.add_argument("--reset", action="store_true", help="delete audits/<sid>/ first")
     w.set_defaults(fn=cmd_walk)
+    e = sub.add_parser("export", help="save fixtures/live/<sid>/ files from a finished audit")
+    e.add_argument("--sid", required=True)
+    e.set_defaults(fn=cmd_export)
     args = parser.parse_args(argv)
     args.fn(args)
 

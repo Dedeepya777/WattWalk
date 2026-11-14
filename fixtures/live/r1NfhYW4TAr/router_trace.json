@@ -1,0 +1,355 @@
+{
+  "observations": {
+    "o076": {
+      "actions": [
+        "escalate_large",
+        "leave_unknown"
+      ],
+      "question_asked": false
+    },
+    "o077": {
+      "actions": [
+        "escalate_large",
+        "leave_unknown"
+      ],
+      "question_asked": false
+    },
+    "o078": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o079": {
+      "actions": [
+        "escalate_large",
+        "leave_unknown"
+      ],
+      "question_asked": false
+    },
+    "o080": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o081": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o082": {
+      "actions": [
+        "escalate_large",
+        "leave_unknown"
+      ],
+      "question_asked": false
+    },
+    "o083": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o084": {
+      "actions": [
+        "escalate_large",
+        "leave_unknown"
+      ],
+      "question_asked": false
+    },
+    "o085": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o086": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o087": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o088": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o089": {
+      "actions": [
+        "leave_unknown"
+      ],
+      "question_asked": false
+    },
+    "o090": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o091": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o092": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o093": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o094": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o095": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o096": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o097": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o098": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o099": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o100": {
+      "actions": [
+        "leave_unknown"
+      ],
+      "question_asked": false
+    },
+    "o101": {
+      "actions": [
+        "leave_unknown"
+      ],
+      "question_asked": false
+    },
+    "o102": {
+      "actions": [
+        "hires_crop",
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o103": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o104": {
+      "actions": [
+        "leave_unknown"
+      ],
+      "question_asked": false
+    },
+    "o105": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o106": {
+      "actions": [
+        "leave_unknown"
+      ],
+      "question_asked": false
+    },
+    "o107": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o108": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o109": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o110": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o111": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o112": {
+      "actions": [
+        "hires_crop",
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o113": {
+      "actions": [
+        "hires_crop",
+        "ask_user",
+        "leave_unknown"
+      ],
+      "question_asked": true
+    },
+    "o114": {
+      "actions": [
+        "leave_unknown"
+      ],
+      "question_asked": false
+    },
+    "o115": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o116": {
+      "actions": [
+        "leave_unknown"
+      ],
+      "question_asked": false
+    },
+    "o117": {
+      "actions": [
+        "hires_crop",
+        "ask_user",
+        "leave_unknown"
+      ],
+      "question_asked": true
+    },
+    "o118": {
+      "actions": [
+        "hires_crop",
+        "leave_unknown"
+      ],
+      "question_asked": false
+    },
+    "o119": {
+      "actions": [
+        "hires_crop",
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o120": {
+      "actions": [
+        "hires_crop",
+        "leave_unknown"
+      ],
+      "question_asked": false
+    },
+    "o121": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o122": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o123": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o124": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o125": {
+      "actions": [
+        "leave_unknown"
+      ],
+      "question_asked": false
+    },
+    "o126": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o127": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o128": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o129": {
+      "actions": [
+        "accept"
+      ],
+      "question_asked": false
+    },
+    "o130": {
+      "actions": [
+        "leave_unknown"
+      ],
+      "question_asked": false
+    },
+    "o131": {
+      "actions": [
+        "hires_crop",
+        "leave_unknown"
+      ],
+      "question_asked": false
+    }
+  }
+}

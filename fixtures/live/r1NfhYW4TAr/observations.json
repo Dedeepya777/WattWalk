@@ -1,0 +1,3020 @@
+[
+  {
+    "id": "o076",
+    "pano_id": "gy41w1fih490pieyp4e9pp76b",
+    "face": 1,
+    "resolution": "4k",
+    "face_px": 4096,
+    "bbox": {
+      "x0": 2620,
+      "y0": 984,
+      "x1": 3246,
+      "y1": 1592
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": "incandescent",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o076"
+        ]
+      },
+      "bulb_count": {
+        "value": 12,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o076"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "large",
+    "escalated": true,
+    "crop_ref": "crops/o076.jpg",
+    "anchor": {
+      "x": -5.186,
+      "y": 3.346,
+      "z": 3.1
+    },
+    "anchor_method": "ceiling_plane",
+    "room_id": "4ubogmomy5h",
+    "quality": {
+      "blur": 207.9,
+      "brightness": 128.7,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:01Z"
+  },
+  {
+    "id": "o077",
+    "pano_id": "gy41w1fih490pieyp4e9pp76b",
+    "face": 1,
+    "resolution": "4k",
+    "face_px": 4096,
+    "bbox": {
+      "x0": 3974,
+      "y0": 1646,
+      "x1": 4096,
+      "y1": 2218
+    },
+    "label": "window",
+    "attrs": {
+      "panes": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "glazing not determinable from image",
+        "evidence_obs_ids": [
+          "o077"
+        ]
+      },
+      "shading": {
+        "value": "curtains",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o077"
+        ]
+      },
+      "width_m": {
+        "value": 0.65,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o077"
+        ]
+      },
+      "height_m": {
+        "value": 1.85,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o077"
+        ]
+      },
+      "area_m2": {
+        "value": 1.2,
+        "source": "visible_in_scan",
+        "note": "width_m x height_m",
+        "evidence_obs_ids": [
+          "o077"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "large",
+    "escalated": true,
+    "crop_ref": "crops/o077.jpg",
+    "anchor": {
+      "x": -4.599,
+      "y": 4.469,
+      "z": 1.595
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "4ubogmomy5h",
+    "quality": {
+      "blur": 207.9,
+      "brightness": 128.7,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:01Z"
+  },
+  {
+    "id": "o078",
+    "pano_id": "gy41w1fih490pieyp4e9pp76b",
+    "face": 1,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 1438,
+      "y0": 939,
+      "x1": 1867,
+      "y1": 1493
+    },
+    "label": "refrigerator",
+    "attrs": {
+      "style": {
+        "value": "bottom_freezer",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o078"
+        ]
+      },
+      "age_years": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "age not determinable from appearance",
+        "evidence_obs_ids": [
+          "o078"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o078.jpg",
+    "anchor": {
+      "x": -5.182,
+      "y": 3.905,
+      "z": 0.0
+    },
+    "anchor_method": "floor_plane",
+    "room_id": "4ubogmomy5h",
+    "quality": {
+      "blur": 207.9,
+      "brightness": 128.7,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:01Z"
+  },
+  {
+    "id": "o079",
+    "pano_id": "gy41w1fih490pieyp4e9pp76b",
+    "face": 1,
+    "resolution": "4k",
+    "face_px": 4096,
+    "bbox": {
+      "x0": 2852,
+      "y0": 1946,
+      "x1": 2974,
+      "y1": 2478
+    },
+    "label": "window",
+    "attrs": {
+      "panes": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "glazing not determinable from image",
+        "evidence_obs_ids": [
+          "o079"
+        ]
+      },
+      "shading": {
+        "value": "blinds",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o079"
+        ]
+      },
+      "width_m": {
+        "value": 1.5,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o079"
+        ]
+      },
+      "height_m": {
+        "value": 2.0,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o079"
+        ]
+      },
+      "area_m2": {
+        "value": 3.0,
+        "source": "visible_in_scan",
+        "note": "width_m x height_m",
+        "evidence_obs_ids": [
+          "o079"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "large",
+    "escalated": true,
+    "crop_ref": "crops/o079.jpg",
+    "anchor": {
+      "x": -8.19,
+      "y": 4.466,
+      "z": 0.94
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "9v0jt17ik0r",
+    "quality": {
+      "blur": 207.9,
+      "brightness": 128.7,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:01Z"
+  },
+  {
+    "id": "o080",
+    "pano_id": "gy41w1fih490pieyp4e9pp76b",
+    "face": 2,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 1589,
+      "y0": 333,
+      "x1": 2046,
+      "y1": 1408
+    },
+    "label": "window",
+    "attrs": {
+      "panes": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "glazing not determinable from image",
+        "evidence_obs_ids": [
+          "o080"
+        ]
+      },
+      "shading": {
+        "value": "curtains",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o080"
+        ]
+      },
+      "width_m": {
+        "value": 0.8,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o080"
+        ]
+      },
+      "height_m": {
+        "value": 1.5,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o080"
+        ]
+      },
+      "area_m2": {
+        "value": 1.2,
+        "source": "visible_in_scan",
+        "note": "width_m x height_m",
+        "evidence_obs_ids": [
+          "o080"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o080.jpg",
+    "anchor": {
+      "x": -0.24,
+      "y": 4.455,
+      "z": 1.819
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "613htqkzf66zz7hf7n8kzszed",
+    "quality": {
+      "blur": 507.9,
+      "brightness": 131.8,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:01Z"
+  },
+  {
+    "id": "o081",
+    "pano_id": "gy41w1fih490pieyp4e9pp76b",
+    "face": 2,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 870,
+      "y0": 351,
+      "x1": 1501,
+      "y1": 1412
+    },
+    "label": "window",
+    "attrs": {
+      "panes": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "glazing not determinable from image",
+        "evidence_obs_ids": [
+          "o081"
+        ]
+      },
+      "shading": {
+        "value": "curtains",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o081"
+        ]
+      },
+      "width_m": {
+        "value": 0.8,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o081"
+        ]
+      },
+      "height_m": {
+        "value": 1.5,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o081"
+        ]
+      },
+      "area_m2": {
+        "value": 1.2,
+        "source": "visible_in_scan",
+        "note": "width_m x height_m",
+        "evidence_obs_ids": [
+          "o081"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o081.jpg",
+    "anchor": {
+      "x": -1.669,
+      "y": 4.437,
+      "z": 1.791
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "613htqkzf66zz7hf7n8kzszed",
+    "quality": {
+      "blur": 507.9,
+      "brightness": 131.8,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:01Z"
+  },
+  {
+    "id": "o082",
+    "pano_id": "gy41w1fih490pieyp4e9pp76b",
+    "face": 2,
+    "resolution": "4k",
+    "face_px": 4096,
+    "bbox": {
+      "x0": 0,
+      "y0": 950,
+      "x1": 528,
+      "y1": 2304
+    },
+    "label": "window",
+    "attrs": {
+      "panes": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "glazing not determinable from image",
+        "evidence_obs_ids": [
+          "o082"
+        ]
+      },
+      "shading": {
+        "value": "curtains",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o082"
+        ]
+      },
+      "width_m": {
+        "value": 1.5,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o082"
+        ]
+      },
+      "height_m": {
+        "value": 2.0,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o082"
+        ]
+      },
+      "area_m2": {
+        "value": 3.0,
+        "source": "visible_in_scan",
+        "note": "width_m x height_m",
+        "evidence_obs_ids": [
+          "o082"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "large",
+    "escalated": true,
+    "crop_ref": "crops/o082.jpg",
+    "anchor": {
+      "x": -4.186,
+      "y": 4.463,
+      "z": 1.958
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "4ubogmomy5h",
+    "quality": {
+      "blur": 507.9,
+      "brightness": 131.8,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:01Z"
+  },
+  {
+    "id": "o083",
+    "pano_id": "gy41w1fih490pieyp4e9pp76b",
+    "face": 3,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 1977,
+      "y0": 244,
+      "x1": 2030,
+      "y1": 301
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": "led",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o083"
+        ]
+      },
+      "bulb_count": {
+        "value": 1,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o083"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o083.jpg",
+    "anchor": {
+      "x": 0.212,
+      "y": 0.125,
+      "z": 3.1
+    },
+    "anchor_method": "ceiling_plane",
+    "room_id": "613htqkzf66zz7hf7n8kzszed",
+    "quality": {
+      "blur": 103.3,
+      "brightness": 138.2,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:01Z"
+  },
+  {
+    "id": "o084",
+    "pano_id": "gy41w1fih490pieyp4e9pp76b",
+    "face": 3,
+    "resolution": "4k",
+    "face_px": 4096,
+    "bbox": {
+      "x0": 2836,
+      "y0": 568,
+      "x1": 2910,
+      "y1": 638
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": "led",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o084"
+        ]
+      },
+      "bulb_count": {
+        "value": 1,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o084"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "large",
+    "escalated": true,
+    "crop_ref": "crops/o084.jpg",
+    "anchor": {
+      "x": 0.295,
+      "y": 1.252,
+      "z": 3.1
+    },
+    "anchor_method": "ceiling_plane",
+    "room_id": "613htqkzf66zz7hf7n8kzszed",
+    "quality": {
+      "blur": 103.3,
+      "brightness": 138.2,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:01Z"
+  },
+  {
+    "id": "o085",
+    "pano_id": "gy41w1fih490pieyp4e9pp76b",
+    "face": 3,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 839,
+      "y0": 295,
+      "x1": 878,
+      "y1": 339
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": "led",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o085"
+        ]
+      },
+      "bulb_count": {
+        "value": 1,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o085"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o085.jpg",
+    "anchor": {
+      "x": 0.293,
+      "y": 2.521,
+      "z": 3.1
+    },
+    "anchor_method": "ceiling_plane",
+    "room_id": "613htqkzf66zz7hf7n8kzszed",
+    "quality": {
+      "blur": 103.3,
+      "brightness": 138.2,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:01Z"
+  },
+  {
+    "id": "o086",
+    "pano_id": "gy41w1fih490pieyp4e9pp76b",
+    "face": 3,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 0,
+      "y0": 356,
+      "x1": 100,
+      "y1": 1386
+    },
+    "label": "window",
+    "attrs": {
+      "panes": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "glazing not determinable from image",
+        "evidence_obs_ids": [
+          "o086"
+        ]
+      },
+      "shading": {
+        "value": "curtains",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o086"
+        ]
+      },
+      "width_m": {
+        "value": 0.3,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o086"
+        ]
+      },
+      "height_m": {
+        "value": 0.8,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o086"
+        ]
+      },
+      "area_m2": {
+        "value": 0.2,
+        "source": "visible_in_scan",
+        "note": "width_m x height_m",
+        "evidence_obs_ids": [
+          "o086"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o086.jpg",
+    "anchor": {
+      "x": 0.39,
+      "y": 4.465,
+      "z": 1.836
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "613htqkzf66zz7hf7n8kzszed",
+    "quality": {
+      "blur": 103.3,
+      "brightness": 138.2,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:01Z"
+  },
+  {
+    "id": "o087",
+    "pano_id": "gy41w1fih490pieyp4e9pp76b",
+    "face": 4,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 1095,
+      "y0": 449,
+      "x1": 1227,
+      "y1": 699
+    },
+    "label": "supply_vent",
+    "attrs": {},
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o087.jpg",
+    "anchor": {
+      "x": -2.188,
+      "y": -0.117,
+      "z": 2.706
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "613htqkzf66zz7hf7n8kzszed",
+    "quality": {
+      "blur": 125.1,
+      "brightness": 136.6,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:01Z"
+  },
+  {
+    "id": "o088",
+    "pano_id": "gy41w1fih490pieyp4e9pp76b",
+    "face": 4,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 364,
+      "y0": 490,
+      "x1": 396,
+      "y1": 538
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": "led",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o088"
+        ]
+      },
+      "bulb_count": {
+        "value": 1,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o088"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o088.jpg",
+    "anchor": {
+      "x": 0.07,
+      "y": -0.94,
+      "z": 3.1
+    },
+    "anchor_method": "ceiling_plane",
+    "room_id": "613htqkzf66zz7hf7n8kzszed",
+    "quality": {
+      "blur": 125.1,
+      "brightness": 136.6,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:01Z"
+  },
+  {
+    "id": "o089",
+    "pano_id": "pnf2wdf4ez6g54bq5wuksb9dc",
+    "face": 4,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 1613,
+      "y0": 701,
+      "x1": 1857,
+      "y1": 876
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": "led",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o089"
+        ]
+      },
+      "bulb_count": {
+        "value": 8,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o089"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o089.jpg",
+    "anchor": {
+      "x": -5.144,
+      "y": 3.402,
+      "z": 3.1
+    },
+    "anchor_method": "ceiling_plane",
+    "room_id": "4ubogmomy5h",
+    "quality": {
+      "blur": 170.8,
+      "brightness": 149.9,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:02Z"
+  },
+  {
+    "id": "o090",
+    "pano_id": "r1cr1mfku2hnif3yb4itbxw1b",
+    "face": 1,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 1077,
+      "y0": 100,
+      "x1": 1134,
+      "y1": 165
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": "led",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o090"
+        ]
+      },
+      "bulb_count": {
+        "value": 1,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o090"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o090.jpg",
+    "anchor": {
+      "x": -5.22,
+      "y": 3.318,
+      "z": 2.6
+    },
+    "anchor_method": "ceiling_plane",
+    "room_id": "4ubogmomy5h",
+    "quality": {
+      "blur": 673.2,
+      "brightness": 108.3,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:02Z"
+  },
+  {
+    "id": "o091",
+    "pano_id": "r1cr1mfku2hnif3yb4itbxw1b",
+    "face": 1,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 870,
+      "y0": 154,
+      "x1": 949,
+      "y1": 209
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": "led",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o091"
+        ]
+      },
+      "bulb_count": {
+        "value": 1,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o091"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o091.jpg",
+    "anchor": {
+      "x": -5.3,
+      "y": 3.074,
+      "z": 2.6
+    },
+    "anchor_method": "ceiling_plane",
+    "room_id": "4ubogmomy5h",
+    "quality": {
+      "blur": 673.2,
+      "brightness": 108.3,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:02Z"
+  },
+  {
+    "id": "o092",
+    "pano_id": "r1cr1mfku2hnif3yb4itbxw1b",
+    "face": 1,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 1185,
+      "y0": 181,
+      "x1": 1243,
+      "y1": 226
+    },
+    "label": "lamp",
+    "attrs": {
+      "bulb_type": {
+        "value": "led",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o092"
+        ]
+      },
+      "bulb_count": {
+        "value": 1,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o092"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o092.jpg",
+    "anchor": {
+      "x": -5.375,
+      "y": 3.482,
+      "z": 2.6
+    },
+    "anchor_method": "ceiling_plane",
+    "room_id": "4ubogmomy5h",
+    "quality": {
+      "blur": 673.2,
+      "brightness": 108.3,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:02Z"
+  },
+  {
+    "id": "o093",
+    "pano_id": "r1cr1mfku2hnif3yb4itbxw1b",
+    "face": 1,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 742,
+      "y0": 299,
+      "x1": 857,
+      "y1": 386
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": "led",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o093"
+        ]
+      },
+      "bulb_count": {
+        "value": 1,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o093"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o093.jpg",
+    "anchor": {
+      "x": -5.566,
+      "y": 2.88,
+      "z": 2.6
+    },
+    "anchor_method": "ceiling_plane",
+    "room_id": "4ubogmomy5h",
+    "quality": {
+      "blur": 673.2,
+      "brightness": 108.3,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:02Z"
+  },
+  {
+    "id": "o094",
+    "pano_id": "r1cr1mfku2hnif3yb4itbxw1b",
+    "face": 1,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 1365,
+      "y0": 333,
+      "x1": 1443,
+      "y1": 398
+    },
+    "label": "lamp",
+    "attrs": {
+      "bulb_type": {
+        "value": "led",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o094"
+        ]
+      },
+      "bulb_count": {
+        "value": 1,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o094"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o094.jpg",
+    "anchor": {
+      "x": -5.718,
+      "y": 3.879,
+      "z": 2.6
+    },
+    "anchor_method": "ceiling_plane",
+    "room_id": "4ubogmomy5h",
+    "quality": {
+      "blur": 673.2,
+      "brightness": 108.3,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:02Z"
+  },
+  {
+    "id": "o095",
+    "pano_id": "r1cr1mfku2hnif3yb4itbxw1b",
+    "face": 1,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 1024,
+      "y0": 482,
+      "x1": 1063,
+      "y1": 534
+    },
+    "label": "lamp",
+    "attrs": {
+      "bulb_type": {
+        "value": "led",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o095"
+        ]
+      },
+      "bulb_count": {
+        "value": 1,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o095"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o095.jpg",
+    "anchor": {
+      "x": -6.208,
+      "y": 3.281,
+      "z": 2.6
+    },
+    "anchor_method": "ceiling_plane",
+    "room_id": "4ubogmomy5h",
+    "quality": {
+      "blur": 673.2,
+      "brightness": 108.3,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:02Z"
+  },
+  {
+    "id": "o096",
+    "pano_id": "r1cr1mfku2hnif3yb4itbxw1b",
+    "face": 1,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 1138,
+      "y0": 626,
+      "x1": 1168,
+      "y1": 658
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": "led",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o096"
+        ]
+      },
+      "bulb_count": {
+        "value": 1,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o096"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o096.jpg",
+    "anchor": {
+      "x": -6.874,
+      "y": 3.617,
+      "z": 2.6
+    },
+    "anchor_method": "ceiling_plane",
+    "room_id": "9v0jt17ik0r",
+    "quality": {
+      "blur": 673.2,
+      "brightness": 108.3,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:02Z"
+  },
+  {
+    "id": "o097",
+    "pano_id": "r1cr1mfku2hnif3yb4itbxw1b",
+    "face": 1,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 1115,
+      "y0": 683,
+      "x1": 1142,
+      "y1": 713
+    },
+    "label": "lamp",
+    "attrs": {
+      "bulb_type": {
+        "value": "led",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o097"
+        ]
+      },
+      "bulb_count": {
+        "value": 1,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o097"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o097.jpg",
+    "anchor": {
+      "x": -7.52,
+      "y": 3.627,
+      "z": 2.6
+    },
+    "anchor_method": "ceiling_plane",
+    "room_id": "9v0jt17ik0r",
+    "quality": {
+      "blur": 673.2,
+      "brightness": 108.3,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:02Z"
+  },
+  {
+    "id": "o098",
+    "pano_id": "r1cr1mfku2hnif3yb4itbxw1b",
+    "face": 1,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 1097,
+      "y0": 746,
+      "x1": 1122,
+      "y1": 772
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": "led",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o098"
+        ]
+      },
+      "bulb_count": {
+        "value": 1,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o098"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o098.jpg",
+    "anchor": {
+      "x": -8.139,
+      "y": 3.625,
+      "z": 2.6
+    },
+    "anchor_method": "ceiling_plane",
+    "room_id": "9v0jt17ik0r",
+    "quality": {
+      "blur": 673.2,
+      "brightness": 108.3,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:02Z"
+  },
+  {
+    "id": "o099",
+    "pano_id": "r1cr1mfku2hnif3yb4itbxw1b",
+    "face": 1,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 1278,
+      "y0": 843,
+      "x1": 2046,
+      "y1": 2046
+    },
+    "label": "refrigerator",
+    "attrs": {
+      "style": {
+        "value": "bottom_freezer",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o099"
+        ]
+      },
+      "age_years": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "age not determinable from appearance",
+        "evidence_obs_ids": [
+          "o099"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o099.jpg",
+    "anchor": {
+      "x": -5.431,
+      "y": 4.124,
+      "z": -0.0
+    },
+    "anchor_method": "floor_plane",
+    "room_id": "4ubogmomy5h",
+    "quality": {
+      "blur": 673.2,
+      "brightness": 108.3,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:02Z"
+  },
+  {
+    "id": "o100",
+    "pano_id": "r1cr1mfku2hnif3yb4itbxw1b",
+    "face": 2,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 390,
+      "y0": 152,
+      "x1": 1103,
+      "y1": 1235
+    },
+    "label": "window",
+    "attrs": {
+      "panes": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "glazing not determinable from image",
+        "evidence_obs_ids": [
+          "o100"
+        ]
+      },
+      "shading": {
+        "value": "curtains",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o100"
+        ]
+      },
+      "width_m": {
+        "value": 1.5,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o100"
+        ]
+      },
+      "height_m": {
+        "value": 1.0,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o100"
+        ]
+      },
+      "area_m2": {
+        "value": 1.5,
+        "source": "visible_in_scan",
+        "note": "width_m x height_m",
+        "evidence_obs_ids": [
+          "o100"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o100.jpg",
+    "anchor": {
+      "x": -4.29,
+      "y": 4.439,
+      "z": 1.874
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "4ubogmomy5h",
+    "quality": {
+      "blur": 1764.2,
+      "brightness": 126.0,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:02Z"
+  },
+  {
+    "id": "o101",
+    "pano_id": "r1cr1mfku2hnif3yb4itbxw1b",
+    "face": 3,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 329,
+      "y0": 199,
+      "x1": 760,
+      "y1": 1524
+    },
+    "label": "window",
+    "attrs": {
+      "panes": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "glazing not determinable from image",
+        "evidence_obs_ids": [
+          "o101"
+        ]
+      },
+      "shading": {
+        "value": "none",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o101"
+        ]
+      },
+      "width_m": {
+        "value": 2.5,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o101"
+        ]
+      },
+      "height_m": {
+        "value": 3.0,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o101"
+        ]
+      },
+      "area_m2": {
+        "value": 7.5,
+        "source": "visible_in_scan",
+        "note": "width_m x height_m",
+        "evidence_obs_ids": [
+          "o101"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o101.jpg",
+    "anchor": {
+      "x": -1.043,
+      "y": 4.495,
+      "z": 1.941
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "613htqkzf66zz7hf7n8kzszed",
+    "quality": {
+      "blur": 249.0,
+      "brightness": 144.8,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:02Z"
+  },
+  {
+    "id": "o102",
+    "pano_id": "r1cr1mfku2hnif3yb4itbxw1b",
+    "face": 4,
+    "resolution": "4k",
+    "face_px": 4096,
+    "bbox": {
+      "x0": 2540,
+      "y0": 52,
+      "x1": 4092,
+      "y1": 2230
+    },
+    "label": "window",
+    "attrs": {
+      "panes": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "glazing not determinable from image",
+        "evidence_obs_ids": [
+          "o102"
+        ]
+      },
+      "shading": {
+        "value": "blinds",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o102"
+        ]
+      },
+      "width_m": {
+        "value": 1.5,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o102"
+        ]
+      },
+      "height_m": {
+        "value": 2.0,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o102"
+        ]
+      },
+      "area_m2": {
+        "value": 3.0,
+        "source": "visible_in_scan",
+        "note": "width_m x height_m",
+        "evidence_obs_ids": [
+          "o102"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o102.jpg",
+    "anchor": {
+      "x": -4.698,
+      "y": 2.078,
+      "z": 1.988
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "4ubogmomy5h",
+    "quality": {
+      "blur": 1048.8,
+      "brightness": 125.1,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:02Z"
+  },
+  {
+    "id": "o103",
+    "pano_id": "c3sn1ryg6wy4t6mp1x3sk672d",
+    "face": 1,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 624,
+      "y0": 628,
+      "x1": 723,
+      "y1": 658
+    },
+    "label": "lamp",
+    "attrs": {
+      "bulb_type": {
+        "value": "led",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o103"
+        ]
+      },
+      "bulb_count": {
+        "value": 1,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o103"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o103.jpg",
+    "anchor": {
+      "x": -9.301,
+      "y": 3.289,
+      "z": 1.762
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "9v0jt17ik0r",
+    "quality": {
+      "blur": 89.8,
+      "brightness": 130.0,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:02Z"
+  },
+  {
+    "id": "o104",
+    "pano_id": "c3sn1ryg6wy4t6mp1x3sk672d",
+    "face": 1,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 1276,
+      "y0": 638,
+      "x1": 1335,
+      "y1": 1136
+    },
+    "label": "window",
+    "attrs": {
+      "panes": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "glazing not determinable from image",
+        "evidence_obs_ids": [
+          "o104"
+        ]
+      },
+      "shading": {
+        "value": "curtains",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o104"
+        ]
+      },
+      "width_m": {
+        "value": 0.5,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o104"
+        ]
+      },
+      "height_m": {
+        "value": 2.0,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o104"
+        ]
+      },
+      "area_m2": {
+        "value": 1.0,
+        "source": "visible_in_scan",
+        "note": "width_m x height_m",
+        "evidence_obs_ids": [
+          "o104"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o104.jpg",
+    "anchor": {
+      "x": -12.3,
+      "y": 4.449,
+      "z": 1.901
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "xy2x8mpaaqknp7q2c3nnbw1ma",
+    "quality": {
+      "blur": 89.8,
+      "brightness": 130.0,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:02Z"
+  },
+  {
+    "id": "o105",
+    "pano_id": "c3sn1ryg6wy4t6mp1x3sk672d",
+    "face": 1,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 425,
+      "y0": 723,
+      "x1": 490,
+      "y1": 772
+    },
+    "label": "lamp",
+    "attrs": {
+      "bulb_type": {
+        "value": "led",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o105"
+        ]
+      },
+      "bulb_count": {
+        "value": 1,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o105"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o105.jpg",
+    "anchor": {
+      "x": -9.308,
+      "y": 3.133,
+      "z": 1.691
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "9v0jt17ik0r",
+    "quality": {
+      "blur": 89.8,
+      "brightness": 130.0,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:02Z"
+  },
+  {
+    "id": "o106",
+    "pano_id": "c3sn1ryg6wy4t6mp1x3sk672d",
+    "face": 2,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 545,
+      "y0": 803,
+      "x1": 1613,
+      "y1": 2046
+    },
+    "label": "window",
+    "attrs": {
+      "panes": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "glazing not determinable from image",
+        "evidence_obs_ids": [
+          "o106"
+        ]
+      },
+      "shading": {
+        "value": "curtains",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o106"
+        ]
+      },
+      "width_m": {
+        "value": 1.0,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o106"
+        ]
+      },
+      "height_m": {
+        "value": 1.0,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o106"
+        ]
+      },
+      "area_m2": {
+        "value": 1.0,
+        "source": "visible_in_scan",
+        "note": "width_m x height_m",
+        "evidence_obs_ids": [
+          "o106"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o106.jpg",
+    "anchor": {
+      "x": -8.532,
+      "y": 4.402,
+      "z": 1.175
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "9v0jt17ik0r",
+    "quality": {
+      "blur": 770.2,
+      "brightness": 142.3,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:02Z"
+  },
+  {
+    "id": "o107",
+    "pano_id": "c3sn1ryg6wy4t6mp1x3sk672d",
+    "face": 3,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 969,
+      "y0": 240,
+      "x1": 1002,
+      "y1": 315
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": "led",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o107"
+        ]
+      },
+      "bulb_count": {
+        "value": 1,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o107"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o107.jpg",
+    "anchor": {
+      "x": -7.207,
+      "y": 3.595,
+      "z": 2.6
+    },
+    "anchor_method": "ceiling_plane",
+    "room_id": "9v0jt17ik0r",
+    "quality": {
+      "blur": 435.2,
+      "brightness": 146.9,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:02Z"
+  },
+  {
+    "id": "o108",
+    "pano_id": "c3sn1ryg6wy4t6mp1x3sk672d",
+    "face": 3,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 996,
+      "y0": 528,
+      "x1": 1254,
+      "y1": 823
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": "led",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o108"
+        ]
+      },
+      "bulb_count": {
+        "value": 8,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o108"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o108.jpg",
+    "anchor": {
+      "x": -6.423,
+      "y": 3.332,
+      "z": 2.6
+    },
+    "anchor_method": "ceiling_plane",
+    "room_id": "9v0jt17ik0r",
+    "quality": {
+      "blur": 435.2,
+      "brightness": 146.9,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:02Z"
+  },
+  {
+    "id": "o109",
+    "pano_id": "c3sn1ryg6wy4t6mp1x3sk672d",
+    "face": 3,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 2,
+      "y0": 809,
+      "x1": 559,
+      "y1": 2044
+    },
+    "label": "window",
+    "attrs": {
+      "panes": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "glazing not determinable from image",
+        "evidence_obs_ids": [
+          "o109"
+        ]
+      },
+      "shading": {
+        "value": "blinds",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o109"
+        ]
+      },
+      "width_m": {
+        "value": 1.5,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o109"
+        ]
+      },
+      "height_m": {
+        "value": 1.5,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o109"
+        ]
+      },
+      "area_m2": {
+        "value": 2.2,
+        "source": "visible_in_scan",
+        "note": "width_m x height_m",
+        "evidence_obs_ids": [
+          "o109"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o109.jpg",
+    "anchor": {
+      "x": -7.342,
+      "y": 4.443,
+      "z": 1.048
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "9v0jt17ik0r",
+    "quality": {
+      "blur": 435.2,
+      "brightness": 146.9,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:02Z"
+  },
+  {
+    "id": "o110",
+    "pano_id": "c3sn1ryg6wy4t6mp1x3sk672d",
+    "face": 3,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 803,
+      "y0": 965,
+      "x1": 1016,
+      "y1": 1601
+    },
+    "label": "refrigerator",
+    "attrs": {
+      "style": {
+        "value": "bottom_freezer",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o110"
+        ]
+      },
+      "age_years": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "age not determinable from appearance",
+        "evidence_obs_ids": [
+          "o110"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o110.jpg",
+    "anchor": {
+      "x": -5.788,
+      "y": 3.867,
+      "z": 0.0
+    },
+    "anchor_method": "floor_plane",
+    "room_id": "4ubogmomy5h",
+    "quality": {
+      "blur": 435.2,
+      "brightness": 146.9,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:29:02Z"
+  },
+  {
+    "id": "o111",
+    "pano_id": "hpmnqmtkddm0kaffx0whsmtpb",
+    "face": 1,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 780,
+      "y0": 549,
+      "x1": 870,
+      "y1": 646
+    },
+    "label": "supply_vent",
+    "attrs": {},
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o111.jpg",
+    "anchor": {
+      "x": -5.975,
+      "y": -1.916,
+      "z": 2.059
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "plxqakfcfog",
+    "quality": {
+      "blur": 360.7,
+      "brightness": 94.2,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:30:28Z"
+  },
+  {
+    "id": "o112",
+    "pano_id": "hpmnqmtkddm0kaffx0whsmtpb",
+    "face": 1,
+    "resolution": "4k",
+    "face_px": 4096,
+    "bbox": {
+      "x0": 1878,
+      "y0": 1110,
+      "x1": 2226,
+      "y1": 1296
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": "led",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o112"
+        ]
+      },
+      "bulb_count": {
+        "value": 1,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o112"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o112.jpg",
+    "anchor": {
+      "x": -5.977,
+      "y": -2.157,
+      "z": 2.05
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "plxqakfcfog",
+    "quality": {
+      "blur": 360.7,
+      "brightness": 94.2,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:30:28Z"
+  },
+  {
+    "id": "o113",
+    "pano_id": "hpmnqmtkddm0kaffx0whsmtpb",
+    "face": 3,
+    "resolution": "4k",
+    "face_px": 4096,
+    "bbox": {
+      "x0": 1988,
+      "y0": 1614,
+      "x1": 2096,
+      "y1": 1706
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "not clearly visible; high-res crop did not resolve; user question expired",
+        "evidence_obs_ids": [
+          "o113"
+        ]
+      },
+      "bulb_count": {
+        "value": 1,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o113"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o113.jpg",
+    "anchor": {
+      "x": -9.295,
+      "y": -2.119,
+      "z": 1.937
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "plxqakfcfog",
+    "quality": {
+      "blur": 508.9,
+      "brightness": 98.9,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:30:28Z"
+  },
+  {
+    "id": "o114",
+    "pano_id": "hbi7twf2gsdgxtxyftz5rwczb",
+    "face": 3,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 545,
+      "y0": 591,
+      "x1": 965,
+      "y1": 1164
+    },
+    "label": "window",
+    "attrs": {
+      "panes": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "glazing not determinable from image",
+        "evidence_obs_ids": [
+          "o114"
+        ]
+      },
+      "shading": {
+        "value": "curtains",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o114"
+        ]
+      },
+      "width_m": {
+        "value": 0.5,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o114"
+        ]
+      },
+      "height_m": {
+        "value": 0.5,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o114"
+        ]
+      },
+      "area_m2": {
+        "value": 0.2,
+        "source": "visible_in_scan",
+        "note": "width_m x height_m",
+        "evidence_obs_ids": [
+          "o114"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o114.jpg",
+    "anchor": {
+      "x": -12.3,
+      "y": 4.449,
+      "z": 1.901
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "xy2x8mpaaqknp7q2c3nnbw1ma",
+    "quality": {
+      "blur": 152.9,
+      "brightness": 138.0,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:32:02Z"
+  },
+  {
+    "id": "o115",
+    "pano_id": "hbi7twf2gsdgxtxyftz5rwczb",
+    "face": 4,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 1390,
+      "y0": 144,
+      "x1": 1438,
+      "y1": 199
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": "led",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o115"
+        ]
+      },
+      "bulb_count": {
+        "value": 1,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o115"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o115.jpg",
+    "anchor": {
+      "x": -9.707,
+      "y": 1.152,
+      "z": 3.11
+    },
+    "anchor_method": "ceiling_plane",
+    "room_id": "xy2x8mpaaqknp7q2c3nnbw1ma",
+    "quality": {
+      "blur": 183.8,
+      "brightness": 134.1,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:32:02Z"
+  },
+  {
+    "id": "o116",
+    "pano_id": "hbi7twf2gsdgxtxyftz5rwczb",
+    "face": 4,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 73,
+      "y0": 957,
+      "x1": 524,
+      "y1": 1501
+    },
+    "label": "window",
+    "attrs": {
+      "panes": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "glazing not determinable from image",
+        "evidence_obs_ids": [
+          "o116"
+        ]
+      },
+      "shading": {
+        "value": "curtains",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o116"
+        ]
+      },
+      "width_m": {
+        "value": 0.5,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o116"
+        ]
+      },
+      "height_m": {
+        "value": 0.5,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o116"
+        ]
+      },
+      "area_m2": {
+        "value": 0.2,
+        "source": "visible_in_scan",
+        "note": "width_m x height_m",
+        "evidence_obs_ids": [
+          "o116"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o116.jpg",
+    "anchor": {
+      "x": -8.19,
+      "y": 4.466,
+      "z": 0.94
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "9v0jt17ik0r",
+    "quality": {
+      "blur": 183.8,
+      "brightness": 134.1,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:32:02Z"
+  },
+  {
+    "id": "o117",
+    "pano_id": "z0rksixyxkdb1nd6xha600xmc",
+    "face": 1,
+    "resolution": "4k",
+    "face_px": 4096,
+    "bbox": {
+      "x0": 2052,
+      "y0": 374,
+      "x1": 2162,
+      "y1": 544
+    },
+    "label": "lamp",
+    "attrs": {
+      "bulb_type": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "not clearly visible; high-res crop did not resolve; user answered unknown",
+        "evidence_obs_ids": [
+          "o117"
+        ]
+      },
+      "bulb_count": {
+        "value": 1,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o117"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o117.jpg",
+    "anchor": {
+      "x": -9.495,
+      "y": -2.156,
+      "z": 1.649
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "tt6gm2a0463x9wmnx7rn6gugc",
+    "quality": {
+      "blur": 478.5,
+      "brightness": 100.5,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:33:42Z"
+  },
+  {
+    "id": "o118",
+    "pano_id": "z0rksixyxkdb1nd6xha600xmc",
+    "face": 1,
+    "resolution": "4k",
+    "face_px": 4096,
+    "bbox": {
+      "x0": 1852,
+      "y0": 780,
+      "x1": 2348,
+      "y1": 1068
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "not clearly visible; high-res crop did not resolve",
+        "evidence_obs_ids": [
+          "o118"
+        ]
+      },
+      "bulb_count": {
+        "value": 1,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o118"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o118.jpg",
+    "anchor": {
+      "x": -9.295,
+      "y": -2.119,
+      "z": 1.937
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "tt6gm2a0463x9wmnx7rn6gugc",
+    "quality": {
+      "blur": 478.5,
+      "brightness": 100.5,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:33:42Z"
+  },
+  {
+    "id": "o119",
+    "pano_id": "z0rksixyxkdb1nd6xha600xmc",
+    "face": 3,
+    "resolution": "4k",
+    "face_px": 4096,
+    "bbox": {
+      "x0": 1970,
+      "y0": 1324,
+      "x1": 2222,
+      "y1": 1540
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": "led",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o119"
+        ]
+      },
+      "bulb_count": {
+        "value": 1,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o119"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o119.jpg",
+    "anchor": {
+      "x": -12.799,
+      "y": -2.125,
+      "z": 2.6
+    },
+    "anchor_method": "ceiling_plane",
+    "room_id": "tt6gm2a0463x9wmnx7rn6gugc",
+    "quality": {
+      "blur": 651.2,
+      "brightness": 140.0,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:33:42Z"
+  },
+  {
+    "id": "o120",
+    "pano_id": "z0rksixyxkdb1nd6xha600xmc",
+    "face": 3,
+    "resolution": "4k",
+    "face_px": 4096,
+    "bbox": {
+      "x0": 2044,
+      "y0": 1840,
+      "x1": 2130,
+      "y1": 1902
+    },
+    "label": "lamp",
+    "attrs": {
+      "bulb_type": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "not clearly visible; high-res crop did not resolve",
+        "evidence_obs_ids": [
+          "o120"
+        ]
+      },
+      "bulb_count": {
+        "value": 3,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o120"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o120.jpg",
+    "anchor": {
+      "x": -15.033,
+      "y": -2.123,
+      "z": 1.979
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "tt6gm2a0463x9wmnx7rn6gugc",
+    "quality": {
+      "blur": 651.2,
+      "brightness": 140.0,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:33:42Z"
+  },
+  {
+    "id": "o121",
+    "pano_id": "zyct8z50382h7xqggy235cxza",
+    "face": 1,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 742,
+      "y0": 110,
+      "x1": 1378,
+      "y1": 309
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": "led",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o121"
+        ]
+      },
+      "bulb_count": {
+        "value": 1,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o121"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o121.jpg",
+    "anchor": {
+      "x": -5.971,
+      "y": 0.478,
+      "z": 2.577
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "3m54yff1z7crxaywd8if9rb0d",
+    "quality": {
+      "blur": 110.7,
+      "brightness": 181.2,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:35:19Z"
+  },
+  {
+    "id": "o122",
+    "pano_id": "zyct8z50382h7xqggy235cxza",
+    "face": 1,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 0,
+      "y0": 390,
+      "x1": 780,
+      "y1": 1786
+    },
+    "label": "dryer",
+    "attrs": {},
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o122.jpg",
+    "anchor": {
+      "x": -5.986,
+      "y": -0.277,
+      "z": 0.728
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "3m54yff1z7crxaywd8if9rb0d",
+    "quality": {
+      "blur": 110.7,
+      "brightness": 181.2,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:35:19Z"
+  },
+  {
+    "id": "o123",
+    "pano_id": "zyct8z50382h7xqggy235cxza",
+    "face": 1,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 0,
+      "y0": 1829,
+      "x1": 742,
+      "y1": 2048
+    },
+    "label": "washer",
+    "attrs": {},
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o123.jpg",
+    "anchor": {
+      "x": -5.987,
+      "y": -0.295,
+      "z": 0.456
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "3m54yff1z7crxaywd8if9rb0d",
+    "quality": {
+      "blur": 110.7,
+      "brightness": 181.2,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:35:19Z"
+  },
+  {
+    "id": "o124",
+    "pano_id": "zyct8z50382h7xqggy235cxza",
+    "face": 3,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 1371,
+      "y0": 402,
+      "x1": 1573,
+      "y1": 634
+    },
+    "label": "supply_vent",
+    "attrs": {},
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o124.jpg",
+    "anchor": {
+      "x": -4.402,
+      "y": 0.251,
+      "z": 1.742
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "3m54yff1z7crxaywd8if9rb0d",
+    "quality": {
+      "blur": 126.2,
+      "brightness": 145.7,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:35:19Z"
+  },
+  {
+    "id": "o125",
+    "pano_id": "zyct8z50382h7xqggy235cxza",
+    "face": 3,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 366,
+      "y0": 628,
+      "x1": 1296,
+      "y1": 711
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": "led",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o125"
+        ]
+      },
+      "bulb_count": {
+        "value": 5,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o125"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o125.jpg",
+    "anchor": {
+      "x": 0.295,
+      "y": 1.252,
+      "z": 3.1
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "613htqkzf66zz7hf7n8kzszed",
+    "quality": {
+      "blur": 126.2,
+      "brightness": 145.7,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:35:19Z"
+  },
+  {
+    "id": "o126",
+    "pano_id": "zyct8z50382h7xqggy235cxza",
+    "face": 3,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 1451,
+      "y0": 1020,
+      "x1": 1514,
+      "y1": 1065
+    },
+    "label": "thermostat",
+    "attrs": {
+      "thermostat_type": {
+        "value": "digital",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o126"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o126.jpg",
+    "anchor": {
+      "x": -4.401,
+      "y": 0.236,
+      "z": 1.467
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "3m54yff1z7crxaywd8if9rb0d",
+    "quality": {
+      "blur": 126.2,
+      "brightness": 145.7,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:35:19Z"
+  },
+  {
+    "id": "o127",
+    "pano_id": "zyct8z50382h7xqggy235cxza",
+    "face": 4,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 1709,
+      "y0": 520,
+      "x1": 2046,
+      "y1": 1890
+    },
+    "label": "dryer",
+    "attrs": {},
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o127.jpg",
+    "anchor": {
+      "x": -6.007,
+      "y": -0.942,
+      "z": 0.425
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "3m54yff1z7crxaywd8if9rb0d",
+    "quality": {
+      "blur": 170.9,
+      "brightness": 179.8,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:35:19Z"
+  },
+  {
+    "id": "o128",
+    "pano_id": "zyct8z50382h7xqggy235cxza",
+    "face": 4,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 782,
+      "y0": 670,
+      "x1": 1067,
+      "y1": 746
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": "led",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o128"
+        ]
+      },
+      "bulb_count": {
+        "value": 4,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o128"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o128.jpg",
+    "anchor": {
+      "x": -4.656,
+      "y": -1.156,
+      "z": 2.062
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "3m54yff1z7crxaywd8if9rb0d",
+    "quality": {
+      "blur": 170.9,
+      "brightness": 179.8,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:35:19Z"
+  },
+  {
+    "id": "o129",
+    "pano_id": "k6gq7syr8t5hdrbcz80i7ky9b",
+    "face": 1,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 872,
+      "y0": 782,
+      "x1": 1233,
+      "y1": 1187
+    },
+    "label": "window",
+    "attrs": {
+      "panes": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "glazing not determinable from image",
+        "evidence_obs_ids": [
+          "o129"
+        ]
+      },
+      "shading": {
+        "value": "none",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o129"
+        ]
+      },
+      "width_m": {
+        "value": 1.5,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o129"
+        ]
+      },
+      "height_m": {
+        "value": 1.5,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o129"
+        ]
+      },
+      "area_m2": {
+        "value": 2.2,
+        "source": "visible_in_scan",
+        "note": "width_m x height_m",
+        "evidence_obs_ids": [
+          "o129"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o129.jpg",
+    "anchor": {
+      "x": -3.65,
+      "y": -1.355,
+      "z": 1.529
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "2qdmc5i9byxi79ry1pxdkqzea",
+    "quality": {
+      "blur": 238.9,
+      "brightness": 108.8,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:36:49Z"
+  },
+  {
+    "id": "o130",
+    "pano_id": "k6gq7syr8t5hdrbcz80i7ky9b",
+    "face": 1,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 1243,
+      "y0": 782,
+      "x1": 1544,
+      "y1": 1187
+    },
+    "label": "window",
+    "attrs": {
+      "panes": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "glazing not determinable from image",
+        "evidence_obs_ids": [
+          "o130"
+        ]
+      },
+      "shading": {
+        "value": "curtains",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o130"
+        ]
+      },
+      "width_m": {
+        "value": 1.5,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o130"
+        ]
+      },
+      "height_m": {
+        "value": 1.5,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o130"
+        ]
+      },
+      "area_m2": {
+        "value": 2.2,
+        "source": "visible_in_scan",
+        "note": "width_m x height_m",
+        "evidence_obs_ids": [
+          "o130"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o130.jpg",
+    "anchor": {
+      "x": -1.043,
+      "y": 4.495,
+      "z": 1.941
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "613htqkzf66zz7hf7n8kzszed",
+    "quality": {
+      "blur": 238.9,
+      "brightness": 108.8,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:36:49Z"
+  },
+  {
+    "id": "o131",
+    "pano_id": "k6gq7syr8t5hdrbcz80i7ky9b",
+    "face": 4,
+    "resolution": "4k",
+    "face_px": 4096,
+    "bbox": {
+      "x0": 1866,
+      "y0": 1426,
+      "x1": 2080,
+      "y1": 1504
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "not clearly visible; high-res crop did not resolve",
+        "evidence_obs_ids": [
+          "o131"
+        ]
+      },
+      "bulb_count": {
+        "value": 1,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o131"
+        ]
+      }
+    },
+    "model_id": "ollama/qwen2.5vl:7b",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o131.jpg",
+    "anchor": {
+      "x": -5.777,
+      "y": -2.08,
+      "z": 2.098
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "2qdmc5i9byxi79ry1pxdkqzea",
+    "quality": {
+      "blur": 441.1,
+      "brightness": 120.7,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T15:36:49Z"
+  }
+]
