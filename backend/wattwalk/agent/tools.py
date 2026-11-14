@@ -220,8 +220,19 @@ def rebuild_inventory(sid: str) -> list[Asset]:
 def coverage_for(sid: str, inv: list[Asset]):
     st = _state(sid)
     reviewed = {k: v for k, v in st["reviewed"].items() if k != "_none"}
+    rejected = st["faces_rejected"]
+    partial = st["partial_rooms"]
+    # Prefer Person 2's coverage inputs when the real vision module is present:
+    # it carries the rejection reason and the "no other panorama" wording from
+    # router_state.json, which is the coverage contract.
+    try:
+        from ..vision.walk import coverage_inputs as real_coverage_inputs
+
+        reviewed, rejected, partial = real_coverage_inputs(sid, geometry(sid))
+    except Exception:
+        pass
     return P.compute_coverage(geometry(sid), store.observations(sid), inv, reviewed,
-                              st["faces_rejected"], st["partial_rooms"])
+                              rejected, partial)
 
 
 def build_inventory_tool(ctx: RunContext) -> str:

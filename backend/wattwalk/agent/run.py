@@ -47,8 +47,20 @@ def _prepare_fixture(sid: str) -> None:
     store.reset(sid)
     store.audit_dir(sid).mkdir(parents=True, exist_ok=True)
     if sid == config.FIXTURE_SID:
-        # Illustrative model-call log for the fixture run (the fixture stubs make no model calls).
+        # Illustrative model-call log for the fixture run. Person 2's fixture
+        # replay does not append calls while RUN_MODE_OVERRIDE is "fixture", so
+        # this stays the authoritative 41-call example.
         shutil.copy(config.EXAMPLES_DIR / "model_calls.json", store.audit_path(sid, "model_calls.json"))
+        # Fixture crop and roof links must resolve without provider imagery.
+        import json
+
+        from .providers import PLACEHOLDER_JPEG
+
+        for item in json.loads((config.EXAMPLES_DIR / "observations.json").read_text(encoding="utf-8")):
+            path = store.audit_path(sid, item["crop_ref"])
+            if not path.exists():
+                path.write_bytes(PLACEHOLDER_JPEG)
+        store.audit_path(sid, "vexcel", "ortho.jpg").write_bytes(PLACEHOLDER_JPEG)
 
 
 async def start_run(sid: str, mode: Mode) -> AuditStatus:

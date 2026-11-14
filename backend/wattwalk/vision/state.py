@@ -8,7 +8,7 @@ import re
 import threading
 from collections import defaultdict
 
-from .. import store
+from .. import config, store
 from ..contracts import ModelCall
 from .types import RouterState
 
@@ -54,6 +54,10 @@ def forget_reservations(sid: str) -> None:
 def log_calls(sid: str, calls: list[ModelCall]) -> None:
     """Assign c-ids after the highest existing one and append to model_calls.json."""
     if not calls:
+        return
+    # In an API-driven fixture run, Person 3 copies the illustrative
+    # model_calls.json; do not append a second set of simulated vision calls.
+    if config.RUN_MODE_OVERRIDE.get() == "fixture":
         return
     with lock(sid):
         existing = store.read(sid, "model_calls.json", default=[]) or []
