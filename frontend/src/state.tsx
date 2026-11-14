@@ -50,8 +50,6 @@ export interface AppState {
   focusAssetId: string | null;
   /** Screen point the alternatives card grows from (a clicked 3D glow), or null for the centre. */
   focusOrigin: { x: number; y: number; r?: number; color?: string } | null;
-  /** Heat map shows each item after its best upgrade (a what-if preview). */
-  afterUpgrades: boolean;
   /** AI upgrade ideas fetched so far, by asset id. */
   aiAlternatives: Record<string, AiAlternativesResponse>;
   /** Upgrade the user picked for each asset in its card (one per asset), by asset id. */
@@ -85,7 +83,6 @@ export const initialState: AppState = {
   selectedAssetId: null,
   focusAssetId: null,
   focusOrigin: null,
-  afterUpgrades: false,
   aiAlternatives: {},
   chosenUpgrades: {},
   openQuestion: null,
@@ -112,7 +109,6 @@ export type Action =
   | { type: "plan"; plan: PlanResponse | null }
   | { type: "energy"; energy: AssetEnergyResponse | null }
   | { type: "pinColor"; mode: PinColorMode }
-  | { type: "afterUpgrades"; on: boolean }
   | { type: "aiAlternatives"; data: AiAlternativesResponse }
   | { type: "chooseUpgrade"; assetId: string; upgradeId: string | null }
   | { type: "focusEnergy"; assetId: string | null; origin?: { x: number; y: number; r?: number; color?: string } | null }
@@ -154,7 +150,6 @@ export function reducer(state: AppState, action: Action): AppState {
         selectedAssetId: null,
         focusAssetId: null,
         focusOrigin: null,
-        afterUpgrades: false,
         aiAlternatives: {},
         chosenUpgrades: {},
         openQuestion: null,
@@ -198,14 +193,11 @@ export function reducer(state: AppState, action: Action): AppState {
       return { ...state, focusAssetId: action.assetId, focusOrigin: action.origin ?? null };
     case "pinColor":
       return { ...state, pinColorMode: action.mode };
-    case "afterUpgrades":
-      return { ...state, afterUpgrades: action.on };
     case "chooseUpgrade": {
       const chosen = { ...state.chosenUpgrades };
       if (action.upgradeId) chosen[action.assetId] = action.upgradeId;
       else delete chosen[action.assetId];
-      // With nothing picked there is nothing to preview.
-      return { ...state, chosenUpgrades: chosen, afterUpgrades: state.afterUpgrades && Object.keys(chosen).length > 0 };
+      return { ...state, chosenUpgrades: chosen };
     }
     case "aiAlternatives":
       return { ...state, aiAlternatives: { ...state.aiAlternatives, [action.data.asset_id]: action.data } };
@@ -277,7 +269,6 @@ export function reducer(state: AppState, action: Action): AppState {
         selectedAssetId: null,
         focusAssetId: null,
         focusOrigin: null,
-        afterUpgrades: false,
         aiAlternatives: {},
         chosenUpgrades: {},
         openQuestion: null,

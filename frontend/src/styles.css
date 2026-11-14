@@ -2497,18 +2497,6 @@ select:disabled {
   color: #6b7280;
 }
 
-/* Heat map: Today | After upgrades */
-.after-switch {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.after-summary {
-  font-weight: 700;
-  color: var(--green);
-  font-variant-numeric: tabular-nums;
-}
 
 /* Pop-out: pick one upgrade per item for the After upgrades preview */
 .energy-pop .pop-pickable {
@@ -2548,6 +2536,39 @@ select:disabled {
   border-color: #10b981;
   background: #10b981;
 }
-.after-summary-idle {
-  color: var(--muted);
+
+/* Heat map: items shown with a picked upgrade */
+.heat-glow-upgrade {
+  position: absolute;
+  transform: translateX(-50%);
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #10b981;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+.picked-upgrades {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+}
+.picked-dot {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #10b981;
+  color: #ffffff;
+  font-size: 11px;
 }

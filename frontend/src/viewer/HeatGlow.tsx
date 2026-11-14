@@ -32,6 +32,7 @@ interface Glow {
   r: number;
   color: string;
   label: string;
+  upgrade?: string;
 }
 
 interface Pose {
@@ -47,6 +48,8 @@ interface Props {
   inventory: Asset[];
   panos: Pano[];
   energyById: Map<string, AssetEnergy>;
+  /** Upgrade picked for an asset (title), shown as a badge on its glow. */
+  upgraded?: Map<string, string>;
   scale: EnergyScale;
   /** Called with the number of glows drawn whenever it changes (for the status line). */
   onCount?: (count: number) => void;
@@ -66,7 +69,7 @@ function glowLabel(row: AssetEnergy, scale: EnergyScale): string {
   return row.heat_kwh_yr ? `${formatRange(row.heat_kwh_yr, "kWh")}/yr` : "";
 }
 
-export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, scale, onCount }: Props) {
+export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, upgraded, scale, onCount }: Props) {
   const dispatch = useAppDispatch();
   const { focusAssetId } = useAppState();
   const [glows, setGlows] = useState<Glow[]>([]);
@@ -94,10 +97,11 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, scale,
         world: modelToSdk(fit, asset.anchor),
         color: toHex(color),
         strength: t,
-        label: t >= LABEL_FROM || value < 0 ? glowLabel(row, scale) : "",
+        label: t >= LABEL_FROM || value < 0 || upgraded?.has(asset.id) ? glowLabel(row, scale) : "",
+        upgrade: upgraded?.get(asset.id),
       }];
     });
-  }, [energyById, fit, inventory, scale]);
+  }, [energyById, fit, inventory, scale, upgraded]);
 
   // Keep the overlay exactly over the tour frame.
   useEffect(() => {
@@ -134,7 +138,7 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, scale,
         if (!screen || screen.x < -200 || screen.y < -200 || screen.x > size.w + 200 || screen.y > size.h + 200) continue;
         const radiusM = 0.4 + 2.0 * s.strength;
         const r = Math.min(size.h * 0.7, Math.max(14, (radiusM * size.h * 0.9) / dist));
-        next.push({ id: s.id, name: s.name, x: screen.x, y: screen.y, r, color: s.color, label: s.label });
+        next.push({ id: s.id, name: s.name, x: screen.x, y: screen.y, r, color: s.color, label: s.label, upgrade: s.upgrade });
       }
       // Draw big glows first so small ones stay visible on top; label the biggest first and skip a
       // label that would overlap one already placed.
@@ -199,6 +203,19 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, scale,
           {g.label ? <span className="heat-glow-label">{g.label}</span> : null}
         </div>
       ))}
+      {/* Upgraded items: a badge under the glow naming the picked upgrade (outside the pulsing glow). */}
+      {glows
+        .filter((g) => g.upgrade && g.id !== focusAssetId)
+        .map((g) => (
+          <span
+            key={`up-${g.id}`}
+            className="heat-glow-upgrade"
+            style={{ left: g.x, top: g.y + (g.label ? 34 : 18) }}
+            title={`Showing ${g.name} after: ${g.upgrade}`}
+          >
+            ✓ {g.upgrade}
+          </span>
+        ))}
       {/* Only the centre of a glow takes clicks, so the tour stays navigable everywhere else. */}
       {glows.filter((g) => g.x >= 0 && g.y >= 0 && g.x <= box.width && g.y <= box.height).map((g) => {
         const hit = Math.max(22, Math.min(44, g.r * 0.5));

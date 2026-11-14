@@ -182,7 +182,7 @@ function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEn
       role="checkbox"
       aria-checked={picked}
       tabIndex={0}
-      title={picked ? "Picked for After upgrades (click to unpick)" : "Pick this upgrade for After upgrades"}
+      title={picked ? "Shown on the heat map (click to unpick)" : "Pick this upgrade to show it on the heat map"}
       onClick={toggle}
       onKeyDown={(event) => {
         if (event.key === " " || event.key === "Enter") {
