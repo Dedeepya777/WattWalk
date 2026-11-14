@@ -167,6 +167,14 @@ export async function addTags(
     if (!Array.isArray(ids) || ids.some((id) => typeof id !== "string")) {
       throw new Error("The SDK did not return the new tag ids.");
     }
+    // Clicking a pin must not move or zoom the camera; only our pop-out opens.
+    for (const id of ids as string[]) {
+      try {
+        void sdk.Tag?.allowAction?.(id, { navigating: false, docking: false });
+      } catch {
+        // older SDK: keep the default behaviour
+      }
+    }
     return ok(ids as string[]);
   } catch (error) {
     return fail("add tags", error);

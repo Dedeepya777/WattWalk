@@ -2148,35 +2148,14 @@ select:disabled {
 .energy-pop.energy-pop-measuring {
   opacity: 0;
 }
-/* The pressed button becomes the card: a circle the size and colour of the button, centred on it,
-   grows until it covers the card (clip-path reveal, so nothing is stretched); the button's colour
-   fades into the card background and the details fade in behind the growing edge. */
+/* The pressed button expands into the card: the visible area starts as the button and grows to
+   the full card. Nothing is scaled and nothing else animates. */
 .energy-pop.energy-pop-in {
-  animation: energy-pop-reveal 560ms cubic-bezier(0.45, 0, 0.2, 1) both;
+  animation: energy-pop-expand 320ms cubic-bezier(0.3, 0, 0.2, 1) both;
 }
-.energy-pop.energy-pop-in::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: radial-gradient(circle at var(--ox) var(--oy), var(--seed) 0%, transparent 70%);
-  animation: energy-pop-seed 520ms ease-out both;
-}
-.energy-pop.energy-pop-in > * {
-  animation: energy-pop-content 300ms ease-out 170ms both;
-}
-@keyframes energy-pop-reveal {
-  from { clip-path: circle(var(--r0) at var(--ox) var(--oy)); }
-  to { clip-path: circle(var(--r1) at var(--ox) var(--oy)); }
-}
-@keyframes energy-pop-seed {
-  from { opacity: 1; }
-  to { opacity: 0; }
-}
-@keyframes energy-pop-content {
-  from { opacity: 0; }
-  to { opacity: 1; }
+@keyframes energy-pop-expand {
+  from { clip-path: inset(var(--it) var(--ir) var(--ib) var(--il) round var(--r0)); }
+  to { clip-path: inset(0 0 0 0 round 14px); }
 }
 .energy-pop-actions {
   display: flex;
@@ -2199,7 +2178,12 @@ select:disabled {
   font-size: 15px;
 }
 @media (prefers-reduced-motion: reduce) {
-  .energy-pop.energy-pop-in,
-  .energy-pop.energy-pop-in::before,
-  .energy-pop.energy-pop-in > * { animation: none; }
+  .energy-pop.energy-pop-in { animation: none; }
+}
+
+.energy-pop .energy-alt-glow,
+.energy-pop .energy-alt-option,
+.energy-pop .energy-alt-bar-fill {
+  animation: none;
+  transition: none;
 }

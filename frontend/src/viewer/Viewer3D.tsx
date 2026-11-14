@@ -335,6 +335,12 @@ export function Viewer3D({ readiness, attempt, onReady, onFailed, onRetry }: Vie
       if (asset && energyByIdRef.current.has(assetId)) {
         const point = pinScreenPointRef.current(asset);
         const color = pinColor(energyByIdRef.current.get(assetId), energyScaleRef.current);
+        // Close Matterport's own tag panel: the pop-out replaces it.
+        try {
+          void sdk.Tag?.close?.(tagId);
+        } catch {
+          // older SDK: nothing to close
+        }
         dispatch({
           type: "focusEnergy",
           assetId,

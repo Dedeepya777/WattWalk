@@ -31,6 +31,18 @@ const GLOW_MAX = 84; // px, today's glow (centred card)
 const POP_WIDTH = 380; // px, the pop-out next to a 3D pin
 const POP_MARGIN = 12;
 
+/** CSS variables for the expand: inset of the button's box (radius r around ox, oy) from each card edge. */
+function expandFrom(p: { ox: number; oy: number; h: number }, r: number): Record<string, string> {
+  const px = (v: number) => `${Math.max(0, v)}px`;
+  return {
+    "--it": px(p.oy - r),
+    "--ib": px(p.h - p.oy - r),
+    "--il": px(p.ox - r),
+    "--ir": px(POP_WIDTH - p.ox - r),
+    "--r0": `${r}px`,
+  };
+}
+
 const mid = (r: [number, number] | null) => (r ? (r[0] + r[1]) / 2 : null);
 
 /** Glow colour for a heat value on the apartment's heat scale (cyan when it removes heat). */
@@ -48,13 +60,8 @@ function glowSize(heat: number | null, todayHeat: number | null): number {
   return Math.max(14, GLOW_MAX * Math.sqrt(ratio));
 }
 
-function Glow({ size, color, from }: { size: number; color: string; from?: number }) {
-  // Starts at `from` (today's size) and transitions to `size` once the card has opened.
-  const [current, setCurrent] = useState(from ?? size);
-  useEffect(() => {
-    const id = window.requestAnimationFrame(() => setCurrent(size));
-    return () => window.cancelAnimationFrame(id);
-  }, [size]);
+function Glow({ size, color }: { size: number; color: string; from?: number }) {
+  const current = size;
   return (
     <div className="energy-alt-glow-box" aria-hidden="true">
       <span
@@ -72,13 +79,8 @@ function Glow({ size, color, from }: { size: number; color: string; from?: numbe
 /** Bar from 100% (today) sliding to the share left after the upgrade, with the change in %. */
 function ChangeBar({ before, after, unit }: { before: number | null; after: number | null; unit: string }) {
   const share = before && after !== null && before > 0 ? Math.max(0, Math.min(1, after / before)) : null;
-  const [width, setWidth] = useState(100);
-  useEffect(() => {
-    if (share === null) return undefined;
-    const id = window.setTimeout(() => setWidth(share * 100), 120);
-    return () => window.clearTimeout(id);
-  }, [share]);
   if (share === null) return null;
+  const width = share * 100;
   const pct = Math.round((share - 1) * 100);
   return (
     <div className="energy-alt-bar-row" aria-label={`${unit} ${pct}% compared with today`}>
@@ -182,7 +184,7 @@ export function EnergyAlternatives() {
   const heatScale = buildScale(state.energy?.assets ?? [], "heat");
   const origin = state.focusOrigin;
   const cardRef = useRef<HTMLDivElement | null>(null);
-  const [place, setPlace] = useState<{ left: number; top: number; ox: number; oy: number; r1: number } | null>(null);
+  const [place, setPlace] = useState<{ left: number; top: number; ox: number; oy: number; h: number } | null>(null);
 
   // Pop-out mode (opened from a 3D pin or glow): measure before the first paint, sit beside the clicked
   // point (right of it, or left if there is no room), stay on screen, and grow out of that point.
@@ -209,9 +211,7 @@ export function EnergyAlternatives() {
     const top = Math.max(POP_MARGIN, Math.min(origin.y - gy, vh - h - POP_MARGIN));
     const ox = origin.x - left;
     const oy = origin.y - top;
-    // radius that just covers the farthest corner of the card from the button
-    const r1 = Math.max(...[[0, 0], [POP_WIDTH, 0], [0, h], [POP_WIDTH, h]].map(([cx, cy]) => Math.hypot(cx - ox, cy - oy)));
-    setPlace({ left, top, ox, oy, r1 });
+    setPlace({ left, top, ox, oy, h });
   }, [assetId, origin]);
 
   useEffect(() => {
@@ -234,12 +234,8 @@ export function EnergyAlternatives() {
         left: place?.left ?? 0,
         top: place?.top ?? 0,
         width: POP_WIDTH,
-        // read by the reveal animation in styles.css
-        ["--ox" as string]: place ? `${place.ox}px` : undefined,
-        ["--oy" as string]: place ? `${place.oy}px` : undefined,
-        ["--r0" as string]: `${origin?.r ?? 14}px`,
-        ["--r1" as string]: place ? `${Math.ceil(place.r1) + 2}px` : undefined,
-        ["--seed" as string]: origin?.color ?? "#f97316",
+        // start of the expand in styles.css: the pressed button's box inside the card
+        ...(place ? expandFrom(place, origin?.r ?? 14) : {}),
       } as React.CSSProperties)
     : undefined;
 
