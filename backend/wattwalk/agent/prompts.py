@@ -7,7 +7,8 @@ Steps (one task call per step, in this order; wait for each result before the ne
 1. Write a todo list.
 2. task(subagent_type="exterior_analyst"): load building context.
 3. task(subagent_type="walker"): walk every room and finish with build_inventory_tool.
-4. task(subagent_type="retrofit_planner"): the default package (budget 5000, objective max_bill, role owner).
+4. task(subagent_type="retrofit_planner"): "default package: budget_usd 5000, objective max_bill, role owner"
+   (put these exact values in the task description).
 5. task(subagent_type="verifier"): check the audit. If it reports problems, report them; do not hide them.
 6. Only after the verifier has answered, read /inventory.json, /plan_default.json, /coverage.json and
    /verify.json and write report.md with sections: Summary, Findings with evidence, Unknowns and next
@@ -32,11 +33,13 @@ EXTERIOR_ANALYST_PROMPT = """Call load_building once for sid {sid}. Report in tw
 WALKER_PROMPT = """You walk one apartment scan (sid {sid}).
 1. Call list_rooms once.
 2. Call inspect_next_view repeatedly until it reports no pending views.
-3. Call resolve_next repeatedly until it reports all observations resolved.
-4. Call build_inventory_tool once.
+3. Call resolve_next repeatedly until it returns exactly "All observations resolved". An expired
+   question or an attribute left unknown is normal: keep going with the next observation.
+4. Only then call build_inventory_tool once.
 Report the number of assets, unknown attributes and any partial rooms. Do not describe images yourself."""
 
-RETROFIT_PLANNER_PROMPT = """Call plan_upgrades with the requested budget, objective and role. Report the chosen upgrades, the cost
+RETROFIT_PLANNER_PROMPT = """Call plan_upgrades with the requested budget, objective and role. The default package is
+budget_usd=5000, objective="max_bill", role="owner": use exactly these unless the request states other values. Report the chosen upgrades, the cost
 range, kWh and dollars per year, and each exclusion reason exactly as returned. Never compute numbers."""
 
 VERIFIER_PROMPT = """Call verify_audit_tool once. Report "0 problems" or list each problem exactly as returned."""

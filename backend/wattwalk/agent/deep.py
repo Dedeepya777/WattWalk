@@ -211,6 +211,18 @@ def _complete_walk(ctx: RunContext) -> None:
     tools.build_inventory_tool(ctx)
 
 
+DEFAULT_PLAN = {"budget_usd": 5000.0, "objective": "max_bill", "role": "owner"}
+
+
+def _is_default_request(request: dict) -> bool:
+    return all(request.get(k) == v for k, v in DEFAULT_PLAN.items())
+
+
+def _unresolved(sid: str) -> list[str]:
+    done = set(tools._state(sid)["resolved"])
+    return [o.id for o in store.observations(sid) if o.id not in done]
+
+
 def _finish(ctx: RunContext) -> None:
     """Guardrails: make missing steps visible, then finalise report.md from the planner's file."""
     sid = ctx.sid
@@ -218,14 +230,31 @@ def _finish(ctx: RunContext) -> None:
         ctx.emit("planner", "error", "Planner finished without a complete walk; finishing it with the same tools",
                  {"code": "internal"})
         _complete_walk(ctx)
-    if store.read(sid, "plan_default.json") is None:
-        ctx.emit("planner", "error", "Planner skipped retrofit_planner; running plan_upgrades with defaults", {"code": "internal"})
+    corrected = False
+    pending = _unresolved(sid)
+    if pending:
+        ctx.emit("planner", "error", f"Walker stopped with {len(pending)} unresolved observations; resolving them "
+                 "and rebuilding the inventory", {"code": "internal"})
+        while "All observations resolved" not in tools.resolve_next(ctx):
+            ctx.check_cancel()
+        tools.build_inventory_tool(ctx)
+        corrected = True
+    plan = store.read(sid, "plan_default.json")
+    if plan is None or corrected or not _is_default_request(plan.get("request", {})):
+        ctx.emit("planner", "error", "Default plan missing, stale or made with non-default inputs; running "
+                 "plan_upgrades with budget 5000, max_bill, owner", {"code": "internal"})
         tools.plan_upgrades(ctx)
-    if store.read(sid, "verify.json") is None:
-        ctx.emit("planner", "error", "Planner skipped the verifier; running verify_audit_tool", {"code": "internal"})
+        corrected = True
+    if store.read(sid, "verify.json") is None or corrected:
+        ctx.emit("planner", "error", "Verifier result missing or stale; running verify_audit_tool", {"code": "internal"})
         tools.verify_audit_tool(ctx)
     report = store.read_text(sid, "agent/report.md")
-    if report and report.strip():
+    if corrected and report and report.strip():
+        # The planner's draft quotes numbers from before the corrections: keep it as a draft only.
+        store.write(sid, "report.md", tools.template_report(sid))
+        ctx.emit("planner", "status", "Report written from audit files (the planner's draft in agent/report.md "
+                 "predates the corrections above)", {"report": "report.md"})
+    elif report and report.strip():
         store.write(sid, "report.md", report)
         ctx.emit("planner", "status", "Report written by the planner from audit files", {"report": "report.md"})
     else:
