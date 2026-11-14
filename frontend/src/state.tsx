@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import type {
+  AiAlternativesResponse,
   AssetEnergyResponse,
   AuditResponse,
   Benchmark,
@@ -49,6 +50,10 @@ export interface AppState {
   focusAssetId: string | null;
   /** Screen point the alternatives card grows from (a clicked 3D glow), or null for the centre. */
   focusOrigin: { x: number; y: number; r?: number; color?: string } | null;
+  /** Heat map shows each item after its best upgrade (a what-if preview). */
+  afterUpgrades: boolean;
+  /** AI upgrade ideas fetched so far, by asset id. */
+  aiAlternatives: Record<string, AiAlternativesResponse>;
   openQuestion: Question | null;
   health: Health | null;
   healthError: string | null;
@@ -78,6 +83,8 @@ export const initialState: AppState = {
   selectedAssetId: null,
   focusAssetId: null,
   focusOrigin: null,
+  afterUpgrades: false,
+  aiAlternatives: {},
   openQuestion: null,
   health: null,
   healthError: null,
@@ -102,6 +109,8 @@ export type Action =
   | { type: "plan"; plan: PlanResponse | null }
   | { type: "energy"; energy: AssetEnergyResponse | null }
   | { type: "pinColor"; mode: PinColorMode }
+  | { type: "afterUpgrades"; on: boolean }
+  | { type: "aiAlternatives"; data: AiAlternativesResponse }
   | { type: "focusEnergy"; assetId: string | null; origin?: { x: number; y: number; r?: number; color?: string } | null }
   | { type: "planRequest"; request: PlanRequest }
   | { type: "planLoading"; loading: boolean }
@@ -141,6 +150,8 @@ export function reducer(state: AppState, action: Action): AppState {
         selectedAssetId: null,
         focusAssetId: null,
         focusOrigin: null,
+        afterUpgrades: false,
+        aiAlternatives: {},
         openQuestion: null,
         correctionDiff: [],
         correctionError: null,
@@ -182,6 +193,10 @@ export function reducer(state: AppState, action: Action): AppState {
       return { ...state, focusAssetId: action.assetId, focusOrigin: action.origin ?? null };
     case "pinColor":
       return { ...state, pinColorMode: action.mode };
+    case "afterUpgrades":
+      return { ...state, afterUpgrades: action.on };
+    case "aiAlternatives":
+      return { ...state, aiAlternatives: { ...state.aiAlternatives, [action.data.asset_id]: action.data } };
     case "energy":
       return { ...state, energy: action.energy };
     case "plan":
@@ -250,6 +265,8 @@ export function reducer(state: AppState, action: Action): AppState {
         selectedAssetId: null,
         focusAssetId: null,
         focusOrigin: null,
+        afterUpgrades: false,
+        aiAlternatives: {},
         openQuestion: null,
         correctionDiff: [],
         correctionError: null,

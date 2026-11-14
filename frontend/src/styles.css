@@ -2496,3 +2496,16 @@ select:disabled {
   font-weight: 600;
   color: #6b7280;
 }
+
+/* Heat map: Today | After upgrades */
+.after-switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.after-summary {
+  font-weight: 700;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+}

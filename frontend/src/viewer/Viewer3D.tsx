@@ -13,6 +13,7 @@ import { FIXTURE_SID } from "../fixtures";
 import { energySummary, labelText, unknownAttrCount } from "../format";
 import { buildScale, pinColor, toHex, type Rgb } from "./energyColor";
 import { HeatGlow } from "./HeatGlow";
+import { afterRow } from "./afterUpgrades";
 import { useAppDispatch, useAppState } from "../state";
 import {
   SDK_CONNECT_TIMEOUT_MS,
@@ -134,6 +135,15 @@ export function Viewer3D({ readiness, attempt, onReady, onFailed, onRetry }: Vie
   const energyById = useMemo(
     () => new Map((state.energy?.assets ?? []).map((row) => [row.asset_id, row])),
     [state.energy],
+  );
+  // "After upgrades" preview: glows show each item after its best upgrade, on today's colour scale,
+  // so upgraded items shrink and cool.
+  const glowEnergyById = useMemo(
+    () =>
+      state.afterUpgrades
+        ? new Map([...energyById].map(([id, row]) => [id, afterRow(row, state.aiAlternatives[id])]))
+        : energyById,
+    [energyById, state.afterUpgrades, state.aiAlternatives],
   );
   const energyScale = useMemo(
     () => buildScale(state.energy?.assets ?? [], state.pinColorMode),
@@ -439,7 +449,7 @@ export function Viewer3D({ readiness, attempt, onReady, onFailed, onRetry }: Vie
           frame={iframeRef.current}
           inventory={inventory}
           panos={panos}
-          energyById={energyById}
+          energyById={glowEnergyById}
           scale={energyScale}
           onCount={setGlowCount}
         />

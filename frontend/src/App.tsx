@@ -1,5 +1,6 @@
 /** Person 4's application shell: fixture/live data flow, SSE refetch rules, layout. */
 import { PinColorControls } from "./components/PinColorControls";
+import { AfterUpgradesSwitch } from "./components/AfterUpgradesSwitch";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ApiFailure,
@@ -539,6 +540,7 @@ export default function App() {
               </button>
             </div>
             <PinColorControls />
+            {state.viewMode === "3d" ? <AfterUpgradesSwitch /> : null}
             <span className="muted small">
               {state.audit?.rooms.length ?? 0} rooms {"\u00b7"}{" "}
               {state.audit?.inventory.length ?? 0} assets

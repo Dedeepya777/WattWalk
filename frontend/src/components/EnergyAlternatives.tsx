@@ -198,26 +198,23 @@ type AiState =
   | { status: "done"; data: AiAlternativesResponse }
   | { status: "error"; message: string };
 
-/** Answers already fetched in this session, so reopening a card shows them at once. */
-const aiSeen = new Map<string, AiAlternativesResponse>();
-
 /** Pop-out: "Find more alternatives" asks DeepSeek for 2-3 rough ideas and lists them, marked as AI. */
 function PopAiAlternatives({ sid, row }: { sid: string; row: AssetEnergy }) {
+  // Fetched ideas live in the app state, so the card shows them again at once and the heat map's
+  // "After upgrades" preview can use them.
+  const dispatch = useAppDispatch();
+  const saved = useAppState().aiAlternatives[row.asset_id];
   const key = `${sid}:${row.asset_id}`;
-  const [ai, setAi] = useState<AiState>(() => {
-    const seen = aiSeen.get(key);
-    return seen ? { status: "done", data: seen } : { status: "idle" };
-  });
+  const [ai, setAi] = useState<AiState>(() => (saved ? { status: "done", data: saved } : { status: "idle" }));
   useEffect(() => {
-    const seen = aiSeen.get(key);
-    setAi(seen ? { status: "done", data: seen } : { status: "idle" });
-  }, [key]);
+    setAi(saved ? { status: "done", data: saved } : { status: "idle" });
+  }, [key, saved]);
 
   const find = async (refresh: boolean) => {
     setAi({ status: "loading" });
     try {
       const data = await postResearchAlternatives(sid, row.asset_id, refresh);
-      aiSeen.set(key, data);
+      dispatch({ type: "aiAlternatives", data });
       setAi({ status: "done", data });
     } catch (error) {
       setAi({ status: "error", message: error instanceof Error ? error.message : String(error) });
