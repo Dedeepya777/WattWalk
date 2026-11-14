@@ -1879,3 +1879,18 @@ select:disabled {
     transition: none;
   }
 }
+
+/* Energy and heat section of the evidence card */
+.energy-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0 0 8px;
+}
+.energy-grid dt {
+  color: var(--muted);
+}
+.energy-grid dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}

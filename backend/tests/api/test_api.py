@@ -249,3 +249,14 @@ def test_models_flags_computed_from_files(client, env, monkeypatch):
     rec.mkdir(parents=True)
     (rec / "events.jsonl").write_text("")
     assert flags()[hero] == (True, True)
+
+
+def test_asset_energy_endpoint(client):
+    r = client.get(f"/audits/{SID}/energy")
+    assert r.status_code == 404  # no audit yet
+    run_fixture(client)
+    r = client.get(f"/audits/{SID}/energy")
+    assert r.status_code == 200
+    assert r.json() == example("asset_energy_response.json")
+    got = r.json()
+    assert {a["asset_id"] for a in got["assets"]} == {a["id"] for a in client.get(f"/audits/{SID}").json()["inventory"]}

@@ -26,8 +26,10 @@ import json
 from dataclasses import asdict, dataclass, field
 from typing import Optional
 
-from wattwalk.contracts import Asset, Building
+from wattwalk.contracts import Asset, AssetEnergyResponse, Building
+from wattwalk.contracts import AssetEnergy as AssetEnergyModel
 from wattwalk.engine.assumptions import AssumptionContext
+from wattwalk.engine.baseline import baseline
 
 HOURS_PER_YEAR = 8760.0
 BTU_PER_WH = 3.412
@@ -79,6 +81,10 @@ def _money(kwh: Range, rate: float) -> Range:
     return _r(kwh[0] * rate, kwh[1] * rate, 2)
 
 
+def _watts(low: float, high: float) -> str:
+    return f"{low:g} W" if low == high else f"{low:g}-{high:g} W"
+
+
 def _light(asset: Asset, ctx: AssumptionContext, rate: float) -> AssetEnergy:
     assumed: list[str] = []
     count = _value(asset, "bulb_count")
@@ -101,7 +107,7 @@ def _light(asset: Asset, ctx: AssumptionContext, rate: float) -> AssetEnergy:
     kind_text = kind or "unknown bulb type"
     return AssetEnergy(asset.id, asset.label, asset.room_id, True, kwh, _money(kwh, rate), kwh,
                        _r(count * w_low, count * w_high, 0),
-                       f"{count} bulb(s), {kind_text}, {w_low:g}-{w_high:g} W each, {hours:g} h/day", assumed)
+                       f"{count} bulb(s), {kind_text}, {_watts(w_low, w_high)} each, {hours:g} h/day", assumed)
 
 
 def _fridge(asset: Asset, ctx: AssumptionContext, rate: float) -> AssetEnergy:
@@ -171,6 +177,21 @@ def inventory_energy(inventory: list[Asset], building: Building, ctx: Assumption
             out.append(AssetEnergy(asset.id, asset.label, asset.room_id, False,
                                    note=NOT_ESTIMATED.get(asset.label, "no sourced assumption yet")))
     return out
+
+
+def energy_response(sid: str, inventory: list[Asset], building: Building) -> AssetEnergyResponse:
+    """The GET /audits/{sid}/energy payload: every asset, totals over the estimated ones, and the
+    cooling energy that no scanned asset accounts for (a central system with no unit in the scan)."""
+    ctx = AssumptionContext(building)
+    rows = inventory_energy(inventory, building, ctx)
+    est = [r for r in rows if r.estimated and r.kwh_yr and r.usd_yr]
+    total_kwh = _r(sum(r.kwh_yr[0] for r in est), sum(r.kwh_yr[1] for r in est))
+    total_usd = _r(sum(r.usd_yr[0] for r in est), sum(r.usd_yr[1] for r in est), 2)
+    has_cooling_unit = any(r.label in COOLING_UNITS for r in rows)
+    unassigned = 0.0 if has_cooling_unit else round(baseline(inventory, building, ctx).cooling, 1)
+    return AssetEnergyResponse(sid=sid, assets=[AssetEnergyModel(**r.to_dict()) for r in rows],
+                               total_kwh_yr=total_kwh, total_usd_yr=total_usd,
+                               unassigned_cooling_kwh_yr=unassigned)
 
 
 def _fmt(r: Optional[Range], unit: str, money: bool = False) -> str:

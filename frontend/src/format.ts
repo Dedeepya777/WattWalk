@@ -180,3 +180,28 @@ export function titleCase(value: string): string {
 export function unknownAttrCount(attrs: Record<string, Attr>): number {
   return Object.values(attrs).filter((attr) => attr.source === "needs_verification").length;
 }
+
+/** "$3" or "$3–20", "9 W" or "9–60 W"; null gives "–". Rounded for display. */
+export function formatRange(range: [number, number] | null, unit = "", money = false): string {
+  if (!range) return "–";
+  const [lo, hi] = range;
+  const num = (n: number) => Math.round(n).toLocaleString();
+  const text = num(lo) === num(hi) ? num(lo) : `${num(lo)}–${num(hi)}`;
+  const withMoney = money ? `$${text}` : text;
+  return unit ? `${withMoney} ${unit}` : withMoney;
+}
+
+/** One short line for a 3D tag: "≈ $3–20/yr · 9–60 W"; empty when not estimated. */
+export function energySummary(e: {
+  estimated: boolean;
+  usd_yr: [number, number] | null;
+  power_w: [number, number] | null;
+  heat_kwh_yr: [number, number] | null;
+}): string {
+  if (!e.estimated || !e.usd_yr) return "";
+  const parts = [`≈ ${formatRange(e.usd_yr, "", true)}/yr`];
+  if (e.power_w) parts.push(formatRange(e.power_w, "W"));
+  else if (e.heat_kwh_yr && e.heat_kwh_yr[0] < 0) parts.push("removes heat");
+  else if (e.heat_kwh_yr) parts.push(`${formatRange(e.heat_kwh_yr, "kWh")} heat/yr`);
+  return parts.join(" · ");
+}

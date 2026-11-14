@@ -244,6 +244,39 @@ class HeatShare(_Strict):
     weight: float = Field(ge=0)
 
 
+Range2 = tuple[float, float]
+
+
+class AssetEnergy(_Strict):
+    """Energy and heat of one inventory asset, as (low, high) ranges (engine/asset_energy.py).
+
+    heat_kwh_yr is negative for a unit that moves heat outside (window AC, mini split). estimated is
+    false when no sourced assumption exists for the label; the ranges are then null and note says why.
+    """
+    asset_id: str
+    label: AssetLabel
+    room_id: Optional[str] = None
+    estimated: bool
+    kwh_yr: Optional[Range2] = None
+    usd_yr: Optional[Range2] = None
+    heat_kwh_yr: Optional[Range2] = None
+    power_w: Optional[Range2] = None
+    basis: str = ""
+    assumed: list[str] = Field(default_factory=list)
+    note: str = ""
+
+
+class AssetEnergyResponse(_Strict):
+    """GET /audits/{sid}/energy. unassigned_cooling_kwh_yr is cooling energy no scanned asset accounts
+    for (a central system with no cooling unit in the scan)."""
+    schema_version: Literal["1.0.0"] = SCHEMA_VERSION
+    sid: str
+    assets: list[AssetEnergy]
+    total_kwh_yr: Range2
+    total_usd_yr: Range2
+    unassigned_cooling_kwh_yr: float = Field(ge=0)
+
+
 class Question(_Strict):
     question_id: str
     asset_id: Optional[str] = None

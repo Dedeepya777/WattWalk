@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import type {
+  AssetEnergyResponse,
   AuditResponse,
   Benchmark,
   CorrectionResponse,
@@ -37,6 +38,8 @@ export interface AppState {
   auditError: RequestError | null;
   events: WattEvent[];
   plan: PlanResponse | null;
+  /** Energy and heat per asset (GET /audits/{sid}/energy); null until the inventory exists. */
+  energy: AssetEnergyResponse | null;
   planRequest: PlanRequest;
   planLoading: boolean;
   planError: RequestError | null;
@@ -61,6 +64,7 @@ export const initialState: AppState = {
   auditError: null,
   events: [],
   plan: null,
+  energy: null,
   planRequest: DEFAULT_PLAN_REQUEST,
   planLoading: false,
   planError: null,
@@ -86,6 +90,7 @@ export type Action =
   | { type: "addEvent"; event: WattEvent }
   | { type: "clearEvents" }
   | { type: "plan"; plan: PlanResponse | null }
+  | { type: "energy"; energy: AssetEnergyResponse | null }
   | { type: "planRequest"; request: PlanRequest }
   | { type: "planLoading"; loading: boolean }
   | { type: "planError"; error: RequestError | null }
@@ -115,6 +120,7 @@ export function reducer(state: AppState, action: Action): AppState {
         ...state,
         selectedSid: action.sid,
         audit: null,
+        energy: null,
         auditError: null,
         events: [],
         plan: null,
@@ -158,6 +164,8 @@ export function reducer(state: AppState, action: Action): AppState {
       return { ...state, events: [...state.events, action.event] };
     case "clearEvents":
       return { ...state, events: [] };
+    case "energy":
+      return { ...state, energy: action.energy };
     case "plan":
       return { ...state, plan: action.plan };
     case "planRequest":
@@ -218,6 +226,7 @@ export function reducer(state: AppState, action: Action): AppState {
         auditError: null,
         events: [],
         plan: null,
+        energy: null,
         planError: null,
         planRequest: DEFAULT_PLAN_REQUEST,
         selectedAssetId: null,

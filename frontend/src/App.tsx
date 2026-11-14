@@ -4,6 +4,7 @@ import {
   ApiFailure,
   cancelAudit,
   consumeFixtureNotice,
+  getAssetEnergy,
   getAudit,
   getBenchmark,
   getHealth,
@@ -273,6 +274,31 @@ export default function App() {
 
   // Plan requests: debounced 250 ms, recomputed from current inputs, never cached.
   const inventoryLength = state.audit?.inventory.length ?? 0;
+
+  // Energy and heat per asset: refetched when the inventory or its attributes change.
+  const energyKey = (state.audit?.inventory ?? [])
+    .map((asset) => `${asset.id}:${JSON.stringify(asset.attrs)}`)
+    .join("|");
+  useEffect(() => {
+    const sid = state.selectedSid;
+    if (!sid || inventoryLength === 0) {
+      dispatch({ type: "energy", energy: null });
+      return undefined;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      try {
+        const energy = await getAssetEnergy(sid);
+        if (!cancelled) dispatch({ type: "energy", energy });
+      } catch {
+        if (!cancelled) dispatch({ type: "energy", energy: null }); // optional data: never an error banner
+      }
+    }, 300);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [dispatch, energyKey, inventoryLength, state.selectedSid]);
   const requestKey = JSON.stringify(state.planRequest);
   useEffect(() => {
     if (!state.selectedSid || inventoryLength === 0) {

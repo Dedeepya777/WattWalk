@@ -25,8 +25,10 @@ from ..agent import providers as P
 from ..agent import run as runner
 from ..agent import tools
 from ..agent.verify import verify_audit  # noqa: F401  (re-exported for convenience)
+from ..engine.asset_energy import energy_response
 from ..contracts import (
     AnswerRequest,
+    AssetEnergyResponse,
     Asset,
     AuditResponse,
     AuditStatus,
@@ -294,6 +296,13 @@ def _plan(sid: str, inv: list[Asset], b: Building, req: PlanRequest) -> PlanResp
 def plan(sid: str, req: PlanRequest) -> PlanResponse:
     inv, b = _inventory_and_building(sid)
     return _plan(sid, inv, b, req)
+
+
+@app.get("/audits/{sid}/energy", response_model=AssetEnergyResponse)
+def asset_energy(sid: str) -> AssetEnergyResponse:
+    """Energy and heat per inventory asset (engine/asset_energy.py); recomputed on every call."""
+    inv, b = _inventory_and_building(sid)
+    return energy_response(sid, inv, b)
 
 
 @app.post("/audits/{sid}/explain", response_model=ExplainResponse)

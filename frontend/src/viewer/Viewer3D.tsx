@@ -8,9 +8,9 @@
  * accepted (0.1 m RMS gate).  All SDK calls go through sdkAdapter.ts.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { Asset } from "../contracts";
+import type { Asset, AssetEnergy } from "../contracts";
 import { FIXTURE_SID } from "../fixtures";
-import { labelText, unknownAttrCount } from "../format";
+import { energySummary, labelText, unknownAttrCount } from "../format";
 import { useAppDispatch, useAppState } from "../state";
 import {
   SDK_CONNECT_TIMEOUT_MS,
@@ -78,13 +78,14 @@ export interface Viewer3DProps {
   onRetry: () => void;
 }
 
-function tagSpec(asset: Asset, fit: SdkFrameFit, roomLabel: string): TagSpec | null {
+function tagSpec(asset: Asset, fit: SdkFrameFit, roomLabel: string, energy?: AssetEnergy): TagSpec | null {
   if (!asset.anchor) return null;
   const unknown = unknownAttrCount(asset.attrs);
   const down = CEILING_LABELS.has(asset.label);
+  const energyText = energy ? energySummary(energy) : "";
   return {
     label: labelText(asset.label),
-    description: `${roomLabel}${unknown > 0 ? ` \u00b7 ${unknown} unknown detail${unknown === 1 ? "" : "s"}` : ""}`,
+    description: `${roomLabel}${unknown > 0 ? ` \u00b7 ${unknown} unknown detail${unknown === 1 ? "" : "s"}` : ""}${energyText ? `\n${energyText}` : ""}`,
     anchorPosition: modelToSdk(fit, asset.anchor),
     stemVector: modelDirToSdk(fit, { x: 0, y: 0, z: down ? -STEM_M : STEM_M }),
     color: unknown > 0 ? UNKNOWN : KNOWN,
@@ -119,6 +120,11 @@ export function Viewer3D({ readiness, attempt, onReady, onFailed, onRetry }: Vie
   const inventoryKey = inventory
     .map((a) => `${a.id}:${a.anchor?.x},${a.anchor?.y},${a.anchor?.z}:${unknownAttrCount(a.attrs)}`)
     .join("|");
+  const energyById = useMemo(
+    () => new Map((state.energy?.assets ?? []).map((row) => [row.asset_id, row])),
+    [state.energy],
+  );
+  const energyKey = (state.energy?.assets ?? []).map((row) => `${row.asset_id}:${row.usd_yr}`).join("|");
   const sdkLive = phase.kind === "aligning" || phase.kind === "ready";
 
   // Clear the connection and tag maps when the selected scan changes (or the tab unmounts).
@@ -222,7 +228,8 @@ export function Viewer3D({ readiness, attempt, onReady, onFailed, onRetry }: Vie
         const placed = inventory
           .map((asset) => ({
             asset,
-            spec: tagSpec(asset, alignment.fit, roomLabels.get(asset.room_id ?? "") ?? "Unknown room"),
+            spec: tagSpec(asset, alignment.fit, roomLabels.get(asset.room_id ?? "") ?? "Unknown room",
+              energyById.get(asset.id)),
           }))
           .filter((item): item is { asset: Asset; spec: TagSpec } => item.spec !== null);
         const added = await addTags(sdk, placed.map((item) => item.spec));
@@ -259,7 +266,7 @@ export function Viewer3D({ readiness, attempt, onReady, onFailed, onRetry }: Vie
     };
     // Keyed on sdkLive (not phase) so the "ready" update after placing tags does not re-run this.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sdkLive, panoKey, inventoryKey]);
+  }, [sdkLive, panoKey, inventoryKey, energyKey]);
 
   // 3. Clicking a tag opens the evidence card.
   useEffect(() => {
