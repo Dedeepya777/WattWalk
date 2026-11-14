@@ -18,6 +18,7 @@ import {
 import { AgentLog } from "./components/AgentLog";
 import { BottomTabs } from "./components/BottomTabs";
 import { BuildingCard } from "./components/BuildingCard";
+import { EnergyAlternatives } from "./components/EnergyAlternatives";
 import { EvidenceCard } from "./components/EvidenceCard";
 import { ModelCallCounter } from "./components/ModelCallCounter";
 import { ModelPicker } from "./components/ModelPicker";
@@ -580,6 +581,7 @@ export default function App() {
       </div>
 
       <EvidenceCard />
+      <EnergyAlternatives />
       <QuestionDialog />
     </div>
   );

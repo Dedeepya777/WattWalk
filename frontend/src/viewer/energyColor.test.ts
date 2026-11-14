@@ -5,7 +5,7 @@ import { NOT_ESTIMATED, REMOVES_HEAT, buildScale, gradient, legendLabels, pinCol
 function row(id: string, usd: [number, number] | null, heat: [number, number] | null, estimated = true): AssetEnergy {
   return {
     asset_id: id, label: "lamp", room_id: "r1", estimated, kwh_yr: usd, usd_yr: usd, heat_kwh_yr: heat,
-    power_w: null, basis: "", assumed: [], note: "",
+    power_w: null, basis: "", assumed: [], note: "", alternatives: [],
   };
 }
 
