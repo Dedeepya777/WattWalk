@@ -1,0 +1,47 @@
+{
+  "address": "215 W 7th Street, Unit 301, Los Angeles, CA, 90014, US",
+  "city": "Los Angeles",
+  "costar_property_id": null,
+  "year_built": {
+    "value": 1911,
+    "source": "reported_in_data",
+    "note": "From LA EBEWE benchmark record",
+    "evidence_obs_ids": []
+  },
+  "units": {
+    "value": null,
+    "source": "needs_verification",
+    "note": "",
+    "evidence_obs_ids": []
+  },
+  "asking_rent_usd_month": {
+    "value": null,
+    "source": "needs_verification",
+    "note": "",
+    "evidence_obs_ids": []
+  },
+  "unit_floor_area_m2": {
+    "value": 109.3,
+    "source": "reported_in_data",
+    "note": "Sum of room floor areas from Matterport scan",
+    "evidence_obs_ids": []
+  },
+  "ebewe": {
+    "site_eui_kbtu_ft2": 40.8,
+    "gfa_ft2": 116201.0,
+    "program_year": 2025,
+    "year_built": 1911,
+    "property_type": "Multifamily Housing"
+  },
+  "roof": {
+    "status": "unavailable",
+    "attributes": {},
+    "ortho_ref": null
+  },
+  "layer_status": {
+    "matterport": "fixture",
+    "costar": "unavailable",
+    "vexcel": "unavailable",
+    "ebewe": "fixture"
+  }
+}
