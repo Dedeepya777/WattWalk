@@ -168,13 +168,31 @@ function CutRing({ pct }: { pct: number | null }) {
 }
 
 function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEnergy; ai?: boolean }) {
+  const dispatch = useAppDispatch();
+  const picked = useAppState().chosenUpgrades[row.asset_id] === alt.upgrade_id;
+  const toggle = () =>
+    dispatch({ type: "chooseUpgrade", assetId: row.asset_id, upgradeId: picked ? null : alt.upgrade_id });
   const free = alt.cost_usd[1] <= 0;
   const today = mid(row.kwh_yr);
   const saved = mid(alt.saves_kwh_yr);
   const cut = today && saved !== null && today > 0 ? Math.round(Math.min(1, saved / today) * 100) : null;
   return (
-    <li className="energy-alt-option energy-alt-with-glow pop-row">
+    <li
+      className={`energy-alt-option energy-alt-with-glow pop-row pop-pickable${picked ? " pop-picked" : ""}`}
+      role="checkbox"
+      aria-checked={picked}
+      tabIndex={0}
+      title={picked ? "Picked for After upgrades (click to unpick)" : "Pick this upgrade for After upgrades"}
+      onClick={toggle}
+      onKeyDown={(event) => {
+        if (event.key === " " || event.key === "Enter") {
+          event.preventDefault();
+          toggle();
+        }
+      }}
+    >
       <CutRing pct={cut} />
+      <span className="pop-check" aria-hidden="true">{picked ? "✓" : ""}</span>
       <div>
         <div className="pop-title">
           {alt.title}

@@ -2509,3 +2509,45 @@ select:disabled {
   color: var(--green);
   font-variant-numeric: tabular-nums;
 }
+
+/* Pop-out: pick one upgrade per item for the After upgrades preview */
+.energy-pop .pop-pickable {
+  position: relative;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
+}
+.energy-pop .pop-pickable:hover {
+  border-color: #6ee7b7;
+}
+.energy-pop .pop-pickable:focus-visible {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}
+.energy-pop .pop-picked,
+.energy-pop .pop-ai .pop-picked {
+  border: 2px solid #10b981;
+  background: #f0fdf4;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+}
+.energy-pop .pop-check {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #d1d5db;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffffff;
+  background: #ffffff;
+}
+.energy-pop .pop-picked .pop-check {
+  border-color: #10b981;
+  background: #10b981;
+}
+.after-summary-idle {
+  color: var(--muted);
+}

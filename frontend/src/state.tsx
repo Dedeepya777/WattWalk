@@ -54,6 +54,8 @@ export interface AppState {
   afterUpgrades: boolean;
   /** AI upgrade ideas fetched so far, by asset id. */
   aiAlternatives: Record<string, AiAlternativesResponse>;
+  /** Upgrade the user picked for each asset in its card (one per asset), by asset id. */
+  chosenUpgrades: Record<string, string>;
   openQuestion: Question | null;
   health: Health | null;
   healthError: string | null;
@@ -85,6 +87,7 @@ export const initialState: AppState = {
   focusOrigin: null,
   afterUpgrades: false,
   aiAlternatives: {},
+  chosenUpgrades: {},
   openQuestion: null,
   health: null,
   healthError: null,
@@ -111,6 +114,7 @@ export type Action =
   | { type: "pinColor"; mode: PinColorMode }
   | { type: "afterUpgrades"; on: boolean }
   | { type: "aiAlternatives"; data: AiAlternativesResponse }
+  | { type: "chooseUpgrade"; assetId: string; upgradeId: string | null }
   | { type: "focusEnergy"; assetId: string | null; origin?: { x: number; y: number; r?: number; color?: string } | null }
   | { type: "planRequest"; request: PlanRequest }
   | { type: "planLoading"; loading: boolean }
@@ -152,6 +156,7 @@ export function reducer(state: AppState, action: Action): AppState {
         focusOrigin: null,
         afterUpgrades: false,
         aiAlternatives: {},
+        chosenUpgrades: {},
         openQuestion: null,
         correctionDiff: [],
         correctionError: null,
@@ -195,6 +200,13 @@ export function reducer(state: AppState, action: Action): AppState {
       return { ...state, pinColorMode: action.mode };
     case "afterUpgrades":
       return { ...state, afterUpgrades: action.on };
+    case "chooseUpgrade": {
+      const chosen = { ...state.chosenUpgrades };
+      if (action.upgradeId) chosen[action.assetId] = action.upgradeId;
+      else delete chosen[action.assetId];
+      // With nothing picked there is nothing to preview.
+      return { ...state, chosenUpgrades: chosen, afterUpgrades: state.afterUpgrades && Object.keys(chosen).length > 0 };
+    }
     case "aiAlternatives":
       return { ...state, aiAlternatives: { ...state.aiAlternatives, [action.data.asset_id]: action.data } };
     case "energy":
@@ -267,6 +279,7 @@ export function reducer(state: AppState, action: Action): AppState {
         focusOrigin: null,
         afterUpgrades: false,
         aiAlternatives: {},
+        chosenUpgrades: {},
         openQuestion: null,
         correctionDiff: [],
         correctionError: null,

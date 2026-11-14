@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { AiAlternativesResponse, AssetEnergy, EnergyAlternative } from "../contracts";
-import { afterRow, afterTotals, bestAlternative } from "./afterUpgrades";
+import { afterRow, afterTotals, chosenAlternative } from "./afterUpgrades";
 
 function alt(id: string, saves: [number, number], extra: Partial<EnergyAlternative> = {}): EnergyAlternative {
   return {
@@ -10,11 +10,11 @@ function alt(id: string, saves: [number, number], extra: Partial<EnergyAlternati
   };
 }
 
+const film = alt("window_film", [9, 9], { kwh_yr: [70, 70], usd_yr: [21, 21], heat_kwh_yr: [140, 140] });
 const window: AssetEnergy = {
   asset_id: "w1", label: "window", room_id: "r1", estimated: true,
   kwh_yr: [100, 100], usd_yr: [30, 30], heat_kwh_yr: [200, 200], power_w: null,
-  basis: "", assumed: [], note: "",
-  alternatives: [alt("window_film", [9, 9], { kwh_yr: [70, 70], usd_yr: [21, 21], heat_kwh_yr: [140, 140] })],
+  basis: "", assumed: [], note: "", alternatives: [film],
 };
 
 const ai = (ideas: EnergyAlternative[]): AiAlternativesResponse => ({
@@ -23,21 +23,23 @@ const ai = (ideas: EnergyAlternative[]): AiAlternativesResponse => ({
 });
 
 describe("after upgrades", () => {
-  it("picks the upgrade that saves the most, library or AI", () => {
-    expect(bestAlternative(window)?.upgrade_id).toBe("window_film");
-    const better = alt("ai:low_e", [12, 14], { kwh_yr: [55, 60], usd_yr: [16, 18], heat_kwh_yr: [110, 120] });
-    expect(bestAlternative(window, ai([better]))?.upgrade_id).toBe("ai:low_e");
+  it("finds the picked upgrade among library and AI ideas", () => {
+    const shade = alt("ai:shade", [15, 15], { kwh_yr: [50, 50], usd_yr: [15, 15] });
+    expect(chosenAlternative(window, undefined, undefined)).toBeNull();
+    expect(chosenAlternative(window, ai([shade]), "ai:shade")).toBe(shade);
+    expect(chosenAlternative(window, undefined, "ai:shade")).toBeNull();
   });
 
   it("uses the upgrade's own heat, or scales heat with the energy saved", () => {
-    expect(afterRow(window).heat_kwh_yr).toEqual([140, 140]);
-    const noHeat = alt("ai:shade", [15, 15], { kwh_yr: [50, 50], usd_yr: [15, 15] });
-    expect(afterRow(window, ai([noHeat])).heat_kwh_yr).toEqual([100, 100]);
+    expect(afterRow(window, film).heat_kwh_yr).toEqual([140, 140]);
+    const shade = alt("ai:shade", [15, 15], { kwh_yr: [50, 50], usd_yr: [15, 15] });
+    expect(afterRow(window, shade).heat_kwh_yr).toEqual([100, 100]);
+    expect(afterRow(window, null)).toBe(window);
   });
 
-  it("leaves items without an upgrade unchanged and adds up the savings", () => {
-    const fan = { ...window, asset_id: "f1", alternatives: [] };
-    expect(afterRow(fan)).toBe(fan);
-    expect(afterTotals([window, fan], {})).toEqual({ usd: 9, heat: 60, upgraded: 1 });
+  it("adds up only the picked upgrades", () => {
+    const fan = { ...window, asset_id: "f1" };
+    expect(afterTotals([window, fan], {}, {})).toEqual({ usd: 0, heat: 0, cost: 0, upgraded: 0 });
+    expect(afterTotals([window, fan], {}, { w1: "window_film" })).toEqual({ usd: 9, heat: 60, cost: 15, upgraded: 1 });
   });
 });
