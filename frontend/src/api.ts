@@ -303,6 +303,15 @@ export async function getHealth(): Promise<Health> {
   return request<Health>("/health");
 }
 
+/**
+ * Probe the live integrations (P3-4: GET /health?probe=1).  The probe can take up to 20 s, so the
+ * mode selector calls it only when the user opens it (cached for 60 s in StartControls).
+ */
+export async function getHealthProbe(signal?: AbortSignal): Promise<Health> {
+  if (isFixtureMode) return clone(health);
+  return request<Health>("/health?probe=1", { signal });
+}
+
 export async function getTestModels(): Promise<TestModel[]> {
   if (isFixtureMode) return clone(testModels);
   return request<TestModel[]>("/models/test");

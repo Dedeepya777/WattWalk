@@ -1,5 +1,5 @@
 /** Person 4's application shell: fixture/live data flow, SSE refetch rules, layout. */
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ApiFailure,
   cancelAudit,
@@ -27,7 +27,12 @@ import type { StartAuditRequest, WattEvent } from "./contracts";
 import { useAppDispatch, useAppState, type RequestError } from "./state";
 import { FloorPlan2D } from "./viewer/FloorPlan2D";
 import { Viewer3D } from "./viewer/Viewer3D";
-import { SDK_KEY } from "./viewer/mpSdk";
+import {
+  forgetSdkReady,
+  initialSdkReadiness,
+  sdkNoKeyTooltip,
+  type SdkReadiness,
+} from "./viewer/sdkReadiness";
 
 function toRequestError(error: unknown): RequestError {
   if (error instanceof ApiFailure) {
@@ -52,6 +57,28 @@ export default function App() {
   const runNonceRef = useRef(0);
   const refetchTimerRef = useRef<number | null>(null);
   const lastPlanKeyRef = useRef("");
+
+  // 3D readiness (P4-5). `sid` pins the cached state to the scan it belongs to; a newly selected
+  // scan derives a fresh state from sessionStorage until the viewer reports ready/failed.
+  const [sdkState, setSdkState] = useState<{
+    sid: string;
+    readiness: SdkReadiness;
+    attempt: number;
+  }>(() => ({
+    sid: state.selectedSid,
+    readiness: initialSdkReadiness(state.selectedSid),
+    attempt: 0,
+  }));
+  const sdkReadiness =
+    sdkState.sid === state.selectedSid
+      ? sdkState.readiness
+      : initialSdkReadiness(state.selectedSid);
+
+  // P4-8: the run this tab owns, even after the user switches away from its scan.
+  const [activeRunSid, setActiveRunSid] = useState<string | null>(null);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [switchBusy, setSwitchBusy] = useState(false);
+  const [switchError, setSwitchError] = useState<string | null>(null);
 
   const refreshAudit = useCallback(
     async (sid: string) => {
@@ -98,7 +125,10 @@ export default function App() {
         ) {
           dispatch({ type: "question", question: null });
         }
-        if (event.type === "done") dispatch({ type: "question", question: null });
+        if (event.type === "done") {
+          dispatch({ type: "question", question: null });
+          setActiveRunSid((current) => (current === sid ? null : current));
+        }
         if (
           event.type === "finding" ||
           event.type === "tool_result" ||
@@ -173,19 +203,37 @@ export default function App() {
     return () => window.clearInterval(interval);
   }, [loadBenchmark, loadHealth, loadModels]);
 
-  // Selecting a model loads its existing audit folder, or shows an empty state.
+  // Close the event stream and pending refetch when the app unmounts.  Switching scans also closes
+  // it in the selection effect below, so no EventSource is left listening to an old run (P4-8).
+  useEffect(
+    () => () => {
+      stopEventsRef.current?.();
+      stopEventsRef.current = null;
+      if (refetchTimerRef.current !== null) window.clearTimeout(refetchTimerRef.current);
+    },
+    [],
+  );
+
+  // Selecting a model loads its existing audit folder, or shows an empty state.  If that scan is
+  // already running (for example a run started in another tab), attach to its event stream from
+  // seq 0 instead of offering Start afresh.
   useEffect(() => {
     let cancelled = false;
     stopEventsRef.current?.();
     stopEventsRef.current = null;
     if (!state.selectedSid) return () => undefined;
+    setAuditLoading(true);
     void getAudit(state.selectedSid)
       .then((audit) => {
         if (cancelled) return;
         dispatch({ type: "audit", audit });
         if (audit?.status.status === "running") {
+          runNonceRef.current += 1;
           dispatch({ type: "clearEvents" });
           listen(state.selectedSid, runNonceRef.current);
+          setActiveRunSid(state.selectedSid);
+        } else {
+          setActiveRunSid((current) => (current === state.selectedSid ? null : current));
         }
       })
       .catch((error) => {
@@ -195,11 +243,33 @@ export default function App() {
         } else {
           dispatch({ type: "auditError", error: toRequestError(error) });
         }
+      })
+      .finally(() => {
+        if (!cancelled) setAuditLoading(false);
       });
     return () => {
       cancelled = true;
     };
   }, [dispatch, listen, state.selectedSid]);
+
+  // Keep the "run in another scan" flag honest after the user chooses "Keep running" and leaves the
+  // scan: once that audit stops (done/failed/cancelled), Start becomes available again.
+  useEffect(() => {
+    if (!activeRunSid || activeRunSid === state.selectedSid) return undefined;
+    const timer = window.setInterval(() => {
+      void getAudit(activeRunSid)
+        .then((audit) => {
+          if (audit.status.status !== "running") {
+            setActiveRunSid((current) => (current === activeRunSid ? null : current));
+          }
+        })
+        .catch(() => {
+          // The audit folder may be gone after a reset; treat that as no longer running.
+          setActiveRunSid((current) => (current === activeRunSid ? null : current));
+        });
+    }, 5_000);
+    return () => window.clearInterval(timer);
+  }, [activeRunSid, state.selectedSid]);
 
   // Plan requests: debounced 250 ms, recomputed from current inputs, never cached.
   const inventoryLength = state.audit?.inventory.length ?? 0;
@@ -246,6 +316,7 @@ export default function App() {
       await resetAudit(sid);
       await startAudit(sid, mode);
       if (nonce !== runNonceRef.current) return;
+      setActiveRunSid(sid);
       listen(sid, nonce);
       await refreshAudit(sid);
     } catch (error) {
@@ -258,6 +329,7 @@ export default function App() {
     const sid = stateRef.current.selectedSid;
     try {
       await cancelAudit(sid);
+      setActiveRunSid((current) => (current === sid ? null : current));
       await refreshAudit(sid);
     } catch (error) {
       dispatch({ type: "auditError", error: toRequestError(error) });
@@ -272,6 +344,7 @@ export default function App() {
     lastPlanKeyRef.current = "";
     try {
       await resetAudit(sid);
+      setActiveRunSid((current) => (current === sid ? null : current));
       dispatch({ type: "resetRun" });
       dispatch({ type: "clearEvents" });
       dispatch({ type: "auditError", error: null });
@@ -279,6 +352,54 @@ export default function App() {
       dispatch({ type: "auditError", error: toRequestError(error) });
     }
   };
+
+  /**
+   * P4-8: cancel the run on the current scan, wait until the server reports it is no longer
+   * running (up to 5 s), then switch.  Returns false when the run did not stop, so the picker
+   * can keep its confirm dialog open with the error.
+   */
+  const cancelAndSwitch = useCallback(async (targetSid: string): Promise<boolean> => {
+    const from = stateRef.current.selectedSid;
+    if (!from || from === targetSid) {
+      dispatch({ type: "selectSid", sid: targetSid });
+      return true;
+    }
+    setSwitchBusy(true);
+    setSwitchError(null);
+    try {
+      if (stateRef.current.audit?.status.status === "running") {
+        await cancelAudit(from);
+        let stopped = false;
+        const deadline = Date.now() + 5_000;
+        while (Date.now() < deadline) {
+          const latest = await getAudit(from).catch(() => null);
+          if (!latest || latest.status.status !== "running") {
+            stopped = true;
+            break;
+          }
+          await new Promise((resolve) => window.setTimeout(resolve, 500));
+        }
+        if (!stopped) {
+          setSwitchError(
+            "The running audit did not stop within 5 seconds. It is still running; try Cancel again.",
+          );
+          return false;
+        }
+        // Close the old stream before selecting the new scan so no listener leaks (P4-8).
+        runNonceRef.current += 1;
+        stopEventsRef.current?.();
+        stopEventsRef.current = null;
+        setActiveRunSid((current) => (current === from ? null : current));
+      }
+      dispatch({ type: "selectSid", sid: targetSid });
+      return true;
+    } catch (error) {
+      setSwitchError(toRequestError(error).message);
+      return false;
+    } finally {
+      setSwitchBusy(false);
+    }
+  }, [dispatch]);
 
   const retry = () => {
     void loadHealth();
@@ -288,6 +409,35 @@ export default function App() {
     dispatch({ type: "planRequest", request: { ...stateRef.current.planRequest } });
   };
 
+  const handleSdkReady = useCallback((sid: string) => {
+    setSdkState((previous) => ({
+      sid,
+      readiness: { kind: "ready" },
+      attempt: previous.sid === sid ? previous.attempt : 0,
+    }));
+  }, []);
+
+  const handleSdkFailed = useCallback((reason: string) => {
+    const sid = stateRef.current.selectedSid;
+    forgetSdkReady(sid);
+    setSdkState((previous) => ({
+      sid,
+      readiness: { kind: "failed", reason },
+      attempt: previous.sid === sid ? previous.attempt : 0,
+    }));
+  }, []);
+
+  const handleSdkRetry = useCallback(() => {
+    const sid = stateRef.current.selectedSid;
+    forgetSdkReady(sid);
+    setSdkState((previous) => ({
+      sid,
+      readiness: { kind: "checking" },
+      attempt: (previous.sid === sid ? previous.attempt : 0) + 1,
+    }));
+  }, []);
+
+  const sdkNoKey = sdkReadiness.kind === "no_key";
   const heatAvailable = (state.audit?.heat_shares.length ?? 0) > 0;
   const errorBanner = state.healthError ?? state.auditError?.message ?? null;
 
@@ -310,11 +460,19 @@ export default function App() {
 
       <div className="main-grid">
         <aside className="left-column">
-          <ModelPicker onRetry={() => void loadModels()} />
+          <ModelPicker
+            onRetry={() => void loadModels()}
+            onCancelAndSwitch={cancelAndSwitch}
+            switchBusy={switchBusy}
+            switchError={switchError}
+            onDismissSwitchError={() => setSwitchError(null)}
+          />
           <StartControls
             onStart={handleStart}
             onCancel={handleCancel}
             onReset={handleReset}
+            auditLoading={auditLoading}
+            otherRunSid={activeRunSid && activeRunSid !== state.selectedSid ? activeRunSid : null}
           />
           <BuildingCard />
         </aside>
@@ -329,13 +487,19 @@ export default function App() {
                 type="button"
                 className={state.viewMode === "3d" ? "segmented-button active" : "segmented-button"}
                 aria-pressed={state.viewMode === "3d"}
+                disabled={sdkNoKey}
                 title={
-                  SDK_KEY
-                    ? "3D tour with asset pins (aligned per model on its panoramas)"
-                    : "3D tour only (set VITE_MATTERPORT_SDK_KEY to show asset pins in 3D)"
+                  sdkNoKey
+                    ? sdkNoKeyTooltip()
+                    : sdkReadiness.kind === "failed"
+                      ? sdkReadiness.reason
+                      : "3D tour with asset pins (aligned per model on its panoramas)"
                 }
                 onClick={() => dispatch({ type: "view", view: "3d" })}
               >
+                {sdkReadiness.kind === "checking" ? (
+                  <span className="spinner" aria-hidden="true" />
+                ) : null}
                 3D
               </button>
               <button
@@ -358,11 +522,22 @@ export default function App() {
               </button>
             </div>
             <span className="muted small">
-              {state.audit?.rooms.length ?? 0} rooms · {state.audit?.inventory.length ?? 0} assets
+              {state.audit?.rooms.length ?? 0} rooms {"\u00b7"}{" "}
+              {state.audit?.inventory.length ?? 0} assets
             </span>
           </div>
           <div className="viewer-body">
-            {state.viewMode === "3d" ? <Viewer3D /> : <FloorPlan2D />}
+            {state.viewMode === "3d" ? (
+              <Viewer3D
+                readiness={sdkReadiness}
+                attempt={sdkState.sid === state.selectedSid ? sdkState.attempt : 0}
+                onReady={handleSdkReady}
+                onFailed={handleSdkFailed}
+                onRetry={handleSdkRetry}
+              />
+            ) : (
+              <FloorPlan2D />
+            )}
           </div>
         </section>
 

@@ -325,16 +325,23 @@ def main(argv: Sequence[str] | None = None) -> int:
     if diagnostic is not None:
         print(f"Diagnostic floor plan: {diagnostic}")
 
-    if winner is None or args.no_write:
+    if winner is None:
         print(f"NOT ACCEPTED: {verdict}")
         print(
             "Keeping face_basis.json at status 'unverified'. Use the 2D "
             "room-centroid pin fallback (plan 9.6) and tell Person 2 that dedupe "
             "must use its same-room/same-label fallback."
         )
-        return 1 if winner is None else 0
+        return 1
 
     best = next(score for score in scores if score.basis is winner)
+    if args.no_write:
+        print(
+            f"ACCEPTED (not written): mean residual {best.mean:.3f} m, second-best ratio "
+            f"{_second_ratio(scores):.1f}x. face_basis.json was left unchanged."
+        )
+        return 0
+
     written = FaceBasis(
         status="calibrated",
         camera_height_m=winner.camera_height_m,
