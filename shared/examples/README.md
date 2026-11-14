@@ -31,7 +31,7 @@ The engine numbers depend on `../contracts/assumptions.json` (all `unverified_de
 | `explain_request.json` / `explain_response.json` | ExplainRequest / ExplainResponse | Template explanation for heat_pump |
 | `answer_request.json` | AnswerRequest | Answer to q001 |
 | `health_fixture.json` | Health | Fixture mode, Bedrock unavailable |
-| `test_models.json` | TestModel[] | Fixture plus four real LA scans that appear in LA EBEWE data |
+| `test_models.json` | TestModel[] | Fixture plus three real LA scans with room outlines and walls (scans without them were removed) |
 | `benchmark_not_run.json` | Benchmark | Status `not_run` until Person 2 measures |
 | `error_*.json` | Error | conflict, not_found, invalid_request, upstream_unavailable, timeout |
 
