@@ -46,6 +46,8 @@ interface Props {
   panos: Pano[];
   energyById: Map<string, AssetEnergy>;
   scale: EnergyScale;
+  /** Called with the number of glows drawn whenever it changes (for the status line). */
+  onCount?: (count: number) => void;
 }
 
 /** Camera forward vector from the SDK pose rotation (degrees: x pitch, y yaw). */
@@ -62,7 +64,7 @@ function glowLabel(row: AssetEnergy, scale: EnergyScale): string {
   return row.heat_kwh_yr ? `${formatRange(row.heat_kwh_yr, "kWh")}/yr` : "";
 }
 
-export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, scale }: Props) {
+export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, scale, onCount }: Props) {
   const [glows, setGlows] = useState<Glow[]>([]);
   const [box, setBox] = useState({ left: 0, top: 0, width: 0, height: 0 });
   const poseRef = useRef<Pose | null>(null);
@@ -142,6 +144,7 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, scale 
         }
       }
       setGlows(next);
+      onCount?.(next.length);
     };
     const schedule = () => {
       if (frameRequest.current === null) frameRequest.current = window.requestAnimationFrame(draw);
@@ -170,7 +173,7 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, scale 
       if (frameRequest.current !== null) window.cancelAnimationFrame(frameRequest.current);
       frameRequest.current = null;
     };
-  }, [box, roomOfPano, sdk, sources]);
+  }, [box, onCount, roomOfPano, sdk, sources]);
 
   return (
     <div
@@ -187,7 +190,7 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, scale 
             top: g.y - g.r,
             width: g.r * 2,
             height: g.r * 2,
-            background: `radial-gradient(circle, ${g.color}e6 0%, ${g.color}88 28%, ${g.color}33 52%, ${g.color}00 72%)`,
+            background: `radial-gradient(circle, ${g.color}b3 0%, ${g.color}73 28%, ${g.color}2e 52%, ${g.color}00 72%)`,
             animationDelay: `${(index % 7) * -0.45}s`,
           }}
         >

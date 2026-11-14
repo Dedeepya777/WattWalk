@@ -1945,7 +1945,6 @@ select:disabled {
 .heat-glow {
   position: absolute;
   border-radius: 50%;
-  mix-blend-mode: screen;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1958,7 +1957,6 @@ select:disabled {
   color: #fff;
   text-shadow: 0 0 4px rgba(0, 0, 0, 0.9), 0 0 2px rgba(0, 0, 0, 0.9);
   white-space: nowrap;
-  mix-blend-mode: normal;
   transform: translateY(18px);
 }
 @keyframes heat-glow-pulse {

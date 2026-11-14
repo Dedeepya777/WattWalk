@@ -116,6 +116,7 @@ export function Viewer3D({ readiness, attempt, onReady, onFailed, onRetry }: Vie
   );
   const [loadedSid, setLoadedSid] = useState<string | null>(null);
   const [tagCount, setTagCount] = useState(0);
+  const [glowCount, setGlowCount] = useState<number | null>(null);
 
   const realModel = selectedSid !== FIXTURE_SID && isModelId(selectedSid);
   const panos = useMemo(() => audit?.panos ?? [], [audit?.panos]);
@@ -379,10 +380,16 @@ export function Viewer3D({ readiness, attempt, onReady, onFailed, onRetry }: Vie
           panos={panos}
           energyById={energyById}
           scale={energyScale}
+          onCount={setGlowCount}
         />
       ) : null}
       <p className={`viewer-tour-note pins-${phase.kind}`} role="status">
         {statusText(phase, tagCount, inventory.length)}
+        {phase.kind === "ready" && energyScale
+          ? ` \u00b7 Heat glow: ${glowCount === null ? "starting" : `${glowCount} source${glowCount === 1 ? "" : "s"} in view`}`
+          : phase.kind === "ready" && state.pinColorMode === "details"
+            ? " \u00b7 Choose Pins: Heat or Cost to see the heat glow"
+            : ""}
       </p>
       {phase.kind === "misaligned" || phase.kind === "error" ? (
         <div className="button-row viewer-tour-actions">
