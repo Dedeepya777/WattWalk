@@ -437,7 +437,7 @@ ul {
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
-  grid-template-columns: 272px minmax(0, 1fr) 396px;
+  grid-template-columns: 272px minmax(0, 1fr);
   gap: 8px;
   padding: 0 12px 8px;
   overflow: hidden;
