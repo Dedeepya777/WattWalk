@@ -100,19 +100,102 @@ def _ollama(model_id: str, image: bytes, prompt: str) -> tuple[str, dict]:
     return data["message"]["content"], {"inputTokens": data.get("prompt_eval_count"), "outputTokens": data.get("eval_count")}
 
 
+# ---------- free cloud backend: Google Gemini API ----------
+# A model id of the form "gemini/<model>" (for example "gemini/gemini-2.5-flash") calls the Gemini
+# API with GOOGLE_API_KEY. Free-tier keys are rate limited, so calls are spaced out process-wide and
+# HTTP 429 answers are retried after the delay Google asks for.
+GEMINI_PREFIX = "gemini/"
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+GEMINI_TIMEOUT_S = 60
+GEMINI_MAX_TOKENS = 8192   # some Gemini models spend output tokens on internal reasoning first
+GEMINI_RETRIES = 3
+_gemini_lock = threading.Lock()
+_gemini_last = 0.0
+
+
+def _gemini_wait() -> None:
+    """Space calls at least GEMINI_MIN_INTERVAL_S apart (free tier requests-per-minute limit)."""
+    global _gemini_last
+    with _gemini_lock:
+        delay = _gemini_last + config.GEMINI_MIN_INTERVAL_S - time.monotonic()
+        if delay > 0:
+            time.sleep(delay)
+        _gemini_last = time.monotonic()
+
+
+def _retry_after_s(body: str, default: float) -> float:
+    """Gemini 429 bodies carry RetryInfo.retryDelay like "17s"."""
+    import re
+    m = re.search(r'"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"', body)
+    return float(m.group(1)) + 1 if m else default
+
+
+def _gemini(model_id: str, image: bytes, prompt: str) -> tuple[str, dict]:
+    import base64
+    import urllib.error
+    import urllib.request
+
+    if not config.GOOGLE_API_KEY:
+        raise UpstreamError("bedrock", False, "GOOGLE_API_KEY is not set; add it to .env for gemini/ model ids")
+    model = model_id.removeprefix(GEMINI_PREFIX)
+    body = json.dumps({
+        "contents": [{"role": "user", "parts": [
+            {"inline_data": {"mime_type": "image/jpeg", "data": base64.b64encode(image).decode("ascii")}},
+            {"text": prompt}]}],
+        "generationConfig": {"temperature": 0, "maxOutputTokens": GEMINI_MAX_TOKENS,
+                             "responseMimeType": "application/json"},
+    }).encode("utf-8")
+    headers = {"Content-Type": "application/json", "x-goog-api-key": config.GOOGLE_API_KEY}
+    for attempt in range(GEMINI_RETRIES + 1):
+        _gemini_wait()
+        req = urllib.request.Request(GEMINI_URL.format(model=model), data=body, headers=headers)
+        try:
+            with urllib.request.urlopen(req, timeout=GEMINI_TIMEOUT_S) as resp:
+                data = json.loads(resp.read())
+            break
+        except urllib.error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", "replace")
+            if exc.code in (429, 500, 503) and attempt < GEMINI_RETRIES:
+                time.sleep(_retry_after_s(detail, 10.0 * (attempt + 1)))
+                continue
+            short = detail[:300].replace(config.GOOGLE_API_KEY, "[key]")
+            raise UpstreamError("bedrock", exc.code in (429, 500, 503),
+                                f"Gemini returned {exc.code}: {short}", exc.code) from exc
+        except (urllib.error.URLError, TimeoutError, OSError) as exc:
+            if attempt < GEMINI_RETRIES:
+                time.sleep(5.0 * (attempt + 1))
+                continue
+            raise UpstreamError("bedrock", True, f"Gemini not reachable: {exc}") from exc
+    candidates = data.get("candidates") or []
+    parts = (candidates[0].get("content") or {}).get("parts", []) if candidates else []
+    text = "".join(p.get("text", "") for p in parts if not p.get("thought"))
+    if not text:
+        reason = candidates[0].get("finishReason") if candidates else data.get("promptFeedback")
+        raise UpstreamError("bedrock", True, f"Gemini returned no text ({reason})")
+    usage = data.get("usageMetadata") or {}
+    return text, {"inputTokens": usage.get("promptTokenCount"), "outputTokens": usage.get("candidatesTokenCount")}
+
+
 DETECT_PX_BEDROCK = 768   # plan 8.2
+DETECT_PX_GEMINI = 1000   # Gemini reports boxes on a 0-1000 grid; at 1000 px that grid equals pixels
 DETECT_PX_OLLAMA = 1008   # measured: Qwen2.5-VL in Ollama upsamples smaller images and reports boxes
                           # in its own grid (factor 1.1 to 1.33); at 1008 px (36 x 28) the factor is 1.0
 
 
 def detect_px(model_id: str) -> int:
     """Longest side of the image sent for detection."""
-    return DETECT_PX_OLLAMA if model_id.startswith(OLLAMA_PREFIX) else DETECT_PX_BEDROCK
+    if model_id.startswith(OLLAMA_PREFIX):
+        return DETECT_PX_OLLAMA
+    if model_id.startswith(GEMINI_PREFIX):
+        return DETECT_PX_GEMINI
+    return DETECT_PX_BEDROCK
 
 
 def _call_model(model_id: str, image: bytes, prompt: str) -> tuple[str, dict]:
     if model_id.startswith(OLLAMA_PREFIX):
         return _ollama(model_id, image, prompt)
+    if model_id.startswith(GEMINI_PREFIX):
+        return _gemini(model_id, image, prompt)
     return _converse(model_id, image, prompt)
 
 
