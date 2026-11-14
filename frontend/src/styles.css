@@ -2270,7 +2270,10 @@ select:disabled {
   font-size: 11px;
   font-weight: 600;
   color: #fff;
-  text-shadow: 0 0 4px rgba(40, 45, 40, 0.9), 0 0 2px rgba(40, 45, 40, 0.9);
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(40, 45, 40, 0.55);
+  text-shadow: 0 0 2px rgba(40, 45, 40, 0.9);
   white-space: nowrap;
   transform: translateY(18px);
 }
@@ -2541,10 +2544,10 @@ select:disabled {
   --panel-3: #f1f5f9;
   --border: #e5e7eb;
   --border-soft: #eef0f3;
-  --text: #111827;
-  --muted: #6b7280;
-  --green: #059669;
-  --accent: #10b981;
+  --text: #282d28;
+  --muted: #6b7068;
+  --green: #4e6b2e;
+  --accent: #4e6b2e;
   color: var(--text);
   background: #ffffff;
   border: 1px solid #e5e7eb;
@@ -2575,7 +2578,7 @@ select:disabled {
 .energy-pop .button {
   background: #ffffff;
   border-color: #d1d5db;
-  color: #374151;
+  color: #3c423b;
   border-radius: 999px;
   font-weight: 600;
 }
@@ -2614,8 +2617,8 @@ select:disabled {
   justify-self: end;
   padding: 0 8px;
   border-radius: 999px;
-  background: #d1fae5;
-  color: #065f46;
+  background: #e2e9d2;
+  color: #3d5130;
 }
 .energy-pop .energy-alt-bar-track {
   height: 6px;
@@ -2623,10 +2626,10 @@ select:disabled {
   border: 0;
 }
 .energy-pop .energy-alt-bar-fill {
-  background: linear-gradient(90deg, #34d399, #10b981);
+  background: linear-gradient(90deg, #a3b77f, #4e6b2e);
 }
 .energy-pop .energy-alt-pct {
-  color: #047857;
+  color: #3d5130;
 }
 .energy-pop .energy-alt-option p.muted {
   margin: 6px 0 0;
@@ -2666,14 +2669,14 @@ select:disabled {
 .energy-pop .pop-title {
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
+  color: #3c423b;
 }
 .energy-pop .pop-save {
   font-size: 22px;
   font-weight: 800;
   letter-spacing: -0.01em;
   line-height: 1.2;
-  color: #047857;
+  color: #3d5130;
   font-variant-numeric: tabular-nums;
 }
 .energy-pop .pop-unit {
@@ -2693,14 +2696,14 @@ select:disabled {
   padding: 4px 6px;
   border: 0;
   background: none;
-  color: #6b7280;
+  color: #6b7068;
   font: inherit;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
 }
 .energy-pop .pop-link:hover {
-  color: #111827;
+  color: #282d28;
 }
 .energy-pop .modal-head {
   align-items: center;
@@ -2715,39 +2718,39 @@ select:disabled {
   width: 100%;
   margin: 10px 0 2px;
   padding: 10px 12px;
-  border: 1px dashed #c4b5fd;
+  border: 1px dashed #cbb8cf;
   border-radius: 12px;
-  background: #faf5ff;
-  color: #6d28d9;
+  background: #f7f3f7;
+  color: #7a5c80;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
 }
 .energy-pop button.pop-ai-button:hover {
-  background: #f3e8ff;
+  background: #efe8f0;
   border-style: solid;
 }
 .energy-pop .pop-ai-loading {
   cursor: default;
-  color: #7c3aed;
+  color: #7a5c80;
 }
 .energy-pop .pop-ai-loading .spinner {
-  border-color: #ddd6fe;
-  border-top-color: #7c3aed;
+  border-color: #e3d9e5;
+  border-top-color: #7a5c80;
 }
 .energy-pop .pop-ai {
   margin-top: 10px;
 }
 .energy-pop .pop-ai .energy-alt-option {
-  border-color: #e9d5ff;
+  border-color: #e3d9e5;
 }
 .energy-pop .pop-ai-tag {
   display: inline-block;
   margin-left: 6px;
   padding: 1px 6px;
   border-radius: 999px;
-  background: #f3e8ff;
-  color: #6d28d9;
+  background: #efe8f0;
+  color: #7a5c80;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -2756,7 +2759,7 @@ select:disabled {
 .energy-pop .pop-ai-today {
   margin: 0 0 8px;
   font-size: 13px;
-  color: #374151;
+  color: #3c423b;
 }
 .energy-pop .pop-ai-error {
   margin-top: 10px;
@@ -2781,12 +2784,12 @@ select:disabled {
 }
 .energy-pop .pop-ring-track {
   fill: none;
-  stroke: #ecfdf5;
+  stroke: #eef2e4;
   stroke-width: 6;
 }
 .energy-pop .pop-ring-fill {
   fill: none;
-  stroke: #10b981;
+  stroke: #4e6b2e;
   stroke-width: 6;
   stroke-linecap: round;
 }
@@ -2798,7 +2801,7 @@ select:disabled {
   align-items: center;
   justify-content: center;
   line-height: 1;
-  color: #047857;
+  color: #3d5130;
 }
 .energy-pop .pop-ring-text strong {
   font-size: 13px;
@@ -2809,7 +2812,7 @@ select:disabled {
   margin-top: 2px;
   font-size: 9px;
   font-weight: 600;
-  color: #6b7280;
+  color: #6b7068;
 }
 
 
@@ -2820,17 +2823,17 @@ select:disabled {
   transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
 }
 .energy-pop .pop-pickable:hover {
-  border-color: #6ee7b7;
+  border-color: #a3b77f;
 }
 .energy-pop .pop-pickable:focus-visible {
-  outline: 2px solid #10b981;
+  outline: 2px solid #4e6b2e;
   outline-offset: 2px;
 }
 .energy-pop .pop-picked,
 .energy-pop .pop-ai .pop-picked {
-  border: 2px solid #10b981;
-  background: #f0fdf4;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+  border: 2px solid #4e6b2e;
+  background: #f4f7ec;
+  box-shadow: 0 0 0 3px rgba(163, 183, 127, 0.25);
 }
 .energy-pop .pop-check {
   position: absolute;
@@ -2848,8 +2851,8 @@ select:disabled {
   background: #ffffff;
 }
 .energy-pop .pop-picked .pop-check {
-  border-color: #10b981;
-  background: #10b981;
+  border-color: #4e6b2e;
+  background: #4e6b2e;
 }
 
 /* Heat map: items shown with a picked upgrade */
@@ -2861,7 +2864,7 @@ select:disabled {
   text-overflow: ellipsis;
   padding: 1px 7px;
   border-radius: 999px;
-  background: #10b981;
+  background: #4e6b2e;
   color: #ffffff;
   font-size: 10px;
   font-weight: 700;
@@ -2883,7 +2886,7 @@ select:disabled {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #10b981;
+  background: #4e6b2e;
   color: #ffffff;
   font-size: 11px;
 }
