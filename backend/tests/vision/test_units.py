@@ -329,13 +329,12 @@ def test_no_temporary_markers_left():
 
 
 def _fake_registry(monkeypatch):
-    import sys
-    import types
+    """Capture what the vision code reports to Person 3's real health registry."""
+    from wattwalk import health_registry
 
     recorded = []
-    registry = types.ModuleType("wattwalk.health_registry")
-    registry.record = lambda integration, ok, detail="": recorded.append((integration, ok, detail))
-    monkeypatch.setitem(sys.modules, "wattwalk.health_registry", registry)
+    monkeypatch.setattr(health_registry, "record",
+                        lambda integration, ok, detail="": recorded.append((integration, ok, detail)))
     return recorded
 
 

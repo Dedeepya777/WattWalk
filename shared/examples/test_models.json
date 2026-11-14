@@ -4,7 +4,7 @@
     "address": "215 W 7th St, Unit 301, Los Angeles, CA",
     "city": "Los Angeles",
     "note": "Demo scan (hero); downtown LA; building listed in LA EBEWE (built 1911, site EUI 40.8); 10 rooms, 64 walls",
-    "has_fixture": false,
+    "has_fixture": true,
     "has_replay": false
   },
   {
