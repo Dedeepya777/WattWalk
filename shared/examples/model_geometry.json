@@ -1,0 +1,352 @@
+{
+  "schema_version": "1.0.0",
+  "sid": "fixtureUnitA",
+  "address": "100 Example St, Los Angeles, CA 90000",
+  "lat": null,
+  "lon": null,
+  "rooms": [
+    {
+      "id": "r_living",
+      "label": "Living Room",
+      "floor_id": "f1",
+      "area_m2": 24.0,
+      "height_m": 2.6,
+      "polygon": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 6,
+          "y": 0
+        },
+        {
+          "x": 6,
+          "y": 4
+        },
+        {
+          "x": 0,
+          "y": 4
+        }
+      ],
+      "pano_ids": [
+        "p01",
+        "p02"
+      ]
+    },
+    {
+      "id": "r_bed",
+      "label": "Bedroom",
+      "floor_id": "f1",
+      "area_m2": 16.0,
+      "height_m": 2.6,
+      "polygon": [
+        {
+          "x": 6,
+          "y": 0
+        },
+        {
+          "x": 10,
+          "y": 0
+        },
+        {
+          "x": 10,
+          "y": 4
+        },
+        {
+          "x": 6,
+          "y": 4
+        }
+      ],
+      "pano_ids": [
+        "p03"
+      ]
+    },
+    {
+      "id": "r_kitchen",
+      "label": "Kitchen",
+      "floor_id": "f1",
+      "area_m2": 10.0,
+      "height_m": 2.6,
+      "polygon": [
+        {
+          "x": 0,
+          "y": 4
+        },
+        {
+          "x": 4,
+          "y": 4
+        },
+        {
+          "x": 4,
+          "y": 6.5
+        },
+        {
+          "x": 0,
+          "y": 6.5
+        }
+      ],
+      "pano_ids": [
+        "p04"
+      ]
+    },
+    {
+      "id": "r_bath",
+      "label": "Bathroom",
+      "floor_id": "f1",
+      "area_m2": 6.0,
+      "height_m": 2.6,
+      "polygon": [
+        {
+          "x": 4,
+          "y": 4
+        },
+        {
+          "x": 6.4,
+          "y": 4
+        },
+        {
+          "x": 6.4,
+          "y": 6.5
+        },
+        {
+          "x": 4,
+          "y": 6.5
+        }
+      ],
+      "pano_ids": [
+        "p05"
+      ]
+    },
+    {
+      "id": "r_hall",
+      "label": "Hallway",
+      "floor_id": "f1",
+      "area_m2": 4.0,
+      "height_m": 2.6,
+      "polygon": [
+        {
+          "x": 6.4,
+          "y": 4
+        },
+        {
+          "x": 8,
+          "y": 4
+        },
+        {
+          "x": 8,
+          "y": 6.5
+        },
+        {
+          "x": 6.4,
+          "y": 6.5
+        }
+      ],
+      "pano_ids": [
+        "p06"
+      ]
+    },
+    {
+      "id": "r_closet",
+      "label": "Closet",
+      "floor_id": "f1",
+      "area_m2": 5.0,
+      "height_m": 2.6,
+      "polygon": [
+        {
+          "x": 8,
+          "y": 4
+        },
+        {
+          "x": 10,
+          "y": 4
+        },
+        {
+          "x": 10,
+          "y": 6.5
+        },
+        {
+          "x": 8,
+          "y": 6.5
+        }
+      ],
+      "pano_ids": [
+        "p07"
+      ]
+    }
+  ],
+  "panos": [
+    {
+      "id": "p01",
+      "label": "1",
+      "position": {
+        "x": 3.0,
+        "y": 2.0,
+        "z": 1.5
+      },
+      "room_id": "r_living"
+    },
+    {
+      "id": "p02",
+      "label": "2",
+      "position": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 1.5
+      },
+      "room_id": "r_living"
+    },
+    {
+      "id": "p03",
+      "label": "3",
+      "position": {
+        "x": 8.0,
+        "y": 2.0,
+        "z": 1.5
+      },
+      "room_id": "r_bed"
+    },
+    {
+      "id": "p04",
+      "label": "4",
+      "position": {
+        "x": 2.0,
+        "y": 5.2,
+        "z": 1.5
+      },
+      "room_id": "r_kitchen"
+    },
+    {
+      "id": "p05",
+      "label": "5",
+      "position": {
+        "x": 5.2,
+        "y": 5.2,
+        "z": 1.5
+      },
+      "room_id": "r_bath"
+    },
+    {
+      "id": "p06",
+      "label": "6",
+      "position": {
+        "x": 7.2,
+        "y": 5.2,
+        "z": 1.5
+      },
+      "room_id": "r_hall"
+    },
+    {
+      "id": "p07",
+      "label": "7",
+      "position": {
+        "x": 9.0,
+        "y": 5.2,
+        "z": 1.5
+      },
+      "room_id": "r_closet"
+    }
+  ],
+  "walls": [
+    {
+      "a": {
+        "x": 0,
+        "y": 0
+      },
+      "b": {
+        "x": 10,
+        "y": 0
+      },
+      "floor_id": "f1"
+    },
+    {
+      "a": {
+        "x": 10,
+        "y": 0
+      },
+      "b": {
+        "x": 10,
+        "y": 6.5
+      },
+      "floor_id": "f1"
+    },
+    {
+      "a": {
+        "x": 10,
+        "y": 6.5
+      },
+      "b": {
+        "x": 0,
+        "y": 6.5
+      },
+      "floor_id": "f1"
+    },
+    {
+      "a": {
+        "x": 0,
+        "y": 6.5
+      },
+      "b": {
+        "x": 0,
+        "y": 0
+      },
+      "floor_id": "f1"
+    },
+    {
+      "a": {
+        "x": 6,
+        "y": 0
+      },
+      "b": {
+        "x": 6,
+        "y": 4
+      },
+      "floor_id": "f1"
+    },
+    {
+      "a": {
+        "x": 0,
+        "y": 4
+      },
+      "b": {
+        "x": 10,
+        "y": 4
+      },
+      "floor_id": "f1"
+    },
+    {
+      "a": {
+        "x": 4,
+        "y": 4
+      },
+      "b": {
+        "x": 4,
+        "y": 6.5
+      },
+      "floor_id": "f1"
+    },
+    {
+      "a": {
+        "x": 6.4,
+        "y": 4
+      },
+      "b": {
+        "x": 6.4,
+        "y": 6.5
+      },
+      "floor_id": "f1"
+    },
+    {
+      "a": {
+        "x": 8,
+        "y": 4
+      },
+      "b": {
+        "x": 8,
+        "y": 6.5
+      },
+      "floor_id": "f1"
+    }
+  ],
+  "status": "fixture"
+}

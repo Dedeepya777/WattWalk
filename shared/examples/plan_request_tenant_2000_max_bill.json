@@ -1,0 +1,8 @@
+{
+  "budget_usd": 2000,
+  "objective": "max_bill",
+  "role": "tenant",
+  "tenant_pays_electric": true,
+  "stay_months": 12,
+  "overrides": {}
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "sid": "fixtureUnitA",
+    "address": "100 Example St, Los Angeles, CA 90000",
+    "city": "Los Angeles",
+    "note": "Illustrative fixture, not a real building",
+    "has_fixture": true,
+    "has_replay": false
+  },
+  {
+    "sid": "2YKpZqjy5bJ",
+    "address": "5600 Wilshire Blvd, Los Angeles, CA",
+    "city": "Los Angeles",
+    "note": "Real scan; building listed in LA EBEWE (built 2008, site EUI 28.3)",
+    "has_fixture": false,
+    "has_replay": false
+  },
+  {
+    "sid": "1sW1YgLzUcT",
+    "address": "1420 S Figueroa St, Los Angeles, CA",
+    "city": "Los Angeles",
+    "note": "Real scan; building listed in LA EBEWE (built 2015, site EUI 36.9)",
+    "has_fixture": false,
+    "has_replay": false
+  },
+  {
+    "sid": "7PGYj769YXv",
+    "address": "870 Hilgard Ave, Los Angeles, CA",
+    "city": "Los Angeles",
+    "note": "Real scan; building listed in LA EBEWE (built 1972, site EUI 15.3)",
+    "has_fixture": false,
+    "has_replay": false
+  },
+  {
+    "sid": "2ibibwUGQAe",
+    "address": "1830 N Cherokee Ave, Los Angeles, CA",
+    "city": "Los Angeles",
+    "note": "Real scan; building listed in LA EBEWE (built 1946, site EUI 32.5)",
+    "has_fixture": false,
+    "has_replay": false
+  }
+]

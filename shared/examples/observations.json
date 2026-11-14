@@ -1,0 +1,530 @@
+[
+  {
+    "id": "o001",
+    "pano_id": "p01",
+    "face": 3,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 820,
+      "y0": 610,
+      "x1": 1340,
+      "y1": 1180
+    },
+    "label": "window",
+    "attrs": {
+      "panes": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "glazing not determinable from image",
+        "evidence_obs_ids": [
+          "o001"
+        ]
+      },
+      "shading": {
+        "value": "blinds",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o001"
+        ]
+      },
+      "width_m": {
+        "value": 1.5,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o001"
+        ]
+      },
+      "height_m": {
+        "value": 1.2,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o001"
+        ]
+      },
+      "area_m2": {
+        "value": 1.8,
+        "source": "visible_in_scan",
+        "note": "width_m x height_m",
+        "evidence_obs_ids": [
+          "o001"
+        ]
+      }
+    },
+    "model_id": "small-vision-model",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o001.jpg",
+    "anchor": {
+      "x": 2.895,
+      "y": 0.1,
+      "z": 1.738
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "r_living",
+    "quality": {
+      "blur": 219.4,
+      "brightness": 129.0,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T10:01:06Z"
+  },
+  {
+    "id": "o002",
+    "pano_id": "p02",
+    "face": 2,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 1330,
+      "y0": 650,
+      "x1": 1740,
+      "y1": 1142
+    },
+    "label": "window",
+    "attrs": {
+      "panes": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "glazing not determinable from image",
+        "evidence_obs_ids": [
+          "o002"
+        ]
+      },
+      "shading": {
+        "value": "blinds",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o002"
+        ]
+      },
+      "width_m": {
+        "value": 1.5,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o002"
+        ]
+      },
+      "height_m": {
+        "value": 1.2,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o002"
+        ]
+      },
+      "area_m2": {
+        "value": 1.8,
+        "source": "visible_in_scan",
+        "note": "width_m x height_m",
+        "evidence_obs_ids": [
+          "o002"
+        ]
+      }
+    },
+    "model_id": "small-vision-model",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o002.jpg",
+    "anchor": {
+      "x": 2.912,
+      "y": 0.045,
+      "z": 1.738
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "r_living",
+    "quality": {
+      "blur": 226.4,
+      "brightness": 130.0,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T10:01:12Z"
+  },
+  {
+    "id": "o003",
+    "pano_id": "p03",
+    "face": 3,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 900,
+      "y0": 640,
+      "x1": 1260,
+      "y1": 1170
+    },
+    "label": "window",
+    "attrs": {
+      "panes": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "glazing not determinable from image",
+        "evidence_obs_ids": [
+          "o003"
+        ]
+      },
+      "shading": {
+        "value": "none",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o003"
+        ]
+      },
+      "width_m": {
+        "value": 1.0,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o003"
+        ]
+      },
+      "height_m": {
+        "value": 1.2,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o003"
+        ]
+      },
+      "area_m2": {
+        "value": 1.2,
+        "source": "visible_in_scan",
+        "note": "width_m x height_m",
+        "evidence_obs_ids": [
+          "o003"
+        ]
+      }
+    },
+    "model_id": "small-vision-model",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o003.jpg",
+    "anchor": {
+      "x": 7.895,
+      "y": 0.1,
+      "z": 1.72
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "r_bed",
+    "quality": {
+      "blur": 233.4,
+      "brightness": 131.0,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T10:01:18Z"
+  },
+  {
+    "id": "o004",
+    "pano_id": "p03",
+    "face": 3,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 1300,
+      "y0": 900,
+      "x1": 1520,
+      "y1": 1080
+    },
+    "label": "window_ac",
+    "attrs": {},
+    "model_id": "small-vision-model",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o004.jpg",
+    "anchor": {
+      "x": 7.28,
+      "y": 0.094,
+      "z": 1.562
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "r_bed",
+    "quality": {
+      "blur": 240.4,
+      "brightness": 132.0,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T10:01:24Z"
+  },
+  {
+    "id": "o005",
+    "pano_id": "p01",
+    "face": 1,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 950,
+      "y0": 40,
+      "x1": 1100,
+      "y1": 140
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "bulb hidden inside fixture; high-res crop did not resolve",
+        "evidence_obs_ids": [
+          "o005"
+        ]
+      },
+      "bulb_count": {
+        "value": 2,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o005"
+        ]
+      }
+    },
+    "model_id": "small-vision-model",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o005.jpg",
+    "anchor": {
+      "x": 3.002,
+      "y": 3.145,
+      "z": 2.6
+    },
+    "anchor_method": "ceiling_plane",
+    "room_id": "r_living",
+    "quality": {
+      "blur": 247.4,
+      "brightness": 133.0,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T10:01:30Z"
+  },
+  {
+    "id": "o006",
+    "pano_id": "p01",
+    "face": 2,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 950,
+      "y0": 200,
+      "x1": 1100,
+      "y1": 340
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "bulb hidden inside fixture; high-res crop did not resolve",
+        "evidence_obs_ids": [
+          "o006"
+        ]
+      },
+      "bulb_count": {
+        "value": 2,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o006"
+        ]
+      }
+    },
+    "model_id": "small-vision-model",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o006.jpg",
+    "anchor": {
+      "x": 4.368,
+      "y": 1.998,
+      "z": 2.6
+    },
+    "anchor_method": "ceiling_plane",
+    "room_id": "r_living",
+    "quality": {
+      "blur": 254.4,
+      "brightness": 134.0,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T10:01:36Z"
+  },
+  {
+    "id": "o007",
+    "pano_id": "p03",
+    "face": 1,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 950,
+      "y0": 100,
+      "x1": 1100,
+      "y1": 220
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "unresolved after high-res crop and large model; user question expired",
+        "evidence_obs_ids": [
+          "o007"
+        ]
+      },
+      "bulb_count": {
+        "value": 2,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o007"
+        ]
+      }
+    },
+    "model_id": "large-vision-model",
+    "model_tier": "large",
+    "escalated": true,
+    "crop_ref": "crops/o007.jpg",
+    "anchor": {
+      "x": 8.002,
+      "y": 3.22,
+      "z": 2.6
+    },
+    "anchor_method": "ceiling_plane",
+    "room_id": "r_bed",
+    "quality": {
+      "blur": 261.4,
+      "brightness": 135.0,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T10:01:42Z"
+  },
+  {
+    "id": "o008",
+    "pano_id": "p04",
+    "face": 1,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 950,
+      "y0": 40,
+      "x1": 1100,
+      "y1": 140
+    },
+    "label": "ceiling_light",
+    "attrs": {
+      "bulb_type": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "bulb hidden inside fixture; high-res crop did not resolve",
+        "evidence_obs_ids": [
+          "o008"
+        ]
+      },
+      "bulb_count": {
+        "value": 2,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o008"
+        ]
+      }
+    },
+    "model_id": "small-vision-model",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o008.jpg",
+    "anchor": {
+      "x": 2.002,
+      "y": 6.345,
+      "z": 2.6
+    },
+    "anchor_method": "ceiling_plane",
+    "room_id": "r_kitchen",
+    "quality": {
+      "blur": 268.4,
+      "brightness": 136.0,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T10:01:48Z"
+  },
+  {
+    "id": "o009",
+    "pano_id": "p04",
+    "face": 4,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 400,
+      "y0": 520,
+      "x1": 900,
+      "y1": 1700
+    },
+    "label": "refrigerator",
+    "attrs": {
+      "style": {
+        "value": "top_freezer",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o009"
+        ]
+      },
+      "age_years": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "age not determinable from appearance",
+        "evidence_obs_ids": [
+          "o009"
+        ]
+      }
+    },
+    "model_id": "small-vision-model",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o009.jpg",
+    "anchor": {
+      "x": 0.094,
+      "y": 4.505,
+      "z": 0.241
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "r_kitchen",
+    "quality": {
+      "blur": 275.4,
+      "brightness": 137.0,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T10:01:54Z"
+  },
+  {
+    "id": "o010",
+    "pano_id": "p04",
+    "face": 2,
+    "resolution": "2k",
+    "face_px": 2048,
+    "bbox": {
+      "x0": 1000,
+      "y0": 1100,
+      "x1": 1500,
+      "y1": 1500
+    },
+    "label": "range_gas",
+    "attrs": {},
+    "model_id": "small-vision-model",
+    "model_tier": "small",
+    "escalated": false,
+    "crop_ref": "crops/o010.jpg",
+    "anchor": {
+      "x": 3.902,
+      "y": 4.779,
+      "z": 0.615
+    },
+    "anchor_method": "wall_raycast",
+    "room_id": "r_kitchen",
+    "quality": {
+      "blur": 282.4,
+      "brightness": 138.0,
+      "accepted": true
+    },
+    "created_at": "2026-11-14T10:02:00Z"
+  }
+]

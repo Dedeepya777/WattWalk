@@ -1,0 +1,11 @@
+{
+  "error": {
+    "code": "invalid_request",
+    "message": "budget_usd must be between 0 and 50000.",
+    "retryable": false,
+    "details": {
+      "field": "budget_usd",
+      "value": -10
+    }
+  }
+}

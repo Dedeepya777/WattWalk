@@ -1,0 +1,525 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wattwalk.local/contracts/wattwalk.schema.json",
+  "title": "WattWalk shared contracts",
+  "description": "Canonical data contracts for WattWalk. Schema version 1.0.0. All other representations (Python, TypeScript, prose) mirror this file. Units: metres, square metres, kWh per year, US dollars. Coordinates: Matterport model frame, metres, z up.",
+  "x-schema-version": "1.0.0",
+  "$defs": {
+    "SchemaVersion": {"type": "string", "const": "1.0.0"},
+    "Id": {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[A-Za-z0-9_\\-]+$"},
+    "Timestamp": {"type": "string", "description": "ISO 8601 UTC, e.g. 2026-11-14T15:04:05Z"},
+    "City": {"type": "string", "enum": ["Los Angeles", "Houston"]},
+    "Source": {
+      "type": "string",
+      "enum": ["visible_in_scan", "reported_in_data", "assumed_for_calculation", "needs_verification", "provided_by_user"],
+      "description": "Where a value came from. needs_verification means the value is unknown (value is null)."
+    },
+    "IntegrationStatus": {"type": "string", "enum": ["live", "fixture", "replay", "unavailable"]},
+    "AssetLabel": {
+      "type": "string",
+      "enum": ["window", "window_ac", "mini_split", "supply_vent", "thermostat", "ceiling_light", "lamp", "refrigerator", "range_gas", "range_electric", "dishwasher", "washer", "dryer", "ceiling_fan", "water_heater"]
+    },
+    "AgentName": {"type": "string", "enum": ["planner", "walker", "exterior_analyst", "retrofit_planner", "verifier", "system", "benchmark"]},
+    "Vec2": {
+      "type": "object", "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {"x": {"type": "number"}, "y": {"type": "number"}}
+    },
+    "Vec3": {
+      "type": "object", "additionalProperties": false,
+      "required": ["x", "y", "z"],
+      "properties": {"x": {"type": "number"}, "y": {"type": "number"}, "z": {"type": "number"}},
+      "description": "Matterport Model API frame, metres, z up. Never the Showcase SDK frame."
+    },
+    "BBox": {
+      "type": "object", "additionalProperties": false,
+      "required": ["x0", "y0", "x1", "y1"],
+      "properties": {
+        "x0": {"type": "integer", "minimum": 0}, "y0": {"type": "integer", "minimum": 0},
+        "x1": {"type": "integer", "minimum": 1}, "y1": {"type": "integer", "minimum": 1}
+      },
+      "description": "Pixel box in the skybox face image at the observation's resolution. x right, y down, origin top-left. x1 > x0, y1 > y0."
+    },
+    "Attr": {
+      "type": "object", "additionalProperties": false,
+      "required": ["value", "source"],
+      "properties": {
+        "value": {"type": ["string", "number", "null"]},
+        "source": {"$ref": "#/$defs/Source"},
+        "note": {"type": "string", "default": ""},
+        "evidence_obs_ids": {"type": "array", "items": {"$ref": "#/$defs/Id"}, "default": []}
+      }
+    },
+    "Error": {
+      "type": "object", "additionalProperties": false,
+      "required": ["error"],
+      "properties": {
+        "error": {
+          "type": "object", "additionalProperties": false,
+          "required": ["code", "message", "retryable"],
+          "properties": {
+            "code": {"type": "string", "enum": ["not_found", "invalid_request", "conflict", "upstream_unavailable", "upstream_auth", "timeout", "cancelled", "internal"]},
+            "message": {"type": "string"},
+            "retryable": {"type": "boolean"},
+            "details": {"type": "object"}
+          }
+        }
+      }
+    },
+    "Room": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "label", "floor_id", "area_m2", "height_m", "polygon", "pano_ids"],
+      "properties": {
+        "id": {"$ref": "#/$defs/Id"},
+        "label": {"type": "string", "description": "Matterport room classification label, or 'Unlabelled'."},
+        "floor_id": {"$ref": "#/$defs/Id"},
+        "area_m2": {"type": "number", "minimum": 0},
+        "height_m": {"type": ["number", "null"], "minimum": 0},
+        "polygon": {"type": "array", "minItems": 3, "items": {"$ref": "#/$defs/Vec2"}, "description": "Counter-clockwise or clockwise ring, not closed (first point not repeated)."},
+        "pano_ids": {"type": "array", "items": {"$ref": "#/$defs/Id"}}
+      }
+    },
+    "Pano": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "label", "position", "room_id"],
+      "properties": {
+        "id": {"$ref": "#/$defs/Id"},
+        "label": {"type": "string"},
+        "position": {"$ref": "#/$defs/Vec3"},
+        "room_id": {"anyOf": [{"$ref": "#/$defs/Id"}, {"type": "null"}]}
+      }
+    },
+    "WallSegment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["a", "b", "floor_id"],
+      "properties": {"a": {"$ref": "#/$defs/Vec2"}, "b": {"$ref": "#/$defs/Vec2"}, "floor_id": {"$ref": "#/$defs/Id"}}
+    },
+    "ModelGeometry": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "sid", "address", "lat", "lon", "rooms", "panos", "walls", "status"],
+      "properties": {
+        "schema_version": {"$ref": "#/$defs/SchemaVersion"},
+        "sid": {"$ref": "#/$defs/Id"},
+        "address": {"type": "string"},
+        "lat": {"type": ["number", "null"]},
+        "lon": {"type": ["number", "null"]},
+        "rooms": {"type": "array", "items": {"$ref": "#/$defs/Room"}},
+        "panos": {"type": "array", "items": {"$ref": "#/$defs/Pano"}},
+        "walls": {"type": "array", "items": {"$ref": "#/$defs/WallSegment"}},
+        "status": {"$ref": "#/$defs/IntegrationStatus"}
+      }
+    },
+    "EbeweRecord": {
+      "type": "object", "additionalProperties": false,
+      "required": ["site_eui_kbtu_ft2", "gfa_ft2", "program_year", "year_built", "property_type"],
+      "properties": {
+        "site_eui_kbtu_ft2": {"type": "number", "minimum": 0},
+        "gfa_ft2": {"type": ["number", "null"], "minimum": 0},
+        "program_year": {"type": "integer"},
+        "year_built": {"type": ["integer", "null"]},
+        "property_type": {"type": "string"}
+      }
+    },
+    "Building": {
+      "type": "object", "additionalProperties": false,
+      "required": ["address", "city", "costar_property_id", "year_built", "units", "asking_rent_usd_month", "unit_floor_area_m2", "ebewe", "roof", "layer_status"],
+      "properties": {
+        "address": {"type": "string"},
+        "city": {"$ref": "#/$defs/City"},
+        "costar_property_id": {"type": ["string", "null"]},
+        "year_built": {"$ref": "#/$defs/Attr"},
+        "units": {"$ref": "#/$defs/Attr"},
+        "asking_rent_usd_month": {"$ref": "#/$defs/Attr"},
+        "unit_floor_area_m2": {"$ref": "#/$defs/Attr"},
+        "ebewe": {"anyOf": [{"$ref": "#/$defs/EbeweRecord"}, {"type": "null"}]},
+        "roof": {
+          "type": "object", "additionalProperties": false,
+          "required": ["status", "attributes", "ortho_ref"],
+          "properties": {
+            "status": {"$ref": "#/$defs/IntegrationStatus"},
+            "attributes": {"type": "object", "description": "Raw Vexcel roof attributes as returned by the adapter. Empty when unavailable."},
+            "ortho_ref": {"type": ["string", "null"], "description": "Relative path of the cached Vexcel ortho image, served by the API."}
+          }
+        },
+        "layer_status": {
+          "type": "object", "additionalProperties": false,
+          "required": ["matterport", "costar", "vexcel", "ebewe"],
+          "properties": {
+            "matterport": {"$ref": "#/$defs/IntegrationStatus"},
+            "costar": {"$ref": "#/$defs/IntegrationStatus"},
+            "vexcel": {"$ref": "#/$defs/IntegrationStatus"},
+            "ebewe": {"$ref": "#/$defs/IntegrationStatus"}
+          }
+        }
+      }
+    },
+    "Quality": {
+      "type": "object", "additionalProperties": false,
+      "required": ["blur", "brightness", "accepted"],
+      "properties": {
+        "blur": {"type": "number", "minimum": 0, "description": "Variance of Laplacian on grayscale. Lower is blurrier."},
+        "brightness": {"type": "number", "minimum": 0, "maximum": 255},
+        "accepted": {"type": "boolean"}
+      }
+    },
+    "Observation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "pano_id", "face", "resolution", "face_px", "bbox", "label", "attrs", "model_id", "model_tier", "escalated", "crop_ref", "anchor", "anchor_method", "room_id", "quality", "created_at"],
+      "properties": {
+        "id": {"$ref": "#/$defs/Id"},
+        "pano_id": {"$ref": "#/$defs/Id"},
+        "face": {"type": "integer", "minimum": 1, "maximum": 4, "description": "Skybox horizon face. 0 (up) and 5 (down) are not inspected in the MVP."},
+        "resolution": {"type": "string", "enum": ["2k", "4k"]},
+        "face_px": {"type": "integer", "enum": [2048, 4096]},
+        "bbox": {"$ref": "#/$defs/BBox"},
+        "label": {"$ref": "#/$defs/AssetLabel"},
+        "attrs": {"type": "object", "additionalProperties": {"$ref": "#/$defs/Attr"}},
+        "model_id": {"type": "string"},
+        "model_tier": {"type": "string", "enum": ["small", "large"]},
+        "escalated": {"type": "boolean"},
+        "crop_ref": {"type": "string", "description": "Relative path under the audit folder, e.g. crops/o001.jpg"},
+        "anchor": {"anyOf": [{"$ref": "#/$defs/Vec3"}, {"type": "null"}]},
+        "anchor_method": {"type": "string", "enum": ["wall_raycast", "ceiling_plane", "floor_plane", "none"]},
+        "room_id": {"anyOf": [{"$ref": "#/$defs/Id"}, {"type": "null"}]},
+        "quality": {"$ref": "#/$defs/Quality"},
+        "created_at": {"$ref": "#/$defs/Timestamp"}
+      }
+    },
+    "Asset": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "label", "scope", "room_id", "observation_ids", "attrs", "anchor", "next_step", "disagreement"],
+      "properties": {
+        "id": {"$ref": "#/$defs/Id"},
+        "label": {"$ref": "#/$defs/AssetLabel"},
+        "scope": {"type": "string", "enum": ["unit", "building"]},
+        "room_id": {"anyOf": [{"$ref": "#/$defs/Id"}, {"type": "null"}]},
+        "observation_ids": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/Id"}},
+        "attrs": {"type": "object", "additionalProperties": {"$ref": "#/$defs/Attr"}},
+        "anchor": {"anyOf": [{"$ref": "#/$defs/Vec3"}, {"type": "null"}]},
+        "next_step": {"type": "string", "description": "Plain-language step that would resolve the most important unknown. Empty if none."},
+        "disagreement": {"type": "boolean", "description": "True when two observations of this asset report different known values for the same attribute."}
+      }
+    },
+    "RoomCoverage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["room_id", "room_label", "status", "panos_reviewed", "notes"],
+      "properties": {
+        "room_id": {"$ref": "#/$defs/Id"},
+        "room_label": {"type": "string"},
+        "status": {"type": "string", "enum": ["reviewed", "partial", "not_visited"]},
+        "panos_reviewed": {"type": "array", "items": {"$ref": "#/$defs/Id"}},
+        "notes": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "Coverage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["panos_total", "panos_reviewed", "rooms_total", "rooms_reviewed", "assets_unique", "observations_total", "attrs_known", "attrs_unknown", "faces_rejected", "not_visible", "rooms"],
+      "properties": {
+        "panos_total": {"type": "integer", "minimum": 0},
+        "panos_reviewed": {"type": "integer", "minimum": 0},
+        "rooms_total": {"type": "integer", "minimum": 0},
+        "rooms_reviewed": {"type": "integer", "minimum": 0, "description": "Rooms with status reviewed or partial."},
+        "assets_unique": {"type": "integer", "minimum": 0},
+        "observations_total": {"type": "integer", "minimum": 0},
+        "attrs_known": {"type": "integer", "minimum": 0},
+        "attrs_unknown": {"type": "integer", "minimum": 0},
+        "faces_rejected": {"type": "integer", "minimum": 0},
+        "not_visible": {"type": "array", "items": {"$ref": "#/$defs/AssetLabel"}, "description": "Labels in the expected checklist (thermostat, water_heater) that no observation found."},
+        "rooms": {"type": "array", "items": {"$ref": "#/$defs/RoomCoverage"}}
+      }
+    },
+    "ModelCall": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "agent", "kind", "model_id", "model_tier", "tokens_in", "tokens_out", "latency_ms", "cache_hit", "image_px", "at"],
+      "properties": {
+        "id": {"$ref": "#/$defs/Id"},
+        "agent": {"$ref": "#/$defs/AgentName"},
+        "kind": {"type": "string", "enum": ["detect", "attr", "planner", "explain"]},
+        "model_id": {"type": "string"},
+        "model_tier": {"type": "string", "enum": ["small", "large", "planner"]},
+        "tokens_in": {"type": ["integer", "null"], "minimum": 0},
+        "tokens_out": {"type": ["integer", "null"], "minimum": 0},
+        "latency_ms": {"type": "integer", "minimum": 0},
+        "cache_hit": {"type": "boolean"},
+        "image_px": {"type": ["integer", "null"], "minimum": 0, "description": "Longest side of the image sent, in pixels. Null for text-only calls."},
+        "at": {"$ref": "#/$defs/Timestamp"}
+      }
+    },
+    "ModelCallSummary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["calls_total", "calls_small", "calls_large", "calls_planner", "cache_hits", "tokens_in", "tokens_out"],
+      "properties": {
+        "calls_total": {"type": "integer", "minimum": 0},
+        "calls_small": {"type": "integer", "minimum": 0},
+        "calls_large": {"type": "integer", "minimum": 0},
+        "calls_planner": {"type": "integer", "minimum": 0},
+        "cache_hits": {"type": "integer", "minimum": 0},
+        "tokens_in": {"type": ["integer", "null"], "minimum": 0},
+        "tokens_out": {"type": ["integer", "null"], "minimum": 0}
+      }
+    },
+    "HeatShare": {
+      "type": "object", "additionalProperties": false,
+      "required": ["room_id", "share", "weight"],
+      "properties": {
+        "room_id": {"$ref": "#/$defs/Id"},
+        "share": {"type": "number", "minimum": 0, "maximum": 1},
+        "weight": {"type": "number", "minimum": 0}
+      }
+    },
+    "Question": {
+      "type": "object", "additionalProperties": false,
+      "required": ["question_id", "asset_id", "attr", "text", "choices", "status", "answer"],
+      "properties": {
+        "question_id": {"$ref": "#/$defs/Id"},
+        "asset_id": {"anyOf": [{"$ref": "#/$defs/Id"}, {"type": "null"}]},
+        "attr": {"type": "string"},
+        "text": {"type": "string"},
+        "choices": {"type": "array", "items": {"type": "string"}},
+        "status": {"type": "string", "enum": ["open", "answered", "expired"]},
+        "answer": {"type": ["string", "null"]}
+      }
+    },
+    "AuditStatus": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sid", "status", "mode", "started_at", "finished_at", "error"],
+      "properties": {
+        "sid": {"$ref": "#/$defs/Id"},
+        "status": {"type": "string", "enum": ["idle", "running", "completed", "failed", "cancelled"]},
+        "mode": {"type": "string", "enum": ["live", "replay", "fixture"]},
+        "started_at": {"anyOf": [{"$ref": "#/$defs/Timestamp"}, {"type": "null"}]},
+        "finished_at": {"anyOf": [{"$ref": "#/$defs/Timestamp"}, {"type": "null"}]},
+        "error": {"anyOf": [{"$ref": "#/$defs/Error"}, {"type": "null"}]},
+        "replay_of": {"type": ["string", "null"], "description": "For mode replay: started_at of the recorded live run.", "default": null}
+      }
+    },
+    "AuditResponse": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "status", "building", "rooms", "panos", "observations", "inventory", "coverage", "heat_shares", "model_call_summary", "questions", "report_md"],
+      "properties": {
+        "schema_version": {"$ref": "#/$defs/SchemaVersion"},
+        "status": {"$ref": "#/$defs/AuditStatus"},
+        "building": {"anyOf": [{"$ref": "#/$defs/Building"}, {"type": "null"}]},
+        "rooms": {"type": "array", "items": {"$ref": "#/$defs/Room"}},
+        "panos": {"type": "array", "items": {"$ref": "#/$defs/Pano"}},
+        "observations": {"type": "array", "items": {"$ref": "#/$defs/Observation"}},
+        "inventory": {"type": "array", "items": {"$ref": "#/$defs/Asset"}},
+        "coverage": {"anyOf": [{"$ref": "#/$defs/Coverage"}, {"type": "null"}]},
+        "heat_shares": {"type": "array", "items": {"$ref": "#/$defs/HeatShare"}},
+        "model_call_summary": {"$ref": "#/$defs/ModelCallSummary"},
+        "questions": {"type": "array", "items": {"$ref": "#/$defs/Question"}},
+        "report_md": {"type": ["string", "null"]}
+      }
+    },
+    "StartAuditRequest": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode"],
+      "properties": {"mode": {"type": "string", "enum": ["live", "replay", "fixture"]}}
+    },
+    "PlanRequest": {
+      "type": "object", "additionalProperties": false,
+      "required": ["budget_usd", "objective", "role", "tenant_pays_electric", "stay_months", "overrides"],
+      "properties": {
+        "budget_usd": {"type": "number", "minimum": 0, "maximum": 50000, "default": 5000},
+        "objective": {"type": "string", "enum": ["max_bill", "max_kwh", "best_value", "conservative"], "default": "max_bill"},
+        "role": {"type": "string", "enum": ["owner", "tenant"], "default": "owner"},
+        "tenant_pays_electric": {"type": "boolean", "default": true},
+        "stay_months": {"type": "integer", "minimum": 1, "maximum": 120, "default": 12},
+        "overrides": {"type": "object", "additionalProperties": {"type": "number"}, "default": {}, "description": "Assumption key to numeric value. Keys must exist in assumptions.json as scalar entries."}
+      }
+    },
+    "WhoPays": {
+      "type": "object", "additionalProperties": false,
+      "required": ["pays", "saves", "approval"],
+      "properties": {
+        "pays": {"type": "string", "enum": ["owner", "tenant", "owner_or_tenant"]},
+        "saves": {"type": "string", "enum": ["owner", "tenant"]},
+        "approval": {"type": "string", "enum": ["none", "landlord_approval", "owner_decision"]}
+      }
+    },
+    "UpgradeLine": {
+      "type": "object", "additionalProperties": false,
+      "required": ["upgrade_id", "name", "cost_low_usd", "cost_high_usd", "kwh_saved_yr", "bill_saved_usd_yr", "explanation", "asset_ids", "evidence_level", "who_pays"],
+      "properties": {
+        "upgrade_id": {"type": "string"},
+        "name": {"type": "string"},
+        "cost_low_usd": {"type": "number", "minimum": 0},
+        "cost_high_usd": {"type": "number", "minimum": 0},
+        "kwh_saved_yr": {"type": "number", "description": "Marginal savings in canonical application order (stage, then upgrade_id)."},
+        "bill_saved_usd_yr": {"type": "number"},
+        "explanation": {"type": "string", "description": "Formula with the numbers substituted. Produced by code, not by a language model."},
+        "asset_ids": {"type": "array", "items": {"$ref": "#/$defs/Id"}},
+        "evidence_level": {"type": "string", "enum": ["verified", "partly_unverified"]},
+        "who_pays": {"$ref": "#/$defs/WhoPays"}
+      }
+    },
+    "Exclusion": {
+      "type": "object", "additionalProperties": false,
+      "required": ["upgrade_id", "reason_code", "reason"],
+      "properties": {
+        "upgrade_id": {"type": "string"},
+        "reason_code": {"type": "string", "enum": ["not_authorized", "already_efficient", "over_budget", "unverified_evidence", "stay_too_short", "mutually_exclusive", "missing_dependency", "not_selected"]},
+        "reason": {"type": "string"}
+      }
+    },
+    "AssumptionUsed": {
+      "type": "object", "additionalProperties": false,
+      "required": ["key", "value", "unit", "status", "source"],
+      "properties": {
+        "key": {"type": "string"},
+        "value": {"type": "number"},
+        "unit": {"type": "string"},
+        "status": {"type": "string", "enum": ["unverified_default", "sourced", "user_override", "physical_constant"]},
+        "source": {"type": "string"}
+      }
+    },
+    "PlanResponse": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "sid", "request", "upgrades", "totals", "excluded", "notes", "assumptions_used", "combos_evaluated"],
+      "properties": {
+        "schema_version": {"$ref": "#/$defs/SchemaVersion"},
+        "sid": {"$ref": "#/$defs/Id"},
+        "request": {"$ref": "#/$defs/PlanRequest"},
+        "upgrades": {"type": "array", "items": {"$ref": "#/$defs/UpgradeLine"}},
+        "totals": {
+          "type": "object", "additionalProperties": false,
+          "required": ["cost_low_usd", "cost_high_usd", "kwh_saved_yr", "bill_saved_usd_yr", "payback_years", "baseline_kwh_yr", "after_kwh_yr"],
+          "properties": {
+            "cost_low_usd": {"type": "number", "minimum": 0},
+            "cost_high_usd": {"type": "number", "minimum": 0},
+            "kwh_saved_yr": {"type": "number", "minimum": 0},
+            "bill_saved_usd_yr": {"type": "number", "minimum": 0},
+            "payback_years": {"type": ["number", "null"], "minimum": 0},
+            "baseline_kwh_yr": {"type": "number", "minimum": 0},
+            "after_kwh_yr": {"type": "number", "minimum": 0}
+          }
+        },
+        "excluded": {"type": "array", "items": {"$ref": "#/$defs/Exclusion"}},
+        "notes": {"type": "array", "items": {"type": "string"}},
+        "assumptions_used": {"type": "array", "items": {"$ref": "#/$defs/AssumptionUsed"}},
+        "combos_evaluated": {"type": "integer", "minimum": 0}
+      }
+    },
+    "ExplainRequest": {
+      "type": "object", "additionalProperties": false,
+      "required": ["upgrade_id", "plan_request"],
+      "properties": {"upgrade_id": {"type": "string"}, "plan_request": {"$ref": "#/$defs/PlanRequest"}}
+    },
+    "ExplainResponse": {
+      "type": "object", "additionalProperties": false,
+      "required": ["upgrade_id", "text", "generated_by"],
+      "properties": {
+        "upgrade_id": {"type": "string"},
+        "text": {"type": "string"},
+        "generated_by": {"type": "string", "enum": ["llm", "template"]}
+      }
+    },
+    "CorrectionRequest": {
+      "type": "object", "additionalProperties": false,
+      "required": ["asset_id", "field", "value", "plan_request"],
+      "properties": {
+        "asset_id": {"$ref": "#/$defs/Id"},
+        "field": {"type": "string", "description": "An attribute key (e.g. bulb_type), or the special fields 'label' or 'merge_into'."},
+        "value": {"type": ["string", "number"]},
+        "plan_request": {"$ref": "#/$defs/PlanRequest"}
+      }
+    },
+    "CorrectionResponse": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "inventory", "coverage", "plan", "changed_asset_ids"],
+      "properties": {
+        "schema_version": {"$ref": "#/$defs/SchemaVersion"},
+        "inventory": {"type": "array", "items": {"$ref": "#/$defs/Asset"}},
+        "coverage": {"$ref": "#/$defs/Coverage"},
+        "plan": {"$ref": "#/$defs/PlanResponse"},
+        "changed_asset_ids": {"type": "array", "items": {"$ref": "#/$defs/Id"}}
+      }
+    },
+    "AnswerRequest": {
+      "type": "object", "additionalProperties": false,
+      "required": ["question_id", "answer"],
+      "properties": {"question_id": {"$ref": "#/$defs/Id"}, "answer": {"type": "string"}}
+    },
+    "Event": {
+      "type": "object", "additionalProperties": false,
+      "required": ["seq", "t_s", "sid", "agent", "type", "summary", "data"],
+      "properties": {
+        "seq": {"type": "integer", "minimum": 0, "description": "Strictly increasing per audit run, starting at 0."},
+        "t_s": {"type": "number", "minimum": 0, "description": "Seconds since the run started."},
+        "sid": {"$ref": "#/$defs/Id"},
+        "agent": {"$ref": "#/$defs/AgentName"},
+        "type": {"type": "string", "enum": ["status", "todo", "tool_call", "tool_result", "finding", "question", "error", "done"]},
+        "summary": {"type": "string", "maxLength": 200},
+        "data": {"type": "object"}
+      }
+    },
+    "TestModel": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sid", "address", "city", "note", "has_fixture", "has_replay"],
+      "properties": {
+        "sid": {"$ref": "#/$defs/Id"},
+        "address": {"type": "string"},
+        "city": {"$ref": "#/$defs/City"},
+        "note": {"type": "string"},
+        "has_fixture": {"type": "boolean"},
+        "has_replay": {"type": "boolean"}
+      }
+    },
+    "Health": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "schema_version", "integrations"],
+      "properties": {
+        "status": {"type": "string", "enum": ["ok", "degraded"]},
+        "schema_version": {"$ref": "#/$defs/SchemaVersion"},
+        "integrations": {
+          "type": "object", "additionalProperties": false,
+          "required": ["matterport", "vexcel", "costar_kit", "ebewe", "bedrock"],
+          "properties": {
+            "matterport": {"$ref": "#/$defs/IntegrationStatus"},
+            "vexcel": {"$ref": "#/$defs/IntegrationStatus"},
+            "costar_kit": {"$ref": "#/$defs/IntegrationStatus"},
+            "ebewe": {"$ref": "#/$defs/IntegrationStatus"},
+            "bedrock": {"$ref": "#/$defs/IntegrationStatus"}
+          }
+        }
+      }
+    },
+    "BenchmarkMode": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "detection_precision", "detection_recall", "attr_accuracy", "correct_abstentions", "unsupported_claims", "escalation_rate", "calls", "tokens_in", "tokens_out", "latency_ms_p50", "cache_hits"],
+      "properties": {
+        "mode": {"type": "string", "enum": ["small_only", "large_only", "adaptive"]},
+        "detection_precision": {"type": "number", "minimum": 0, "maximum": 1},
+        "detection_recall": {"type": "number", "minimum": 0, "maximum": 1},
+        "attr_accuracy": {"type": "number", "minimum": 0, "maximum": 1},
+        "correct_abstentions": {"type": "integer", "minimum": 0},
+        "unsupported_claims": {"type": "integer", "minimum": 0},
+        "escalation_rate": {"type": "number", "minimum": 0, "maximum": 1},
+        "calls": {"type": "integer", "minimum": 0},
+        "tokens_in": {"type": ["integer", "null"], "minimum": 0},
+        "tokens_out": {"type": ["integer", "null"], "minimum": 0},
+        "latency_ms_p50": {"type": "integer", "minimum": 0},
+        "cache_hits": {"type": "integer", "minimum": 0}
+      }
+    },
+    "Benchmark": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "status", "dataset", "modes", "notes"],
+      "properties": {
+        "schema_version": {"$ref": "#/$defs/SchemaVersion"},
+        "status": {"type": "string", "enum": ["measured", "not_run", "illustrative"]},
+        "dataset": {
+          "type": "object", "additionalProperties": false,
+          "required": ["n_images", "labeled_by", "created_at"],
+          "properties": {
+            "n_images": {"type": "integer", "minimum": 0},
+            "labeled_by": {"type": "string"},
+            "created_at": {"anyOf": [{"$ref": "#/$defs/Timestamp"}, {"type": "null"}]}
+          }
+        },
+        "modes": {"type": "array", "items": {"$ref": "#/$defs/BenchmarkMode"}},
+        "notes": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}
