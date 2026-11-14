@@ -1,0 +1,6 @@
+sid,name,segment,lat,lon,address,city,costar_property_id,homes_listing_id,pano_count,room_count,splat
+fixtureUnitA,Fixture Unit A,residential,,,"100 Example St, Los Angeles, CA 90000",Los Angeles,illustrative-0001,,7,6,False
+2YKpZqjy5bJ,5600 Wilshire Blvd,commercial,34.0625,-118.3512,"5600 Wilshire Blvd, Los Angeles, CA",Los Angeles,costar-5600,,12,8,False
+1sW1YgLzUcT,1420 S Figueroa St,commercial,34.0411,-118.2678,"1420 S Figueroa St, Los Angeles, CA",Los Angeles,costar-1420,,10,7,False
+7PGYj769YXv,870 Hilgard Ave,commercial,34.0601,-118.4398,"870 Hilgard Ave, Los Angeles, CA",Los Angeles,costar-870,,8,6,False
+2ibibwUGQAe,1830 N Cherokee Ave,commercial,34.1047,-118.3351,"1830 N Cherokee Ave, Los Angeles, CA",Los Angeles,costar-1830,,14,9,False
