@@ -15,8 +15,10 @@ export interface Progress {
   percent: number;
   stage: string;
   detail: string;
-  /** Seconds left, from the average time per view so far; null until one view is done. */
+  /** Seconds left in the current stage, from that stage's own pace; null while estimating. */
   etaS: number | null;
+  /** True when an estimate is expected but not yet possible (nothing timed in this stage). */
+  estimating: boolean;
   elapsedS: number;
 }
 
@@ -38,6 +40,9 @@ export function computeProgress(events: WattEvent[]): Progress {
   let lastGapS = 0;
   let resolveTotal = 0;
   let unresolved: number | null = null;
+  let resolveStartS: number | null = null;
+  let resolvedDone = 0;
+  let lastResolvedS: number | null = null;
   const finished = new Set<string>();
   let current = "Starting";
   let elapsedS = 0;
@@ -53,6 +58,7 @@ export function computeProgress(events: WattEvent[]): Progress {
     else if (event.type === "tool_call" || event.type === "tool_result") waiting = false;
     if (event.type === "tool_call") {
       if (tool === "inspect_next_view" && walkStartS === null) walkStartS = event.t_s;
+      if (tool === "resolve_next" && resolveStartS === null) resolveStartS = event.t_s;
       current = tool ?? current;
     }
     if (event.type !== "tool_result") continue;
@@ -66,10 +72,15 @@ export function computeProgress(events: WattEvent[]): Progress {
       if (pending !== null) totalViews = Math.max(totalViews ?? 0, viewsDone + pending);
     }
     if (tool === "resolve_next") {
+      // One observation can take several resolve steps; "final" marks the step that settles it.
+      if (event.data.final === true) {
+        resolvedDone += 1;
+        lastResolvedS = event.t_s;
+      }
       const left = num(event.data.unresolved);
       if (left !== null) {
-        resolveTotal = Math.max(resolveTotal, left + 1);
         unresolved = left;
+        resolveTotal = Math.max(resolveTotal, resolvedDone + left);
       }
     }
     if (tool && FINISH_TOOLS.includes(tool)) finished.add(tool);
@@ -77,7 +88,7 @@ export function computeProgress(events: WattEvent[]): Progress {
 
   const walkFrac = totalViews ? Math.min(1, viewsDone / totalViews) : 0;
   const resolveFrac =
-    finished.size > 0 ? 1 : resolveTotal > 0 && unresolved !== null ? 1 - unresolved / resolveTotal : 0;
+    finished.size > 0 ? 1 : resolveTotal > 0 ? resolvedDone / resolveTotal : 0;
   const finishFrac = finished.size / FINISH_TOOLS.length;
   let percent = done
     ? 100
@@ -99,7 +110,7 @@ export function computeProgress(events: WattEvent[]): Progress {
     detail = `${finished.size} of ${FINISH_TOOLS.length} steps`;
   } else if (resolveTotal > 0 || current === "resolve_next") {
     stage = "Double-checking unclear items";
-    detail = resolveTotal > 0 ? `${resolveTotal - (unresolved ?? resolveTotal)} of ${resolveTotal}` : "";
+    detail = resolveTotal > 0 ? `${resolvedDone} of ${resolveTotal} items` : "first item";
   } else if (totalViews !== null) {
     stage = "Walking the rooms";
     detail = `${viewsDone} of ${totalViews} views`;
@@ -107,19 +118,25 @@ export function computeProgress(events: WattEvent[]): Progress {
     stage = "Loading building info";
   }
 
+  // Each stage is timed on its own pace: a walk served from the cache finishes in seconds, while
+  // double-checking makes fresh (slow) model calls, so one pace cannot predict the other.
   let etaS: number | null = null;
-  if (!done && !waiting && totalViews && viewsDone > 0 && walkStartS !== null && lastViewS !== null) {
-    // Cached views finish instantly, so the average alone is too optimistic early on: take the
-    // slower of the average and the latest view.
-    const perView = Math.max((lastViewS - walkStartS) / viewsDone, lastGapS);
-    const viewsLeft = totalViews - viewsDone;
-    // The walk is WEIGHTS.walk of the bar; scale the rest of the run from the same pace.
-    const walkTotal = perView * totalViews;
-    const restOfRun = (walkTotal * (100 - WEIGHTS.walk - WEIGHTS.building)) / WEIGHTS.walk;
-    const restLeft = restOfRun * (1 - (WEIGHTS.resolve * resolveFrac + WEIGHTS.finish * finishFrac) /
-      (WEIGHTS.resolve + WEIGHTS.finish));
-    etaS = Math.max(0, Math.round(perView * viewsLeft + restLeft));
+  let estimating = false;
+  if (!done && !waiting && stage === "Walking the rooms" && totalViews) {
+    const perView =
+      viewsDone > 0 && walkStartS !== null && lastViewS !== null
+        ? Math.max((lastViewS - walkStartS) / viewsDone, lastGapS)
+        : null;
+    // Under 3 s a view was a cache hit: it says nothing about the views still to come.
+    if (perView !== null && perView >= 3) etaS = Math.round(perView * (totalViews - viewsDone));
+    else estimating = true;
+  } else if (!done && !waiting && stage === "Double-checking unclear items") {
+    if (resolvedDone > 0 && resolveStartS !== null && lastResolvedS !== null && unresolved !== null) {
+      etaS = Math.round(((lastResolvedS - resolveStartS) / resolvedDone) * unresolved);
+    } else {
+      estimating = true;
+    }
   }
 
-  return { percent, stage, detail, etaS, elapsedS: Math.round(elapsedS) };
+  return { percent, stage, detail, etaS, estimating, elapsedS: Math.round(elapsedS) };
 }

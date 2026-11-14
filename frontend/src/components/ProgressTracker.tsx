@@ -54,7 +54,11 @@ export function ProgressTracker() {
         <span>{progress.detail}</span>
         <span>
           {clock(elapsed)} elapsed
-          {running && progress.etaS !== null ? ` · about ${clock(progress.etaS)} left` : ""}
+          {running && progress.etaS !== null
+            ? ` · about ${clock(progress.etaS)} left in this stage`
+            : running && progress.estimating
+              ? " · estimating time left…"
+              : ""}
         </span>
       </div>
     </div>
