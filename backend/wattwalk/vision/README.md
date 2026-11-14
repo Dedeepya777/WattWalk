@@ -94,11 +94,25 @@ written from viewing the photos; a development check, not the hand-labeled bench
 |---|---|---|
 | Plan E.1 wording plus one-line rules | 7 | 1 |
 | Label definitions (current `DETECT_PROMPT`) | 4 | 1 |
+| Label definitions + second look (current pipeline) | 2 | 1 |
 
 The definitions fixed closet doors read as windows and an electrical panel read as a window AC.
-Still wrong with the 7B model: a mirror as a window, a smoke detector as a ceiling light, a
-mini-split as a window AC, a picture frame as a lamp. Output format, vocabulary and the "unknown"
-rule are unchanged, as Appendix E requires.
+The second look removed a mirror read as a window and a smoke detector read as a ceiling light.
+Still wrong with the 7B model: a mini-split as a window AC, a picture frame as a lamp. Ten faces is
+a small sample: treat this as "clearly helps", not a precise rate. Output format, vocabulary and the
+"unknown" rule of the detection prompt are unchanged, as Appendix E requires.
+
+Second look (`prompts.SECOND_LOOK_LABELS`, `walk._second_look`): every window, window AC, ceiling
+light, ceiling fan and lamp detection is cropped and sent back to the small model with a narrow
+"what is this?" question; it is kept only if the model names the same label. One extra small call per
+such detection (logged as kind `attr`). An unparseable answer or a failed call keeps the detection.
+Set `SECOND_LOOK_LABELS = {}` to switch it off.
+
+215 W 7th St Unit 301 (r1NfhYW4TAr, proposed demo apartment: 1911 building, in LA EBEWE 2025, 10
+rooms, 64 walls, room heights for the main rooms): full walk with the earlier prompt and no second
+look, 9 views, 0 faces rejected, coverage 8 of 10 rooms (a closet and a staircase have no panorama),
+59 observations to 57 assets including 20 windows and 19 ceiling lights: inflated by false positives
+and by duplicates that cannot merge without anchors. Not yet re-run with the current pipeline.
 
 Scan data: 2YKpZqjy5bJ and 1sW1YgLzUcT have no room segmentation and no walls in Matterport (no
 room coverage, no anchors). 7PGYj769YXv labels every room "Other". 2ibibwUGQAe has proper labels but
@@ -120,5 +134,7 @@ seen from three panoramas is three assets until anchors land.
   a doorway otherwise lands in the wrong room and dedupe can never merge it. No effect until anchors exist.
 - A face is rejected as blurry only when the Laplacian variance is below 60 and edge sharpness is
   below 0.08 (plan 8.2 uses the variance alone); `quality.blur` still reports the variance.
+- Second look on detections (not in the plan): see "Prompt tuning" above. Switch off with
+  `SECOND_LOOK_LABELS = {}` if the team prefers the plan's single detection call.
 - HARD_LABELS are read from `eval/hard_labels.json`, which the benchmark writes (the `Benchmark`
   contract has no per-label field).

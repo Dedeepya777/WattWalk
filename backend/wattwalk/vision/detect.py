@@ -222,6 +222,14 @@ def parse_detections(raw: dict | None, image_px: int, face_px: int) -> list[RawD
     return result
 
 
+def second_look_keeps(raw: dict | None, label: str) -> bool:
+    """True when the second-look answer names the same label. An unparseable answer keeps the
+    detection: a formatting failure must not delete a real object."""
+    if not raw or "object" not in raw:
+        return True
+    return str(raw["object"]).strip().lower() == label
+
+
 def parse_attrs(raw: dict | None, label: str) -> dict[str, Any]:
     """Validate an attribute-read response ({"attrs": {...}})."""
     return clean_attrs(label, raw.get("attrs") if raw else None)

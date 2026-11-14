@@ -72,16 +72,19 @@ def test_fixture_unknown_sid_raises(geometry):
 class FakeBedrock:
     """Answers detection prompts with a fixed detection per face and attribute prompts per tier."""
 
-    def __init__(self, small_attr="unknown", large_attr="led", fail=False):
+    def __init__(self, small_attr="unknown", large_attr="led", fail=False, second_look="ceiling_light"):
         self.calls = []
-        self.small_attr, self.large_attr, self.fail = small_attr, large_attr, fail
+        self.small_attr, self.large_attr, self.fail, self.second_look = small_attr, large_attr, fail, second_look
 
     def converse(self, modelId, messages, inferenceConfig):
         prompt = messages[0]["content"][1]["text"]
-        self.calls.append((modelId, "attr" if "close crop" in prompt else "detect"))
+        kind = "verify" if "A detector thought" in prompt else ("attr" if "close crop" in prompt else "detect")
+        self.calls.append((modelId, kind))
         if self.fail:
             raise RuntimeError("throttled")
-        if "close crop" in prompt:
+        if kind == "verify":
+            body = {"object": self.second_look}
+        elif kind == "attr":
             value = self.large_attr if modelId == "large-id" else self.small_attr
             body = {"attrs": {"bulb_type": value, "bulb_count": 2}}
         else:
@@ -118,7 +121,8 @@ def _faces(sid, pano, dark_faces=()):
 def test_live_inspect_view(geometry, live):
     _faces("liveA", "p05", dark_faces=(4,))
     result = walk.inspect_view("liveA", geometry, "r_bath", "p05")
-    assert result.faces_inspected == [1, 2, 3] and result.faces_rejected == [4] and result.calls == 3
+    assert result.faces_inspected == [1, 2, 3] and result.faces_rejected == [4]
+    assert result.calls == 6  # 3 detections + 3 second looks (one per ceiling light)
     assert [o.id for o in result.observations] == ["o001", "o002", "o003"]  # sofa dropped, one light per face
     o = result.observations[0]
     assert o.label == "ceiling_light" and o.attrs["bulb_type"].source == "needs_verification"
@@ -126,7 +130,7 @@ def test_live_inspect_view(geometry, live):
     assert (o.bbox.x0, o.bbox.y0) == (747, 53)  # scaled from 768 px to 2048 px face pixels
     assert store.audit_path("liveA", "crops", "o001.jpg").exists()
     calls = store.read("liveA", "model_calls.json", ModelCall)
-    assert [c.id for c in calls] == ["c001", "c002", "c003"] and calls[0].tokens_in == 1600
+    assert [c.id for c in calls] == [f"c{i:03d}" for i in range(1, 7)] and calls[0].tokens_in == 1600
     _, rejected, partial = walk.coverage_inputs("liveA", geometry)
     assert rejected == 1 and partial["r_bath"].startswith("1 of 4 faces rejected as too dark")
 
@@ -171,3 +175,20 @@ def test_live_three_failures_fail_the_run(geometry, live):
     _faces("liveA", "p03")
     with pytest.raises(UpstreamError, match="consecutive"):
         walk.inspect_view("liveA", geometry, "r_bed", "p03")
+
+
+def test_live_second_look_drops_unconfirmed(geometry, live):
+    """The second look removes a detection the model does not confirm (a 'light' that is a smoke detector)."""
+    live.second_look = "smoke_detector"
+    _faces("liveA", "p03")
+    result = walk.inspect_view("liveA", geometry, "r_bed", "p03")
+    assert result.observations == [] and result.calls == 8  # 4 detections + 4 second looks, all rejected
+    assert sum(1 for _, k in live.calls if k == "verify") == 4
+
+
+def test_live_second_look_can_be_switched_off(geometry, live, monkeypatch):
+    monkeypatch.setattr(walk, "SECOND_LOOK_LABELS", {})
+    live.second_look = "smoke_detector"
+    _faces("liveA", "p03")
+    result = walk.inspect_view("liveA", geometry, "r_bed", "p03")
+    assert len(result.observations) == 4 and result.calls == 4

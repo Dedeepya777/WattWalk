@@ -283,3 +283,13 @@ def test_room_for_object_seen_through_doorway(geometry):
 
 def test_prompt_mentions_mirror_rule():
     assert "mirror" in DETECT_PROMPT and "exactly one label" in DETECT_PROMPT
+
+
+def test_second_look_keeps_only_confirmed():
+    from wattwalk.vision.detect import second_look_keeps
+    from wattwalk.vision.prompts import verify_prompt
+    assert second_look_keeps({"object": "Window"}, "window")
+    assert not second_look_keeps({"object": "mirror"}, "window")
+    assert second_look_keeps(None, "window")  # unparseable answer: keep the detection
+    p = verify_prompt("ceiling_light")
+    assert "ceiling light" in p and "smoke_detector" in p and '{"object": "..."}' in p

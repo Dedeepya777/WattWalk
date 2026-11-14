@@ -104,6 +104,30 @@ Use "unknown" for anything not clearly visible. Never guess wattage, glazing, ag
 Return only JSON, no other text: {"attrs": {...}}"""
 
 
+# Second look (not in the plan; added after real-scan testing): each detection with one of these
+# labels is cropped and sent back with a narrow question. It is kept only if the model names the same
+# label again. On 10 hand-checked Cherokee faces it cut false detections from 4 to 2 with no new misses
+# (the mirror read as a window and the smoke detector read as a ceiling light were removed).
+# Set SECOND_LOOK_LABELS to an empty dict to switch it off.
+SECOND_LOOK_LABELS: dict[str, list[str]] = {
+    "window": ["window", "mirror", "door", "cabinet", "picture", "screen", "curtain", "wall", "other"],
+    "window_ac": ["window_ac", "mini_split", "electrical_panel", "vent", "other"],
+    "ceiling_light": ["ceiling_light", "smoke_detector", "vent", "other"],
+    "ceiling_fan": ["ceiling_fan", "table", "furniture", "other"],
+    "lamp": ["lamp", "picture", "mirror", "other"],
+}
+
+VERIFY_PROMPT = """This is a close crop from an apartment photo. A detector thought it shows a {label}.
+What is the main object in the crop? Choose exactly one of: {choices}.
+A window shows the outdoors; a mirror shows the inside of the room.
+Return only JSON, no other text: {"object": "..."}"""
+
+
+def verify_prompt(label: str) -> str:
+    return (VERIFY_PROMPT.replace("{label}", label.replace("_", " "))
+            .replace("{choices}", ", ".join(SECOND_LOOK_LABELS[label])))
+
+
 def detect_prompt(w: int, h: int) -> str:
     # str.replace, not str.format: the prompt contains literal JSON braces.
     return DETECT_PROMPT.replace("{w}", str(w)).replace("{h}", str(h))

@@ -18,9 +18,10 @@ from ..errors import UpstreamError
 from ..inventory import THRESHOLD_M, same_object
 from . import fixture
 from .deps import anchor_from_bbox, get_face_image
-from .detect import call_vision, detect_px, image_ok, now_iso, parse_attrs, parse_detections
+from .detect import call_vision, detect_px, image_ok, now_iso, parse_attrs, parse_detections, second_look_keeps
 from .images import BRIGHTNESS_MAX, BRIGHTNESS_MIN, crop, downscale, quality, rejection_reason
-from .prompts import ATTR_ORDER, KEY_ATTR, NON_VISUAL, USER_ANSWERABLE, attr_prompt, detect_prompt
+from .prompts import (ATTR_ORDER, KEY_ATTR, NON_VISUAL, SECOND_LOOK_LABELS, USER_ANSWERABLE, attr_prompt,
+                      detect_prompt, verify_prompt)
 from .questions import apply_answer, make_question
 from .router import key_unknown, next_action
 from .state import load_state, lock, log_calls, next_observation_ids, next_question_id, save_state
@@ -166,6 +167,7 @@ def inspect_view(sid: str, geometry: ModelGeometry, room_id: str | None, pano_id
             dets = parse_detections(raw, call.image_px or DETECT_PX, 2048)
         per_face.append((face, path, q, dets))
 
+    per_face = _second_look(sid, per_face, model_id, calls)
     total = sum(len(d) for *_, d in per_face)
     with lock(sid):
         ids = iter(next_observation_ids(sid, total))
@@ -175,6 +177,37 @@ def inspect_view(sid: str, geometry: ModelGeometry, room_id: str | None, pano_id
         save_state(sid, state)
     log_calls(sid, calls)
     return InspectResult(observations=observations, faces_inspected=inspected, faces_rejected=rejected, calls=len(calls))
+
+
+def _second_look(sid: str, per_face: list, model_id: str, calls: list[ModelCall]) -> list:
+    """Re-ask the small model about each detection whose label is in SECOND_LOOK_LABELS, on a crop.
+    Drops detections the model does not confirm. Calls are logged as kind "attr" (the ModelCall
+    contract has no separate kind for this)."""
+    jobs = [(i, j, det, path) for i, (_, path, _, dets) in enumerate(per_face)
+            for j, det in enumerate(dets) if det.label in SECOND_LOOK_LABELS]
+    if not jobs:
+        return per_face
+
+    def ask(job):
+        _, _, det, path = job
+        image = crop(path, det.bbox)
+        try:
+            raw, call, _ = call_vision(model_id, image, verify_prompt(det.label), sid, "walker", "attr", "small",
+                                       image_px=_px(image))
+        except UpstreamError:
+            return True, None  # a failed check keeps the detection
+        return second_look_keeps(raw, det.label), call
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        verdicts = list(pool.map(ask, jobs))
+    dropped = set()
+    for (i, j, _, _), (keep, call) in zip(jobs, verdicts):
+        if call is not None:
+            calls.append(call)
+        if not keep:
+            dropped.add((i, j))
+    return [(face, path, q, [d for j, d in enumerate(dets) if (i, j) not in dropped])
+            for i, (face, path, q, dets) in enumerate(per_face)]
 
 
 def _merge_state(sid: str, local: RouterState, pano_id: str, inspected: list[int]) -> RouterState:
