@@ -11,7 +11,8 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Asset, AssetEnergy, Pano } from "../contracts";
-import { formatRange } from "../format";
+import { formatRange, labelText } from "../format";
+import { useAppDispatch } from "../state";
 import { pinColor, position, toHex, type EnergyScale } from "./energyColor";
 import type { MpSdk } from "./sdkAdapter";
 import { modelToSdk, type SdkFrameFit } from "./sdkFrame";
@@ -25,6 +26,7 @@ const LABEL_FROM = 0.45; // label glows in the upper part of the scale only (avo
 
 interface Glow {
   id: string;
+  name: string;
   x: number;
   y: number;
   r: number;
@@ -65,6 +67,7 @@ function glowLabel(row: AssetEnergy, scale: EnergyScale): string {
 }
 
 export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, scale, onCount }: Props) {
+  const dispatch = useAppDispatch();
   const [glows, setGlows] = useState<Glow[]>([]);
   const [box, setBox] = useState({ left: 0, top: 0, width: 0, height: 0 });
   const poseRef = useRef<Pose | null>(null);
@@ -85,6 +88,7 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, scale,
       const t = value > 0 ? position(value, scale) : 0.6; // heat removed: a mid-sized cold haze
       return [{
         id: asset.id,
+        name: labelText(asset.label),
         room: asset.room_id ?? null,
         world: modelToSdk(fit, asset.anchor),
         color: toHex(color),
@@ -129,7 +133,7 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, scale,
         if (!screen || screen.x < -200 || screen.y < -200 || screen.x > size.w + 200 || screen.y > size.h + 200) continue;
         const radiusM = 0.4 + 2.0 * s.strength;
         const r = Math.min(size.h * 0.7, Math.max(14, (radiusM * size.h * 0.9) / dist));
-        next.push({ id: s.id, x: screen.x, y: screen.y, r, color: s.color, label: s.label });
+        next.push({ id: s.id, name: s.name, x: screen.x, y: screen.y, r, color: s.color, label: s.label });
       }
       // Draw big glows first so small ones stay visible on top; label the biggest first and skip a
       // label that would overlap one already placed.
@@ -176,15 +180,12 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, scale,
   }, [box, onCount, roomOfPano, sdk, sources]);
 
   return (
-    <div
-      className="heat-glow-layer"
-      aria-hidden="true"
-      style={{ left: box.left, top: box.top, width: box.width, height: box.height }}
-    >
+    <div className="heat-glow-layer" style={{ left: box.left, top: box.top, width: box.width, height: box.height }}>
       {glows.map((g, index) => (
         <div
           key={g.id}
           className="heat-glow"
+          aria-hidden="true"
           style={{
             left: g.x - g.r,
             top: g.y - g.r,
@@ -197,6 +198,23 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, scale,
           {g.label ? <span className="heat-glow-label">{g.label}</span> : null}
         </div>
       ))}
+      {/* Only the centre of a glow takes clicks, so the tour stays navigable everywhere else. */}
+      {glows.filter((g) => g.x >= 0 && g.y >= 0 && g.x <= box.width && g.y <= box.height).map((g) => {
+        const hit = Math.max(22, Math.min(44, g.r * 0.5));
+        return (
+          <button
+            key={`hit-${g.id}`}
+            type="button"
+            className="heat-glow-hit"
+            style={{ left: g.x - hit / 2, top: g.y - hit / 2, width: hit, height: hit }}
+            aria-label={`${g.name}: compare alternatives`}
+            title={`${g.name}: compare alternatives`}
+            onClick={(event) =>
+              dispatch({ type: "focusEnergy", assetId: g.id, origin: { x: event.clientX, y: event.clientY } })
+            }
+          />
+        );
+      })}
     </div>
   );
 }

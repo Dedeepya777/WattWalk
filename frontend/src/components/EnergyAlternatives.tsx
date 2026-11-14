@@ -3,7 +3,7 @@
  * the upgrades that apply to it, from GET /audits/{sid}/energy. Opened from the evidence card's
  * "Compare alternatives" button. Plain on purpose: the expanding animation and the glows come later.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { AssetEnergy, EnergyAlternative } from "../contracts";
 import { formatRange, labelText } from "../format";
 import { useAppDispatch, useAppState } from "../state";
@@ -178,6 +178,19 @@ export function EnergyAlternatives() {
   const room = asset?.room_id ? state.audit?.rooms.find((r) => r.id === asset.room_id)?.label : undefined;
   const close = () => dispatch({ type: "focusEnergy", assetId: null });
   const heatScale = buildScale(state.energy?.assets ?? [], "heat");
+  const origin = state.focusOrigin;
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const [fromOrigin, setFromOrigin] = useState<{ x: number; y: number } | null>(null);
+
+  // Measure the card before the first paint and start it at the clicked glow (offset from its centre).
+  useLayoutEffect(() => {
+    if (!assetId || !origin || !cardRef.current) {
+      setFromOrigin(null);
+      return;
+    }
+    const rect = cardRef.current.getBoundingClientRect();
+    setFromOrigin({ x: origin.x - (rect.left + rect.width / 2), y: origin.y - (rect.top + rect.height / 2) });
+  }, [assetId, origin]);
 
   useEffect(() => {
     if (!assetId) return undefined;
@@ -193,7 +206,13 @@ export function EnergyAlternatives() {
   return (
     <div className="modal-backdrop energy-alt-backdrop" role="presentation" onClick={close}>
       <div
-        className="modal energy-alt-card"
+        ref={cardRef}
+        className={`modal energy-alt-card${origin ? (fromOrigin ? " energy-alt-from-glow" : " energy-alt-measuring") : ""}`}
+        style={
+          fromOrigin
+            ? ({ "--from-x": `${fromOrigin.x}px`, "--from-y": `${fromOrigin.y}px` } as React.CSSProperties)
+            : undefined
+        }
         role="dialog"
         aria-modal="true"
         aria-labelledby="energy-alt-title"

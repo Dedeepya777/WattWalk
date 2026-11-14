@@ -47,6 +47,8 @@ export interface AppState {
   selectedAssetId: string | null;
   /** Asset whose energy alternatives card is open, or null. */
   focusAssetId: string | null;
+  /** Screen point the alternatives card grows from (a clicked 3D glow), or null for the centre. */
+  focusOrigin: { x: number; y: number } | null;
   openQuestion: Question | null;
   health: Health | null;
   healthError: string | null;
@@ -75,6 +77,7 @@ export const initialState: AppState = {
   planError: null,
   selectedAssetId: null,
   focusAssetId: null,
+  focusOrigin: null,
   openQuestion: null,
   health: null,
   healthError: null,
@@ -99,7 +102,7 @@ export type Action =
   | { type: "plan"; plan: PlanResponse | null }
   | { type: "energy"; energy: AssetEnergyResponse | null }
   | { type: "pinColor"; mode: PinColorMode }
-  | { type: "focusEnergy"; assetId: string | null }
+  | { type: "focusEnergy"; assetId: string | null; origin?: { x: number; y: number } | null }
   | { type: "planRequest"; request: PlanRequest }
   | { type: "planLoading"; loading: boolean }
   | { type: "planError"; error: RequestError | null }
@@ -137,6 +140,7 @@ export function reducer(state: AppState, action: Action): AppState {
         planRequest: DEFAULT_PLAN_REQUEST,
         selectedAssetId: null,
         focusAssetId: null,
+        focusOrigin: null,
         openQuestion: null,
         correctionDiff: [],
         correctionError: null,
@@ -175,7 +179,7 @@ export function reducer(state: AppState, action: Action): AppState {
     case "clearEvents":
       return { ...state, events: [] };
     case "focusEnergy":
-      return { ...state, focusAssetId: action.assetId };
+      return { ...state, focusAssetId: action.assetId, focusOrigin: action.origin ?? null };
     case "pinColor":
       return { ...state, pinColorMode: action.mode };
     case "energy":
@@ -245,6 +249,7 @@ export function reducer(state: AppState, action: Action): AppState {
         planRequest: DEFAULT_PLAN_REQUEST,
         selectedAssetId: null,
         focusAssetId: null,
+        focusOrigin: null,
         openQuestion: null,
         correctionDiff: [],
         correctionError: null,
