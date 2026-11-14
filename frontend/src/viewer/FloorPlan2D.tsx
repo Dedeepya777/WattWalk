@@ -10,6 +10,7 @@ import { useMemo, useState } from "react";
 import faceBasisJson from "@spatial/face_basis.json";
 import type { Asset, AssetLabel, HeatShare, Pano, Room, Vec2 } from "../contracts";
 import { labelText, unknownAttrCount } from "../format";
+import { buildScale, pinColor, toHex } from "./energyColor";
 import { useAppDispatch, useAppState } from "../state";
 
 const FACE_BASIS = faceBasisJson as { status?: string; residual_m?: number | null };
@@ -84,6 +85,18 @@ function heatColor(share: number, max: number): string {
 
 export function FloorPlan2D() {
   const state = useAppState();
+  const energyById = useMemo(
+    () => new Map((state.energy?.assets ?? []).map((row) => [row.asset_id, row])),
+    [state.energy],
+  );
+  const energyScale = useMemo(
+    () => buildScale(state.energy?.assets ?? [], state.pinColorMode),
+    [state.energy, state.pinColorMode],
+  );
+  const energyFill = (assetId: string): string | null => {
+    const color = pinColor(energyById.get(assetId), energyScale);
+    return color ? toHex(color) : null;
+  };
   const dispatch = useAppDispatch();
   const [pinMode, setPinMode] = useState<PinMode>("anchor");
 
@@ -354,7 +367,13 @@ export function FloorPlan2D() {
                 }}
               >
                 <title>{aria}</title>
-                <circle cx={pin.x} cy={-pin.y} r={0.2} className="pin-dot" />
+                <circle
+                  cx={pin.x}
+                  cy={-pin.y}
+                  r={0.2}
+                  className="pin-dot"
+                  style={energyFill(pin.asset.id) ? { fill: energyFill(pin.asset.id) ?? undefined } : undefined}
+                />
                 <text
                   className="pin-text"
                   x={pin.x}

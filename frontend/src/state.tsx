@@ -23,6 +23,7 @@ import type {
   WattEvent,
 } from "./contracts";
 import { DEFAULT_PLAN_REQUEST, FIXTURE_SID } from "./fixtures";
+import type { PinColorMode } from "./viewer/energyColor";
 
 export type ViewMode = "3d" | "2d" | "heat";
 
@@ -50,6 +51,8 @@ export interface AppState {
   testModels: TestModel[];
   modelsError: string | null;
   viewMode: ViewMode;
+  /** Pin colours: details known/unknown (default), cost per year, or heat per year. */
+  pinColorMode: PinColorMode;
   benchmark: Benchmark | null;
   benchmarkError: string | null;
   correctionDiff: string[];
@@ -75,6 +78,7 @@ export const initialState: AppState = {
   testModels: [],
   modelsError: null,
   viewMode: "2d",
+  pinColorMode: "details",
   benchmark: null,
   benchmarkError: null,
   correctionDiff: [],
@@ -91,6 +95,7 @@ export type Action =
   | { type: "clearEvents" }
   | { type: "plan"; plan: PlanResponse | null }
   | { type: "energy"; energy: AssetEnergyResponse | null }
+  | { type: "pinColor"; mode: PinColorMode }
   | { type: "planRequest"; request: PlanRequest }
   | { type: "planLoading"; loading: boolean }
   | { type: "planError"; error: RequestError | null }
@@ -164,6 +169,8 @@ export function reducer(state: AppState, action: Action): AppState {
       return { ...state, events: [...state.events, action.event] };
     case "clearEvents":
       return { ...state, events: [] };
+    case "pinColor":
+      return { ...state, pinColorMode: action.mode };
     case "energy":
       return { ...state, energy: action.energy };
     case "plan":

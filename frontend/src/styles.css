@@ -1894,3 +1894,40 @@ select:disabled {
   margin: 0;
   font-variant-numeric: tabular-nums;
 }
+
+/* Pin colour switch and legend (components/PinColorControls.tsx) */
+.pin-color-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.segmented-label {
+  padding: 0 6px;
+  align-self: center;
+}
+.energy-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.energy-legend-bar {
+  display: inline-block;
+  width: 90px;
+  height: 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border-soft);
+}
+.energy-legend-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.energy-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid #0b1015;
+}

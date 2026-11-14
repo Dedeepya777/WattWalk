@@ -11,6 +11,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Asset, AssetEnergy } from "../contracts";
 import { FIXTURE_SID } from "../fixtures";
 import { energySummary, labelText, unknownAttrCount } from "../format";
+import { buildScale, pinColor, type Rgb } from "./energyColor";
 import { useAppDispatch, useAppState } from "../state";
 import {
   SDK_CONNECT_TIMEOUT_MS,
@@ -78,7 +79,13 @@ export interface Viewer3DProps {
   onRetry: () => void;
 }
 
-function tagSpec(asset: Asset, fit: SdkFrameFit, roomLabel: string, energy?: AssetEnergy): TagSpec | null {
+function tagSpec(
+  asset: Asset,
+  fit: SdkFrameFit,
+  roomLabel: string,
+  energy?: AssetEnergy,
+  energyColor?: Rgb | null,
+): TagSpec | null {
   if (!asset.anchor) return null;
   const unknown = unknownAttrCount(asset.attrs);
   const down = CEILING_LABELS.has(asset.label);
@@ -88,7 +95,7 @@ function tagSpec(asset: Asset, fit: SdkFrameFit, roomLabel: string, energy?: Ass
     description: `${roomLabel}${unknown > 0 ? ` \u00b7 ${unknown} unknown detail${unknown === 1 ? "" : "s"}` : ""}${energyText ? `\n${energyText}` : ""}`,
     anchorPosition: modelToSdk(fit, asset.anchor),
     stemVector: modelDirToSdk(fit, { x: 0, y: 0, z: down ? -STEM_M : STEM_M }),
-    color: unknown > 0 ? UNKNOWN : KNOWN,
+    color: energyColor ?? (unknown > 0 ? UNKNOWN : KNOWN),
   };
 }
 
@@ -124,7 +131,11 @@ export function Viewer3D({ readiness, attempt, onReady, onFailed, onRetry }: Vie
     () => new Map((state.energy?.assets ?? []).map((row) => [row.asset_id, row])),
     [state.energy],
   );
-  const energyKey = (state.energy?.assets ?? []).map((row) => `${row.asset_id}:${row.usd_yr}`).join("|");
+  const energyScale = useMemo(
+    () => buildScale(state.energy?.assets ?? [], state.pinColorMode),
+    [state.energy, state.pinColorMode],
+  );
+  const energyKey = `${state.pinColorMode}|${(state.energy?.assets ?? []).map((row) => `${row.asset_id}:${row.usd_yr}`).join("|")}`;
   const sdkLive = phase.kind === "aligning" || phase.kind === "ready";
 
   // Clear the connection and tag maps when the selected scan changes (or the tab unmounts).
@@ -229,7 +240,7 @@ export function Viewer3D({ readiness, attempt, onReady, onFailed, onRetry }: Vie
           .map((asset) => ({
             asset,
             spec: tagSpec(asset, alignment.fit, roomLabels.get(asset.room_id ?? "") ?? "Unknown room",
-              energyById.get(asset.id)),
+              energyById.get(asset.id), pinColor(energyById.get(asset.id), energyScale)),
           }))
           .filter((item): item is { asset: Asset; spec: TagSpec } => item.spec !== null);
         const added = await addTags(sdk, placed.map((item) => item.spec));
