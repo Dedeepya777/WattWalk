@@ -276,7 +276,7 @@
     "Range2": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
     "AssetEnergy": {
       "type": "object", "additionalProperties": false,
-      "required": ["asset_id", "label", "room_id", "estimated", "kwh_yr", "usd_yr", "heat_kwh_yr", "power_w", "basis", "assumed", "note"],
+      "required": ["asset_id", "label", "room_id", "estimated", "kwh_yr", "usd_yr", "heat_kwh_yr", "power_w", "basis", "assumed", "note", "alternatives"],
       "properties": {
         "asset_id": {"$ref": "#/$defs/Id"},
         "label": {"$ref": "#/$defs/AssetLabel"},
@@ -288,7 +288,26 @@
         "power_w": {"anyOf": [{"$ref": "#/$defs/Range2"}, {"type": "null"}]},
         "basis": {"type": "string"},
         "assumed": {"type": "array", "items": {"type": "string"}},
-        "note": {"type": "string"}
+        "note": {"type": "string"},
+        "alternatives": {"type": "array", "items": {"$ref": "#/$defs/EnergyAlternative"}}
+      }
+    },
+    "EnergyAlternative": {
+      "type": "object", "additionalProperties": false,
+      "required": ["upgrade_id", "title", "kwh_yr", "usd_yr", "heat_kwh_yr", "power_w", "saves_kwh_yr", "saves_usd_yr", "cost_usd", "payback_years", "who", "basis"],
+      "properties": {
+        "upgrade_id": {"type": "string"},
+        "title": {"type": "string"},
+        "kwh_yr": {"anyOf": [{"$ref": "#/$defs/Range2"}, {"type": "null"}]},
+        "usd_yr": {"anyOf": [{"$ref": "#/$defs/Range2"}, {"type": "null"}]},
+        "heat_kwh_yr": {"anyOf": [{"$ref": "#/$defs/Range2"}, {"type": "null"}]},
+        "power_w": {"anyOf": [{"$ref": "#/$defs/Range2"}, {"type": "null"}]},
+        "saves_kwh_yr": {"$ref": "#/$defs/Range2"},
+        "saves_usd_yr": {"$ref": "#/$defs/Range2"},
+        "cost_usd": {"$ref": "#/$defs/Range2"},
+        "payback_years": {"anyOf": [{"$ref": "#/$defs/Range2"}, {"type": "null"}]},
+        "who": {"type": "string"},
+        "basis": {"type": "string"}
       }
     },
     "AssetEnergyResponse": {

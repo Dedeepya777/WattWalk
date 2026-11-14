@@ -18,6 +18,16 @@ import {
 import { useAppDispatch, useAppState } from "../state";
 import { SourceChip } from "./SourceChip";
 
+function CompareButton({ row }: { row: AssetEnergy }) {
+  const dispatch = useAppDispatch();
+  if (row.alternatives.length === 0) return null;
+  return (
+    <button className="button small" onClick={() => dispatch({ type: "focusEnergy", assetId: row.asset_id })}>
+      Compare alternatives ({row.alternatives.length})
+    </button>
+  );
+}
+
 /** Energy and heat of one asset (GET /audits/{sid}/energy). Ranges widen when details were not seen. */
 function EnergySection({ row }: { row: AssetEnergy | null }) {
   if (!row) {
@@ -63,6 +73,7 @@ function EnergySection({ row }: { row: AssetEnergy | null }) {
         </p>
       ) : null}
       {row.note ? <p className="muted small">{row.note}</p> : null}
+      <CompareButton row={row} />
     </section>
   );
 }

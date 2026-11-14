@@ -247,6 +247,26 @@ class HeatShare(_Strict):
 Range2 = tuple[float, float]
 
 
+class EnergyAlternative(_Strict):
+    """One upgrade from upgrades.json applied to one asset: what it would use afterwards and the saving.
+
+    kwh_yr/usd_yr/heat_kwh_yr/power_w are the asset after the upgrade (null when the upgrade acts on the
+    whole apartment, e.g. a smart thermostat). payback_years is null when nothing is saved.
+    """
+    upgrade_id: str
+    title: str
+    kwh_yr: Optional[Range2] = None
+    usd_yr: Optional[Range2] = None
+    heat_kwh_yr: Optional[Range2] = None
+    power_w: Optional[Range2] = None
+    saves_kwh_yr: Range2
+    saves_usd_yr: Range2
+    cost_usd: Range2
+    payback_years: Optional[Range2] = None
+    who: str
+    basis: str
+
+
 class AssetEnergy(_Strict):
     """Energy and heat of one inventory asset, as (low, high) ranges (engine/asset_energy.py).
 
@@ -264,6 +284,7 @@ class AssetEnergy(_Strict):
     basis: str = ""
     assumed: list[str] = Field(default_factory=list)
     note: str = ""
+    alternatives: list[EnergyAlternative] = Field(default_factory=list)
 
 
 class AssetEnergyResponse(_Strict):

@@ -171,6 +171,22 @@ export interface HeatShare { room_id: string; share: number; weight: number; }
 /** A (low, high) range. */
 export type Range2 = [number, number];
 
+/** One upgrade applied to one asset: usage after it, the saving, cost and payback. */
+export interface EnergyAlternative {
+  upgrade_id: string;
+  title: string;
+  kwh_yr: Range2 | null;
+  usd_yr: Range2 | null;
+  heat_kwh_yr: Range2 | null;
+  power_w: Range2 | null;
+  saves_kwh_yr: Range2;
+  saves_usd_yr: Range2;
+  cost_usd: Range2;
+  payback_years: Range2 | null;
+  who: string;
+  basis: string;
+}
+
 /** Energy and heat of one inventory asset (GET /audits/{sid}/energy). heat_kwh_yr < 0 removes heat. */
 export interface AssetEnergy {
   asset_id: string;
@@ -184,6 +200,7 @@ export interface AssetEnergy {
   basis: string;
   assumed: string[];
   note: string;
+  alternatives: EnergyAlternative[];
 }
 
 export interface AssetEnergyResponse {

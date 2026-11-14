@@ -74,3 +74,28 @@ def test_fridge_age_known_narrows_the_range(building):
                                           _asset("f3", "refrigerator", age_years=None)], building)
     assert new.kwh_yr == (400, 400) and old.kwh_yr == (700, 700) and unknown.kwh_yr == (400, 700)
     assert unknown.power_w == (46, 80)
+
+
+def test_alternatives_match_the_upgrade_library(building):
+    rows = {r.asset_id: r for r in inventory_energy([
+        _asset("inc", "lamp", bulb_type="incandescent", bulb_count=2),
+        _asset("led", "lamp", bulb_type="led", bulb_count=1),
+        _asset("unk", "ceiling_light", bulb_type=None, bulb_count=1),
+        _asset("win", "window", area_m2=2.0),
+        _asset("old", "refrigerator", age_years=15),
+        _asset("new", "refrigerator", age_years=3),
+        _asset("ac", "window_ac"),
+        _asset("t", "thermostat"),
+    ], building)}
+    inc = rows["inc"].alternatives[0]
+    assert inc["upgrade_id"] == "led" and inc["power_w"] == (18, 18)
+    assert inc["saves_kwh_yr"][0] == pytest.approx(2 * (60 - 9) * 3 * 365 / 1000, abs=0.1)
+    assert inc["cost_usd"] == (10, 16) and inc["payback_years"][0] < 1
+    assert rows["led"].alternatives == []                        # already LED: nothing to offer
+    assert rows["unk"].alternatives[0]["saves_kwh_yr"][0] == 0    # unknown bulb: may already be LED
+    assert "best case" in rows["unk"].alternatives[0]["basis"]
+    film = rows["win"].alternatives[0]
+    assert film["upgrade_id"] == "window_film" and film["kwh_yr"][0] == pytest.approx(rows["win"].kwh_yr[0] * 0.7, abs=0.1)
+    assert rows["old"].alternatives[0]["kwh_yr"] == (400, 400) and rows["new"].alternatives == []
+    assert rows["ac"].alternatives[0]["kwh_yr"][0] == pytest.approx(rows["ac"].kwh_yr[0] / 2, abs=0.1)
+    assert rows["t"].alternatives[0]["upgrade_id"] == "smart_thermostat" and rows["t"].alternatives[0]["kwh_yr"] is None

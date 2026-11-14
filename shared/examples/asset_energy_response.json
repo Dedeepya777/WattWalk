@@ -24,7 +24,44 @@
       "assumed": [
         "panes"
       ],
-      "note": "single or double pane cannot be seen; the city average is used"
+      "note": "single or double pane cannot be seen; the city average is used",
+      "alternatives": [
+        {
+          "upgrade_id": "window_film",
+          "title": "Solar control window film",
+          "kwh_yr": [
+            75.6,
+            75.6
+          ],
+          "usd_yr": [
+            22.68,
+            22.68
+          ],
+          "heat_kwh_yr": [
+            199.4,
+            199.4
+          ],
+          "power_w": null,
+          "saves_kwh_yr": [
+            32.4,
+            32.4
+          ],
+          "saves_usd_yr": [
+            9.72,
+            9.72
+          ],
+          "cost_usd": [
+            14.0,
+            27.0
+          ],
+          "payback_years": [
+            1.5,
+            2.8
+          ],
+          "who": "the tenant can do it with the owner's approval",
+          "basis": "film blocks 30% of the sun heat through 1.8 m2 of glass"
+        }
+      ]
     },
     {
       "asset_id": "a_o003",
@@ -48,7 +85,44 @@
       "assumed": [
         "panes"
       ],
-      "note": "single or double pane cannot be seen; the city average is used"
+      "note": "single or double pane cannot be seen; the city average is used",
+      "alternatives": [
+        {
+          "upgrade_id": "window_film",
+          "title": "Solar control window film",
+          "kwh_yr": [
+            50.4,
+            50.4
+          ],
+          "usd_yr": [
+            15.12,
+            15.12
+          ],
+          "heat_kwh_yr": [
+            132.9,
+            132.9
+          ],
+          "power_w": null,
+          "saves_kwh_yr": [
+            21.6,
+            21.6
+          ],
+          "saves_usd_yr": [
+            6.48,
+            6.48
+          ],
+          "cost_usd": [
+            10.0,
+            18.0
+          ],
+          "payback_years": [
+            1.5,
+            2.8
+          ],
+          "who": "the tenant can do it with the owner's approval",
+          "basis": "film blocks 30% of the sun heat through 1.2 m2 of glass"
+        }
+      ]
     },
     {
       "asset_id": "a_o004",
@@ -70,7 +144,44 @@
       "power_w": null,
       "basis": "apartment cooling 65 m2 x 30 kWh/m2/yr, shared by 1 cooling unit(s); heat moved outside = electricity x COP 2.64",
       "assumed": [],
-      "note": "negative heat: it removes heat from the apartment"
+      "note": "negative heat: it removes heat from the apartment",
+      "alternatives": [
+        {
+          "upgrade_id": "heat_pump",
+          "title": "Replace window AC with ductless heat pump",
+          "kwh_yr": [
+            975.0,
+            975.0
+          ],
+          "usd_yr": [
+            292.5,
+            292.5
+          ],
+          "heat_kwh_yr": [
+            -5143.6,
+            -5143.6
+          ],
+          "power_w": null,
+          "saves_kwh_yr": [
+            975.0,
+            975.0
+          ],
+          "saves_usd_yr": [
+            292.5,
+            292.5
+          ],
+          "cost_usd": [
+            3000.0,
+            6000.0
+          ],
+          "payback_years": [
+            10.3,
+            20.5
+          ],
+          "who": "the owner pays",
+          "basis": "same cooling with EER 18 instead of 9"
+        }
+      ]
     },
     {
       "asset_id": "a_o005",
@@ -97,7 +208,47 @@
       "assumed": [
         "bulb_type"
       ],
-      "note": ""
+      "note": "",
+      "alternatives": [
+        {
+          "upgrade_id": "led",
+          "title": "Replace bulbs with LED",
+          "kwh_yr": [
+            19.7,
+            19.7
+          ],
+          "usd_yr": [
+            5.91,
+            5.91
+          ],
+          "heat_kwh_yr": [
+            19.7,
+            19.7
+          ],
+          "power_w": [
+            18.0,
+            18.0
+          ],
+          "saves_kwh_yr": [
+            0.0,
+            111.7
+          ],
+          "saves_usd_yr": [
+            0.0,
+            33.51
+          ],
+          "cost_usd": [
+            10.0,
+            16.0
+          ],
+          "payback_years": [
+            0.3,
+            0.5
+          ],
+          "who": "the tenant can do it",
+          "basis": "2 bulb(s) at 9 W instead of today's bulbs, 3 h/day; saves nothing if it is already efficient (detail not seen), so payback is the best case"
+        }
+      ]
     },
     {
       "asset_id": "a_o006",
@@ -124,7 +275,47 @@
       "assumed": [
         "bulb_type"
       ],
-      "note": ""
+      "note": "",
+      "alternatives": [
+        {
+          "upgrade_id": "led",
+          "title": "Replace bulbs with LED",
+          "kwh_yr": [
+            19.7,
+            19.7
+          ],
+          "usd_yr": [
+            5.91,
+            5.91
+          ],
+          "heat_kwh_yr": [
+            19.7,
+            19.7
+          ],
+          "power_w": [
+            18.0,
+            18.0
+          ],
+          "saves_kwh_yr": [
+            0.0,
+            111.7
+          ],
+          "saves_usd_yr": [
+            0.0,
+            33.51
+          ],
+          "cost_usd": [
+            10.0,
+            16.0
+          ],
+          "payback_years": [
+            0.3,
+            0.5
+          ],
+          "who": "the tenant can do it",
+          "basis": "2 bulb(s) at 9 W instead of today's bulbs, 3 h/day; saves nothing if it is already efficient (detail not seen), so payback is the best case"
+        }
+      ]
     },
     {
       "asset_id": "a_o007",
@@ -151,7 +342,47 @@
       "assumed": [
         "bulb_type"
       ],
-      "note": ""
+      "note": "",
+      "alternatives": [
+        {
+          "upgrade_id": "led",
+          "title": "Replace bulbs with LED",
+          "kwh_yr": [
+            19.7,
+            19.7
+          ],
+          "usd_yr": [
+            5.91,
+            5.91
+          ],
+          "heat_kwh_yr": [
+            19.7,
+            19.7
+          ],
+          "power_w": [
+            18.0,
+            18.0
+          ],
+          "saves_kwh_yr": [
+            0.0,
+            111.7
+          ],
+          "saves_usd_yr": [
+            0.0,
+            33.51
+          ],
+          "cost_usd": [
+            10.0,
+            16.0
+          ],
+          "payback_years": [
+            0.3,
+            0.5
+          ],
+          "who": "the tenant can do it",
+          "basis": "2 bulb(s) at 9 W instead of today's bulbs, 3 h/day; saves nothing if it is already efficient (detail not seen), so payback is the best case"
+        }
+      ]
     },
     {
       "asset_id": "a_o008",
@@ -178,7 +409,47 @@
       "assumed": [
         "bulb_type"
       ],
-      "note": ""
+      "note": "",
+      "alternatives": [
+        {
+          "upgrade_id": "led",
+          "title": "Replace bulbs with LED",
+          "kwh_yr": [
+            19.7,
+            19.7
+          ],
+          "usd_yr": [
+            5.91,
+            5.91
+          ],
+          "heat_kwh_yr": [
+            19.7,
+            19.7
+          ],
+          "power_w": [
+            18.0,
+            18.0
+          ],
+          "saves_kwh_yr": [
+            0.0,
+            111.7
+          ],
+          "saves_usd_yr": [
+            0.0,
+            33.51
+          ],
+          "cost_usd": [
+            10.0,
+            16.0
+          ],
+          "payback_years": [
+            0.3,
+            0.5
+          ],
+          "who": "the tenant can do it",
+          "basis": "2 bulb(s) at 9 W instead of today's bulbs, 3 h/day; saves nothing if it is already efficient (detail not seen), so payback is the best case"
+        }
+      ]
     },
     {
       "asset_id": "a_o009",
@@ -205,7 +476,47 @@
       "assumed": [
         "age_years"
       ],
-      "note": "power is the average over the day; the compressor cycles on and off"
+      "note": "power is the average over the day; the compressor cycles on and off",
+      "alternatives": [
+        {
+          "upgrade_id": "fridge",
+          "title": "Efficient replacement refrigerator",
+          "kwh_yr": [
+            400.0,
+            400.0
+          ],
+          "usd_yr": [
+            120.0,
+            120.0
+          ],
+          "heat_kwh_yr": [
+            400.0,
+            400.0
+          ],
+          "power_w": [
+            46.0,
+            46.0
+          ],
+          "saves_kwh_yr": [
+            0.0,
+            300.0
+          ],
+          "saves_usd_yr": [
+            0.0,
+            90.0
+          ],
+          "cost_usd": [
+            900.0,
+            1600.0
+          ],
+          "payback_years": [
+            10.0,
+            17.8
+          ],
+          "who": "the owner pays",
+          "basis": "an ENERGY STAR model uses about 400 kWh/yr; saves nothing if it is already efficient (detail not seen), so payback is the best case"
+        }
+      ]
     },
     {
       "asset_id": "a_o010",
@@ -218,7 +529,8 @@
       "power_w": null,
       "basis": "",
       "assumed": [],
-      "note": "no sourced assumption yet for gas ranges (and gas is not electricity)"
+      "note": "no sourced assumption yet for gas ranges (and gas is not electricity)",
+      "alternatives": []
     }
   ],
   "total_kwh_yr": [
