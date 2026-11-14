@@ -1,0 +1,102 @@
+{
+  "schema_version": "1.0.0",
+  "sid": "fixtureUnitA",
+  "request": {
+    "budget_usd": 0,
+    "objective": "max_bill",
+    "role": "owner",
+    "tenant_pays_electric": true,
+    "stay_months": 12,
+    "overrides": {}
+  },
+  "upgrades": [],
+  "totals": {
+    "cost_low_usd": 0.0,
+    "cost_high_usd": 0.0,
+    "kwh_saved_yr": 0.0,
+    "bill_saved_usd_yr": 0.0,
+    "payback_years": null,
+    "baseline_kwh_yr": 3175.6,
+    "after_kwh_yr": 3175.6
+  },
+  "excluded": [
+    {
+      "upgrade_id": "window_film",
+      "reason_code": "over_budget",
+      "reason": "The lowest cost estimate $24 alone exceeds the budget $0."
+    },
+    {
+      "upgrade_id": "led",
+      "reason_code": "over_budget",
+      "reason": "The lowest cost estimate $40 alone exceeds the budget $0."
+    },
+    {
+      "upgrade_id": "fridge",
+      "reason_code": "over_budget",
+      "reason": "The lowest cost estimate $900 alone exceeds the budget $0."
+    },
+    {
+      "upgrade_id": "heat_pump",
+      "reason_code": "over_budget",
+      "reason": "The lowest cost estimate $3,000 alone exceeds the budget $0."
+    }
+  ],
+  "notes": [
+    "No feasible package for these constraints.",
+    "Lighting baseline assumes bulbs of unknown type draw 60 W (assumption).",
+    "Context, not validation: modelled end uses (cooling, lighting, refrigerator) = 48.9 kWh/m2/yr; LA EBEWE reported building site energy = 113.2 kWh/m2/yr (program year 2025; includes gas, common areas and all other end uses). Ratio 0.43.",
+    "6 assumptions are unverified defaults; results are planning estimates."
+  ],
+  "assumptions_used": [
+    {
+      "key": "bulb_w_incandescent",
+      "value": 60,
+      "unit": "W",
+      "status": "unverified_default",
+      "source": ""
+    },
+    {
+      "key": "bulb_w_led",
+      "value": 9,
+      "unit": "W",
+      "status": "unverified_default",
+      "source": ""
+    },
+    {
+      "key": "cooling_kwh_per_m2_yr",
+      "value": 30,
+      "unit": "kWh/m2/yr",
+      "status": "unverified_default",
+      "source": ""
+    },
+    {
+      "key": "electricity_rate_usd_per_kwh",
+      "value": 0.3,
+      "unit": "USD/kWh",
+      "status": "unverified_default",
+      "source": ""
+    },
+    {
+      "key": "fridge_kwh_yr_old",
+      "value": 700,
+      "unit": "kWh/yr",
+      "status": "unverified_default",
+      "source": ""
+    },
+    {
+      "key": "kbtu_per_ft2_to_kwh_per_m2",
+      "value": 3.15459,
+      "unit": "(kWh/m2)/(kBtu/ft2)",
+      "status": "physical_constant",
+      "source": "1 kBtu = 0.293071 kWh; 1 ft2 = 0.092903 m2"
+    },
+    {
+      "key": "lighting_hours_per_day",
+      "value": 3,
+      "unit": "h/day",
+      "status": "unverified_default",
+      "source": ""
+    }
+  ],
+  "combos_evaluated": 0
+}

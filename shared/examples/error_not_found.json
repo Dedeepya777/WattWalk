@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "not_found",
+    "message": "No audit exists for sid unknownSid01. Start one with POST /audits/unknownSid01.",
+    "retryable": false,
+    "details": {
+      "sid": "unknownSid01"
+    }
+  }
+}

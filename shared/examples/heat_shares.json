@@ -1,0 +1,32 @@
+[
+  {
+    "room_id": "r_living",
+    "share": 0.43,
+    "weight": 98.4
+  },
+  {
+    "room_id": "r_bed",
+    "share": 0.286,
+    "weight": 65.6
+  },
+  {
+    "room_id": "r_kitchen",
+    "share": 0.114,
+    "weight": 26.0
+  },
+  {
+    "room_id": "r_bath",
+    "share": 0.068,
+    "weight": 15.6
+  },
+  {
+    "room_id": "r_hall",
+    "share": 0.045,
+    "weight": 10.4
+  },
+  {
+    "room_id": "r_closet",
+    "share": 0.057,
+    "weight": 13.0
+  }
+]

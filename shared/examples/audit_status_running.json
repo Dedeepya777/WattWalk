@@ -1,0 +1,9 @@
+{
+  "sid": "fixtureUnitA",
+  "status": "running",
+  "mode": "live",
+  "started_at": "2026-11-14T10:00:00Z",
+  "finished_at": null,
+  "error": null,
+  "replay_of": null
+}

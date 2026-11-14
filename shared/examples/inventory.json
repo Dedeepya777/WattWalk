@@ -1,0 +1,328 @@
+[
+  {
+    "id": "a_o001",
+    "label": "window",
+    "scope": "unit",
+    "room_id": "r_living",
+    "observation_ids": [
+      "o001",
+      "o002"
+    ],
+    "attrs": {
+      "panes": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "glazing not determinable from image",
+        "evidence_obs_ids": [
+          "o001",
+          "o002"
+        ]
+      },
+      "shading": {
+        "value": "blinds",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o001",
+          "o002"
+        ]
+      },
+      "width_m": {
+        "value": 1.5,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o001",
+          "o002"
+        ]
+      },
+      "height_m": {
+        "value": 1.2,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o001",
+          "o002"
+        ]
+      },
+      "area_m2": {
+        "value": 1.8,
+        "source": "visible_in_scan",
+        "note": "width_m x height_m",
+        "evidence_obs_ids": [
+          "o001",
+          "o002"
+        ]
+      }
+    },
+    "anchor": {
+      "x": 2.904,
+      "y": 0.073,
+      "z": 1.738
+    },
+    "next_step": "Confirm glazing (single or double pane) from a close photo or on site",
+    "disagreement": false
+  },
+  {
+    "id": "a_o003",
+    "label": "window",
+    "scope": "unit",
+    "room_id": "r_bed",
+    "observation_ids": [
+      "o003"
+    ],
+    "attrs": {
+      "panes": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "glazing not determinable from image",
+        "evidence_obs_ids": [
+          "o003"
+        ]
+      },
+      "shading": {
+        "value": "none",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o003"
+        ]
+      },
+      "width_m": {
+        "value": 1.0,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o003"
+        ]
+      },
+      "height_m": {
+        "value": 1.2,
+        "source": "visible_in_scan",
+        "note": "estimated from image",
+        "evidence_obs_ids": [
+          "o003"
+        ]
+      },
+      "area_m2": {
+        "value": 1.2,
+        "source": "visible_in_scan",
+        "note": "width_m x height_m",
+        "evidence_obs_ids": [
+          "o003"
+        ]
+      }
+    },
+    "anchor": {
+      "x": 7.895,
+      "y": 0.1,
+      "z": 1.72
+    },
+    "next_step": "Confirm glazing (single or double pane) from a close photo or on site",
+    "disagreement": false
+  },
+  {
+    "id": "a_o004",
+    "label": "window_ac",
+    "scope": "unit",
+    "room_id": "r_bed",
+    "observation_ids": [
+      "o004"
+    ],
+    "attrs": {},
+    "anchor": {
+      "x": 7.28,
+      "y": 0.094,
+      "z": 1.562
+    },
+    "next_step": "Photo of the AC unit label to confirm efficiency (EER)",
+    "disagreement": false
+  },
+  {
+    "id": "a_o005",
+    "label": "ceiling_light",
+    "scope": "unit",
+    "room_id": "r_living",
+    "observation_ids": [
+      "o005"
+    ],
+    "attrs": {
+      "bulb_type": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "bulb hidden inside fixture; high-res crop did not resolve",
+        "evidence_obs_ids": [
+          "o005"
+        ]
+      },
+      "bulb_count": {
+        "value": 2,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o005"
+        ]
+      }
+    },
+    "anchor": {
+      "x": 3.002,
+      "y": 3.145,
+      "z": 2.6
+    },
+    "next_step": "Photo of a bulb, or answer the bulb-type question",
+    "disagreement": false
+  },
+  {
+    "id": "a_o006",
+    "label": "ceiling_light",
+    "scope": "unit",
+    "room_id": "r_living",
+    "observation_ids": [
+      "o006"
+    ],
+    "attrs": {
+      "bulb_type": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "bulb hidden inside fixture; high-res crop did not resolve",
+        "evidence_obs_ids": [
+          "o006"
+        ]
+      },
+      "bulb_count": {
+        "value": 2,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o006"
+        ]
+      }
+    },
+    "anchor": {
+      "x": 4.368,
+      "y": 1.998,
+      "z": 2.6
+    },
+    "next_step": "Photo of a bulb, or answer the bulb-type question",
+    "disagreement": false
+  },
+  {
+    "id": "a_o007",
+    "label": "ceiling_light",
+    "scope": "unit",
+    "room_id": "r_bed",
+    "observation_ids": [
+      "o007"
+    ],
+    "attrs": {
+      "bulb_type": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "unresolved after high-res crop and large model; user question expired",
+        "evidence_obs_ids": [
+          "o007"
+        ]
+      },
+      "bulb_count": {
+        "value": 2,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o007"
+        ]
+      }
+    },
+    "anchor": {
+      "x": 8.002,
+      "y": 3.22,
+      "z": 2.6
+    },
+    "next_step": "Photo of a bulb, or answer the bulb-type question",
+    "disagreement": false
+  },
+  {
+    "id": "a_o008",
+    "label": "ceiling_light",
+    "scope": "unit",
+    "room_id": "r_kitchen",
+    "observation_ids": [
+      "o008"
+    ],
+    "attrs": {
+      "bulb_type": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "bulb hidden inside fixture; high-res crop did not resolve",
+        "evidence_obs_ids": [
+          "o008"
+        ]
+      },
+      "bulb_count": {
+        "value": 2,
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o008"
+        ]
+      }
+    },
+    "anchor": {
+      "x": 2.002,
+      "y": 6.345,
+      "z": 2.6
+    },
+    "next_step": "Photo of a bulb, or answer the bulb-type question",
+    "disagreement": false
+  },
+  {
+    "id": "a_o009",
+    "label": "refrigerator",
+    "scope": "unit",
+    "room_id": "r_kitchen",
+    "observation_ids": [
+      "o009"
+    ],
+    "attrs": {
+      "style": {
+        "value": "top_freezer",
+        "source": "visible_in_scan",
+        "note": "",
+        "evidence_obs_ids": [
+          "o009"
+        ]
+      },
+      "age_years": {
+        "value": null,
+        "source": "needs_verification",
+        "note": "age not determinable from appearance",
+        "evidence_obs_ids": [
+          "o009"
+        ]
+      }
+    },
+    "anchor": {
+      "x": 0.094,
+      "y": 4.505,
+      "z": 0.241
+    },
+    "next_step": "Photo of the refrigerator nameplate (model number)",
+    "disagreement": false
+  },
+  {
+    "id": "a_o010",
+    "label": "range_gas",
+    "scope": "unit",
+    "room_id": "r_kitchen",
+    "observation_ids": [
+      "o010"
+    ],
+    "attrs": {},
+    "anchor": {
+      "x": 3.902,
+      "y": 4.779,
+      "z": 0.615
+    },
+    "next_step": "",
+    "disagreement": false
+  }
+]

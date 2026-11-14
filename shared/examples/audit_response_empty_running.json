@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "status": {
+    "sid": "fixtureUnitA",
+    "status": "running",
+    "mode": "live",
+    "started_at": "2026-11-14T10:00:00Z",
+    "finished_at": null,
+    "error": null,
+    "replay_of": null
+  },
+  "building": null,
+  "rooms": [],
+  "panos": [],
+  "observations": [],
+  "inventory": [],
+  "coverage": null,
+  "heat_shares": [],
+  "model_call_summary": {
+    "calls_total": 0,
+    "calls_small": 0,
+    "calls_large": 0,
+    "calls_planner": 0,
+    "cache_hits": 0,
+    "tokens_in": 0,
+    "tokens_out": 0
+  },
+  "questions": [],
+  "report_md": null
+}

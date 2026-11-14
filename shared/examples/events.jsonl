@@ -1,0 +1,32 @@
+{"seq": 0, "t_s": 0.0, "sid": "fixtureUnitA", "agent": "system", "type": "status", "summary": "Audit started (mode fixture)", "data": {"status": "running"}}
+{"seq": 1, "t_s": 1.2, "sid": "fixtureUnitA", "agent": "planner", "type": "todo", "summary": "Plan: building context, walk 6 rooms, plan upgrades, verify, report", "data": {"todo": ["building context", "walk rooms", "plan upgrades", "verify", "write report"]}}
+{"seq": 2, "t_s": 2.0, "sid": "fixtureUnitA", "agent": "exterior_analyst", "type": "tool_call", "summary": "load_building(fixtureUnitA)", "data": {"tool": "load_building"}}
+{"seq": 3, "t_s": 3.1, "sid": "fixtureUnitA", "agent": "exterior_analyst", "type": "tool_result", "summary": "Built 1974, 42 units, Los Angeles; EBEWE site EUI 35.9 kBtu/ft2 (2025)", "data": {"tool": "load_building"}}
+{"seq": 4, "t_s": 4.0, "sid": "fixtureUnitA", "agent": "walker", "type": "tool_call", "summary": "list_rooms(fixtureUnitA)", "data": {"tool": "list_rooms"}}
+{"seq": 5, "t_s": 4.6, "sid": "fixtureUnitA", "agent": "walker", "type": "tool_result", "summary": "6 rooms, 7 panoramas; living room >= 20 m2 gets 2 views", "data": {"tool": "list_rooms"}}
+{"seq": 6, "t_s": 6.0, "sid": "fixtureUnitA", "agent": "walker", "type": "tool_call", "summary": "inspect_next_view(r_living, p01)", "data": {"tool": "inspect_next_view", "room_id": "r_living", "pano_id": "p01"}}
+{"seq": 7, "t_s": 11.5, "sid": "fixtureUnitA", "agent": "walker", "type": "finding", "summary": "Living room: window 1.8 m2, 2 ceiling lights (bulb type unknown)", "data": {"observation_ids": ["o001", "o005", "o006"]}}
+{"seq": 8, "t_s": 12.0, "sid": "fixtureUnitA", "agent": "walker", "type": "tool_call", "summary": "inspect_next_view(r_living, p02)", "data": {"tool": "inspect_next_view", "room_id": "r_living", "pano_id": "p02"}}
+{"seq": 9, "t_s": 17.2, "sid": "fixtureUnitA", "agent": "walker", "type": "finding", "summary": "Living room window seen again from p02 (will merge)", "data": {"observation_ids": ["o002"]}}
+{"seq": 10, "t_s": 18.0, "sid": "fixtureUnitA", "agent": "walker", "type": "tool_call", "summary": "inspect_next_view(r_bed, p03)", "data": {"tool": "inspect_next_view", "room_id": "r_bed", "pano_id": "p03"}}
+{"seq": 11, "t_s": 23.4, "sid": "fixtureUnitA", "agent": "walker", "type": "finding", "summary": "Bedroom: window 1.2 m2, window AC unit, ceiling light", "data": {"observation_ids": ["o003", "o004", "o007"]}}
+{"seq": 12, "t_s": 24.0, "sid": "fixtureUnitA", "agent": "walker", "type": "tool_call", "summary": "inspect_next_view(r_kitchen, p04)", "data": {"tool": "inspect_next_view", "room_id": "r_kitchen", "pano_id": "p04"}}
+{"seq": 13, "t_s": 29.8, "sid": "fixtureUnitA", "agent": "walker", "type": "finding", "summary": "Kitchen: refrigerator (top freezer), gas range, ceiling light", "data": {"observation_ids": ["o008", "o009", "o010"]}}
+{"seq": 14, "t_s": 30.5, "sid": "fixtureUnitA", "agent": "walker", "type": "tool_call", "summary": "inspect_next_view(r_bath, p05)", "data": {"tool": "inspect_next_view", "room_id": "r_bath", "pano_id": "p05"}}
+{"seq": 15, "t_s": 34.0, "sid": "fixtureUnitA", "agent": "walker", "type": "tool_result", "summary": "Bathroom: 1 face too dark (brightness 31), no other panorama in room; marked partial", "data": {"faces_rejected": 1}}
+{"seq": 16, "t_s": 35.0, "sid": "fixtureUnitA", "agent": "walker", "type": "tool_call", "summary": "inspect_next_view(r_hall, p06), then inspect_next_view(r_closet, p07)", "data": {"tool": "inspect_next_view"}}
+{"seq": 17, "t_s": 44.0, "sid": "fixtureUnitA", "agent": "walker", "type": "tool_result", "summary": "Hallway and closet: no energy-relevant assets", "data": {}}
+{"seq": 18, "t_s": 45.0, "sid": "fixtureUnitA", "agent": "walker", "type": "tool_call", "summary": "resolve_next: o005 high-res crop (small model); same for o006, o007, o008", "data": {"tool": "resolve_next", "action": "hires_crop"}}
+{"seq": 19, "t_s": 49.0, "sid": "fixtureUnitA", "agent": "walker", "type": "tool_result", "summary": "4 light fixtures: bulb type still not visible", "data": {"action": "hires_crop"}}
+{"seq": 20, "t_s": 50.0, "sid": "fixtureUnitA", "agent": "walker", "type": "tool_call", "summary": "resolve_next: o007 escalate to large model", "data": {"tool": "resolve_next", "action": "escalate_large"}}
+{"seq": 21, "t_s": 53.5, "sid": "fixtureUnitA", "agent": "walker", "type": "tool_result", "summary": "Large model: bulb type still unknown", "data": {"action": "escalate_large"}}
+{"seq": 22, "t_s": 54.0, "sid": "fixtureUnitA", "agent": "walker", "type": "question", "summary": "What type of bulb is in the bedroom ceiling light?", "data": {"question_id": "q001", "choices": ["led", "cfl", "incandescent", "unknown"], "timeout_s": 30}}
+{"seq": 23, "t_s": 84.0, "sid": "fixtureUnitA", "agent": "walker", "type": "tool_result", "summary": "Question q001 expired without an answer; bulb type left unknown", "data": {"question_id": "q001"}}
+{"seq": 24, "t_s": 85.0, "sid": "fixtureUnitA", "agent": "walker", "type": "tool_call", "summary": "build_inventory_tool(fixtureUnitA)", "data": {"tool": "build_inventory_tool"}}
+{"seq": 25, "t_s": 85.4, "sid": "fixtureUnitA", "agent": "walker", "type": "tool_result", "summary": "10 observations -> 9 unique assets (window seen twice merged)", "data": {"assets_unique": 9}}
+{"seq": 26, "t_s": 86.0, "sid": "fixtureUnitA", "agent": "retrofit_planner", "type": "tool_call", "summary": "plan_upgrades(budget 5000, max_bill, owner)", "data": {"tool": "plan_upgrades"}}
+{"seq": 27, "t_s": 86.1, "sid": "fixtureUnitA", "agent": "retrofit_planner", "type": "tool_result", "summary": "4 upgrades, $3,964-$7,709, 1748.8 kWh/yr, $524.63/yr", "data": {"tool": "plan_upgrades"}}
+{"seq": 28, "t_s": 87.0, "sid": "fixtureUnitA", "agent": "verifier", "type": "tool_call", "summary": "verify_audit_tool(fixtureUnitA)", "data": {"tool": "verify_audit_tool"}}
+{"seq": 29, "t_s": 87.3, "sid": "fixtureUnitA", "agent": "verifier", "type": "tool_result", "summary": "0 problems: all recommendations link to assets; no duplicate assets; totals consistent", "data": {"problems": 0}}
+{"seq": 30, "t_s": 90.0, "sid": "fixtureUnitA", "agent": "planner", "type": "status", "summary": "Report written", "data": {"report": "report.md"}}
+{"seq": 31, "t_s": 90.1, "sid": "fixtureUnitA", "agent": "system", "type": "done", "summary": "Audit completed", "data": {"status": "completed"}}

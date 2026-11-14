@@ -1,0 +1,20 @@
+# secrets
+.env
+.env.*
+!.env.example
+# runtime state and provider data (hackathon use only, never commit)
+audits/
+fixtures/live/**/*.jpg
+fixtures/live/**/*.png
+fixtures/live/**/costar/
+**/cache/
+*.zip
+mp_out/
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+# node
+node_modules/
+frontend/dist/
