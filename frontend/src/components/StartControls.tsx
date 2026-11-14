@@ -44,6 +44,7 @@ export function StartControls({
   const [mode, setMode] = useState<Mode>(isFixtureMode ? "fixture" : "live");
   const [busy, setBusy] = useState<null | "start" | "cancel" | "reset">(null);
   const [showOptions, setShowOptions] = useState(false);
+  const [liveFailed, setLiveFailed] = useState(false);
   const [probe, setProbe] = useState<Health | null>(null);
   const [probing, setProbing] = useState(false);
   const [probeError, setProbeError] = useState<string | null>(null);
@@ -52,9 +53,9 @@ export function StartControls({
 
   const model = state.testModels.find((item) => item.sid === state.selectedSid);
 
-  const probeLive = async (force = false) => {
-    if (probingRef.current) return;
-    if (!force && Date.now() - lastProbeRef.current < 60_000) return;
+  const probeLive = async (force = false): Promise<Health | null> => {
+    if (probingRef.current) return null;
+    if (!force && Date.now() - lastProbeRef.current < 60_000) return probe;
     probingRef.current = true;
     setProbing(true);
     setProbeError(null);
@@ -64,12 +65,14 @@ export function StartControls({
       const result = await getHealthProbe(controller.signal);
       setProbe(result);
       lastProbeRef.current = Date.now();
+      return result;
     } catch (error) {
       setProbeError(
         error instanceof ApiFailure
           ? error.message
           : "Could not check the live integrations.",
       );
+      return null;
     } finally {
       window.clearTimeout(timer);
       probingRef.current = false;
@@ -113,10 +116,6 @@ export function StartControls({
     if (integrations.bedrock !== "live") missing.push(`Bedrock: ${integrations.bedrock}`);
     return `Live needs Matterport and Bedrock. ${missing.join(". ")}.`;
   })();
-
-  const noModeReason = available.replay || available.fixture
-    ? "No audit mode is available for this scan. Choose another scan or check the integrations."
-    : "No audit mode is available. Live needs Matterport and Bedrock, and this scan has no replay or fixture.";
 
   const startDisabled =
     running ||
@@ -187,8 +186,36 @@ export function StartControls({
                 : "Start audit"}
         </button>
       ) : (
-        <p className="hint small">{noModeReason}</p>
+        // Live-only apartment: check the live services, then start a live audit straight away.
+        <button
+          className="button primary audit-main"
+          disabled={probing || busy !== null || auditLoading || Boolean(otherRunSid)}
+          onClick={async () => {
+            setLiveFailed(false);
+            const health = await probeLive(true);
+            const ok = health?.integrations.matterport === "live" && health?.integrations.bedrock === "live";
+            if (!ok) {
+              setLiveFailed(true);
+              return;
+            }
+            setMode("live");
+            setBusy("start");
+            try {
+              await onStart("live");
+            } finally {
+              setBusy(null);
+            }
+          }}
+        >
+          {probing || busy === "start" ? <span className="spinner" aria-hidden="true" /> : null}
+          {probing ? "Connecting\u2026" : busy === "start" ? "Starting\u2026" : done ? "Run audit again" : "Start audit"}
+        </button>
       )}
+      {liveFailed && !anyAvailable ? (
+        <p className="hint small audit-note" title={liveReason ?? undefined}>
+          Live services aren’t ready. Pick an Instant demo apartment.
+        </p>
+      ) : null}
 
       <ProgressTracker />
 

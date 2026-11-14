@@ -95,6 +95,22 @@ export function FloorPlan2D() {
     () => buildScale(state.energy?.assets ?? [], state.pinColorMode),
     [state.energy, state.pinColorMode],
   );
+  // Clicking a dot opens the same small pop-out as the 3D view, growing out of the dot; items with no
+  // energy row open the evidence card as before.
+  const openPin = (assetId: string, target: Element) => {
+    if (!state.energy?.assets.some((row) => row.asset_id === assetId)) {
+      dispatch({ type: "selectAsset", assetId });
+      return;
+    }
+    const dot = target.querySelector(".pin-dot") ?? target;
+    const b = dot.getBoundingClientRect();
+    dispatch({
+      type: "focusEnergy",
+      assetId,
+      origin: { x: b.left + b.width / 2, y: b.top + b.height / 2, r: Math.max(8, b.width / 2), color: energyFill(assetId) ?? undefined },
+    });
+  };
+
   const energyFill = (assetId: string): string | null => {
     const color = pinColor(energyById.get(assetId), energyScale);
     return color ? toHex(color) : null;
@@ -360,11 +376,11 @@ export function FloorPlan2D() {
                 role="button"
                 tabIndex={0}
                 aria-label={aria}
-                onClick={() => dispatch({ type: "selectAsset", assetId: pin.asset.id })}
+                onClick={(event) => openPin(pin.asset.id, event.currentTarget)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
-                    dispatch({ type: "selectAsset", assetId: pin.asset.id });
+                    openPin(pin.asset.id, event.currentTarget);
                   }
                 }}
               >

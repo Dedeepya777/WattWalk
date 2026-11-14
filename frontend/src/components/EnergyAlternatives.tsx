@@ -4,7 +4,7 @@
  * "Compare alternatives" button. Plain on purpose: the expanding animation and the glows come later.
  */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { postResearchAlternatives } from "../api";
+import { fileUrl, postResearchAlternatives } from "../api";
 import type { AiAlternativesResponse, AssetEnergy, EnergyAlternative } from "../contracts";
 import { formatRange, labelText } from "../format";
 import { useAppDispatch, useAppState } from "../state";
@@ -207,6 +207,37 @@ function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEn
         </div>
       </div>
     </li>
+  );
+}
+
+/** The item's clearest photo: the crop with the largest box (a sharper, closer view). */
+function PopPhoto({ assetId }: { assetId: string }) {
+  const state = useAppState();
+  const [hidden, setHidden] = useState(false);
+  const asset = state.audit?.inventory.find((item) => item.id === assetId);
+  const ids = new Set(asset?.observation_ids ?? []);
+  const area = (o: { bbox: { x0: number; y0: number; x1: number; y1: number } }) =>
+    (o.bbox.x1 - o.bbox.x0) * (o.bbox.y1 - o.bbox.y0);
+  const best = (state.audit?.observations ?? [])
+    .filter((o) => ids.has(o.id) && o.crop_ref)
+    .sort((a, b) => area(b) - area(a))[0];
+  const url = best ? fileUrl(state.selectedSid, best.crop_ref) : null;
+  useEffect(() => setHidden(false), [url]);
+  if (!url || hidden) return null;
+  return (
+    <figure className="pop-photo">
+      <img
+        src={url}
+        alt={asset ? `Photo of the ${asset.label.replace(/_/g, " ")}` : "Photo of the item"}
+        onError={() => setHidden(true)}
+        onLoad={(event) => {
+          // Demo audits ship 1x1 placeholder crops: hide them rather than show a stretched pixel.
+          const img = event.currentTarget;
+          if (img.naturalWidth <= 2 || img.naturalHeight <= 2) setHidden(true);
+        }}
+      />
+      {ids.size > 1 ? <figcaption>Seen {ids.size} times</figcaption> : null}
+    </figure>
   );
 }
 
@@ -460,6 +491,7 @@ export function EnergyAlternatives() {
             </button>
           </div>
         </div>
+        {popout ? <PopPhoto assetId={row.asset_id} /> : null}
         {row.estimated ? (
           popout ? <PopNow row={row} scale={heatScale} /> : <NowRow row={row} scale={heatScale} />
         ) : (
