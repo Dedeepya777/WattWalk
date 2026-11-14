@@ -112,7 +112,10 @@ def read_text(sid: str, name: str) -> str | None:
 
 
 def observations(sid: str) -> list[Observation]:
-    return read(sid, "observations.json", list[Observation], default=[])
+    return sorted(
+        read(sid, "observations.json", list[Observation], default=[]),
+        key=lambda o: o.id,
+    )
 
 
 def append_observations(sid: str, obs: list[Observation]) -> None:
@@ -125,7 +128,7 @@ def append_observations(sid: str, obs: list[Observation]) -> None:
             else:
                 current.append(o)
                 known.add(o.id)
-        write(sid, "observations.json", current)
+        write(sid, "observations.json", sorted(current, key=lambda o: o.id))
 
 
 def upsert_question(sid: str, q: Question) -> None:

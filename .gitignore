@@ -18,3 +18,10 @@ __pycache__/
 # node
 node_modules/
 frontend/dist/
+
+# planning packs (instructions, not code)
+wattwalk_person*/
+.DS_Store
+# benchmark images (never commit)
+eval/crops/
+eval/faces/

@@ -1,1 +1,1 @@
-"""wattwalk.eval: see shared/ownership.md for the owner."""
+"""wattwalk.eval: hand labels and the adaptive-routing benchmark (Person 2)."""
