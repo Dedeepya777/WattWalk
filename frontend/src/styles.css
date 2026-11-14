@@ -4,12 +4,12 @@
 :root {
   color-scheme: light;
   /* Palette: warm architectural neutrals with restrained botanical accents.
-     Ivory #f9f8f5, Limestone #f0eee8, Sage #e3e9de, Moss #a4b39a, Forest #465b47, Charcoal #282d28. */
+     Ivory #f9f8f5, Limestone #f0eee8, Sage #e2e9d2, Moss #a3b77f, Forest #4b6237, Charcoal #282d28. */
   --ivory: #f9f8f5;
   --limestone: #f0eee8;
-  --sage: #e3e9de;
-  --moss: #a4b39a;
-  --forest: #465b47;
+  --sage: #e2e9d2;
+  --moss: #a3b77f;
+  --forest: #4b6237;
   --charcoal: #282d28;
   --bg: var(--limestone);
   --panel: var(--ivory);
@@ -21,12 +21,12 @@
   --muted: #6b7068;
   --ink: var(--charcoal);
   --accent: var(--forest);
-  --accent-strong: #384a39;
-  --accent-tint: rgba(164, 179, 154, 0.22);
+  --accent-strong: #3d5130;
+  --accent-tint: rgba(163, 183, 127, 0.22);
   --blue: #4e6478;
   --amber: #9a5b1e;
   --red: #a23b2a;
-  --green: #3f6b45;
+  --green: #4e6b2e;
   --purple: #7a5c80;
   --room-fill: #fbfaf7;
   --shadow: 0 4px 24px rgba(40, 45, 40, 0.08);
@@ -303,7 +303,7 @@ ul {
 
 /* Mode colour shows only as a small dot; the label itself is plain text. */
 .mode-live {
-  --mode: #6f8f6a;
+  --mode: #7e9a4f;
 }
 
 .mode-replay {
@@ -349,8 +349,8 @@ ul {
 
 .layer-live {
   border-color: transparent;
-  background: rgba(111, 143, 106, 0.12);
-  color: #3f6b45;
+  background: rgba(126, 154, 79, 0.12);
+  color: #4e6b2e;
 }
 
 .layer-fixture {
@@ -591,7 +591,7 @@ ul {
 }
 
 .button:hover:not(:disabled) {
-  background: #d5ddcf;
+  background: #d6e0c3;
 }
 
 .button:disabled {
@@ -801,7 +801,7 @@ select:disabled {
 
 .skeleton {
   border-radius: 6px;
-  background: linear-gradient(90deg, #e3e9de 25%, #e3e9de 37%, #e3e9de 63%);
+  background: linear-gradient(90deg, #e2e9d2 25%, #e2e9d2 37%, #e2e9d2 63%);
   background-size: 400% 100%;
   animation: shimmer 1.3s ease infinite;
 }
@@ -846,7 +846,7 @@ select:disabled {
 }
 
 .status-completed {
-  --status: #6f8f6a;
+  --status: #7e9a4f;
 }
 
 .status-failed,
@@ -878,7 +878,7 @@ select:disabled {
 }
 
 .badge-ok {
-  --badge: #6f8f6a;
+  --badge: #7e9a4f;
 }
 
 .badge-warn {
@@ -928,7 +928,7 @@ select:disabled {
 
 .model-row.selected {
   border-color: var(--accent);
-  box-shadow: inset 0 0 0 1px rgba(70, 91, 71, 0.25);
+  box-shadow: inset 0 0 0 1px rgba(75, 98, 55, 0.25);
   background: linear-gradient(120deg, var(--accent-tint), var(--panel-2) 60%);
 }
 
@@ -1554,7 +1554,7 @@ select:disabled {
 }
 
 .source-visible_in_scan {
-  --src: #6f8f6a;
+  --src: #7e9a4f;
 }
 
 .source-reported_in_data {
@@ -1598,9 +1598,9 @@ select:disabled {
 }
 
 .todo-item.done {
-  color: #3f6b45;
-  border-color: rgba(111, 143, 106, 0.4);
-  background: rgba(111, 143, 106, 0.07);
+  color: #4e6b2e;
+  border-color: rgba(126, 154, 79, 0.4);
+  background: rgba(126, 154, 79, 0.07);
 }
 
 .log-list {
@@ -1651,8 +1651,8 @@ select:disabled {
 }
 
 .agent-walker {
-  color: #3f6b45;
-  border-color: rgba(111, 143, 106, 0.45);
+  color: #4e6b2e;
+  border-color: rgba(126, 154, 79, 0.45);
 }
 
 .agent-exterior_analyst {
@@ -1767,7 +1767,7 @@ select:disabled {
 }
 
 .data-table tbody tr:hover {
-  background: rgba(111, 143, 106, 0.07);
+  background: rgba(126, 154, 79, 0.07);
 }
 
 .row-changed {
@@ -1909,7 +1909,7 @@ select:disabled {
   border-radius: 7px;
   border: 1px solid var(--border);
   background:
-    radial-gradient(circle at 30% 25%, rgba(111, 143, 106, 0.18), transparent 55%),
+    radial-gradient(circle at 30% 25%, rgba(126, 154, 79, 0.18), transparent 55%),
     linear-gradient(135deg, var(--ivory), var(--limestone));
   display: flex;
   align-items: center;
@@ -1921,7 +1921,7 @@ select:disabled {
 .crop-box {
   position: absolute;
   inset: 22% 18%;
-  border: 2px dashed rgba(70, 91, 71, 0.55);
+  border: 2px dashed rgba(75, 98, 55, 0.55);
   border-radius: 4px;
 }
 

@@ -81,7 +81,7 @@ function heatColor(share: number, max: number): string {
   // Palette-matched: pale sage for little heat, warm ochre for the most; dark room labels stay readable.
   const hue = 120 - 88 * t;
   const lightness = 86 - 18 * t;
-  const saturation = 28 + 22 * t;
+  const saturation = 38 + 24 * t;
   return `hsl(${hue.toFixed(0)} ${saturation.toFixed(0)}% ${lightness.toFixed(0)}%)`;
 }
 
