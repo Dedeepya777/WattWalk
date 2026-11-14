@@ -28,7 +28,7 @@ from typing import Optional
 
 from wattwalk.contracts import Asset, AssetEnergyResponse, Building
 from wattwalk.contracts import AssetEnergy as AssetEnergyModel
-from wattwalk.engine.assumptions import AssumptionContext
+from wattwalk.engine.assumptions import AssumptionContext, load_upgrades
 from wattwalk.engine.baseline import baseline
 
 HOURS_PER_YEAR = 8760.0
@@ -63,6 +63,7 @@ class AssetEnergy:
     basis: str = ""                       # one line: how the numbers were made
     assumed: list[str] = field(default_factory=list)   # attributes not seen in the scan
     note: str = ""
+    alternatives: list[dict] = field(default_factory=list)  # upgrades from upgrades.json, see _alternatives
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -156,6 +157,96 @@ def _cooling(asset: Asset, ctx: AssumptionContext, rate: float, area_m2: float, 
                        note="negative heat: it removes heat from the apartment")
 
 
+AUTHORIZER_TEXT = {
+    "tenant": "the tenant can do it",
+    "owner": "the owner pays",
+    "tenant_with_approval": "the tenant can do it with the owner's approval",
+}
+
+
+def _alt(upgrade: dict, ctx: AssumptionContext, rate: float, now: AssetEnergy, cost: Range,
+         after_kwh: Optional[Range], after_heat: Optional[Range], after_power: Optional[Range],
+         saves_kwh: Range, basis: str) -> dict:
+    saves_usd = _money(saves_kwh, rate)
+    payback = None
+    if saves_usd[1] > 0:
+        low = cost[0] / saves_usd[1]
+        high = cost[1] / saves_usd[0] if saves_usd[0] > 0 else cost[1] / saves_usd[1]
+        payback = _r(low, high)
+    if saves_usd[0] <= 0 < saves_usd[1]:
+        # A detail was not seen (bulb type, fridge age): the saving may be zero; payback is the best case.
+        basis += "; saves nothing if it is already efficient (detail not seen), so payback is the best case"
+    return {
+        "upgrade_id": upgrade["id"],
+        "title": upgrade["name"],
+        "kwh_yr": after_kwh,
+        "usd_yr": _money(after_kwh, rate) if after_kwh else None,
+        "heat_kwh_yr": after_heat,
+        "power_w": after_power,
+        "saves_kwh_yr": saves_kwh,
+        "saves_usd_yr": saves_usd,
+        "cost_usd": _r(cost[0], cost[1], 0),
+        "payback_years": payback,
+        "who": AUTHORIZER_TEXT.get(upgrade.get("authorizer", ""), upgrade.get("authorizer", "")),
+        "basis": basis,
+    }
+
+
+def _alternatives(asset: Asset, row: AssetEnergy, ctx: AssumptionContext, rate: float,
+                  upgrades: dict[str, dict], unit_cooling_kwh: float) -> list[dict]:
+    """What the asset would use after each upgrade in upgrades.json that applies to it.
+
+    Same formulas and assumptions as engine/savings.py, applied to this one asset, so the per-asset
+    saving matches what the plan counts for it (the window-film cap and stage interactions are
+    apartment-level and not applied here).
+    """
+    label = asset.label
+    out: list[dict] = []
+    if label in LIGHTS and "led" in upgrades and row.kwh_yr and _value(asset, "bulb_type") != "led":
+        up = upgrades["led"]
+        count = _value(asset, "bulb_count")
+        count = int(count) if isinstance(count, (int, float)) else int(ctx.get("default_bulb_count_per_fixture"))
+        w_led, hours = ctx.get("bulb_w_led"), ctx.get("lighting_hours_per_day")
+        after = count * w_led * hours * 365 / 1000
+        after_r = _r(after, after)
+        saves = _r(max(row.kwh_yr[0] - after, 0), max(row.kwh_yr[1] - after, 0))
+        out.append(_alt(up, ctx, rate, row, (count * up["cost_low_usd"], count * up["cost_high_usd"]), after_r, after_r,
+                        _r(count * w_led, count * w_led, 0), saves,
+                        f"{count} bulb(s) at {w_led:g} W instead of today's bulbs, {hours:g} h/day"))
+    elif label == "window" and "window_film" in upgrades and row.kwh_yr:
+        up = upgrades["window_film"]
+        cut = ctx.get("window_film_reduction")
+        area = _value(asset, "area_m2")
+        after_kwh = _r(row.kwh_yr[0] * (1 - cut), row.kwh_yr[1] * (1 - cut))
+        after_heat = _r(row.heat_kwh_yr[0] * (1 - cut), row.heat_kwh_yr[1] * (1 - cut)) if row.heat_kwh_yr else None
+        saves = _r(row.kwh_yr[0] * cut, row.kwh_yr[1] * cut)
+        out.append(_alt(up, ctx, rate, row, (area * up["cost_low_usd"], area * up["cost_high_usd"]), after_kwh, after_heat,
+                        None, saves, f"film blocks {cut:.0%} of the sun heat through {area:g} m2 of glass"))
+    elif label == "refrigerator" and "fridge" in upgrades and row.kwh_yr:
+        up = upgrades["fridge"]
+        new = ctx.get("fridge_kwh_yr_new")
+        if row.kwh_yr[1] > new:
+            after = _r(new, new)
+            saves = _r(max(row.kwh_yr[0] - new, 0), row.kwh_yr[1] - new)
+            out.append(_alt(up, ctx, rate, row, (up["cost_low_usd"], up["cost_high_usd"]), after, after,
+                            _r(new * 1000 / HOURS_PER_YEAR, new * 1000 / HOURS_PER_YEAR, 0), saves,
+                            f"an ENERGY STAR model uses about {new:g} kWh/yr"))
+    elif label == "window_ac" and "heat_pump" in upgrades and row.kwh_yr:
+        up = upgrades["heat_pump"]
+        ratio = ctx.get("eer_window_ac_old") / ctx.get("eer_heat_pump_new")
+        after = _r(row.kwh_yr[0] * ratio, row.kwh_yr[1] * ratio)
+        saves = _r(row.kwh_yr[0] - after[0], row.kwh_yr[1] - after[1])
+        out.append(_alt(up, ctx, rate, row, (up["cost_low_usd"], up["cost_high_usd"]), after, row.heat_kwh_yr, None, saves,
+                        f"same cooling with EER {ctx.get('eer_heat_pump_new'):g} instead of {ctx.get('eer_window_ac_old'):g}"))
+    elif label == "thermostat" and "smart_thermostat" in upgrades and unit_cooling_kwh > 0:
+        up = upgrades["smart_thermostat"]
+        frac = ctx.get("thermostat_hvac_savings_fraction")
+        saved = unit_cooling_kwh * frac
+        out.append(_alt(up, ctx, rate, row, (up["cost_low_usd"], up["cost_high_usd"]), None, None, None,
+                        _r(saved, saved), f"saves about {frac:.0%} of the apartment's cooling ({unit_cooling_kwh:,.0f} kWh/yr)"))
+    return out
+
+
 def inventory_energy(inventory: list[Asset], building: Building, ctx: AssumptionContext | None = None) -> list[AssetEnergy]:
     """Energy and heat for every asset, in inventory order."""
     ctx = ctx or AssumptionContext(building)
@@ -176,6 +267,10 @@ def inventory_energy(inventory: list[Asset], building: Building, ctx: Assumption
         else:
             out.append(AssetEnergy(asset.id, asset.label, asset.room_id, False,
                                    note=NOT_ESTIMATED.get(asset.label, "no sourced assumption yet")))
+    upgrades = {u["id"]: u for u in load_upgrades()}
+    unit_cooling = area_m2 * ctx.get("cooling_kwh_per_m2_yr")
+    for asset, row in zip(inventory, out):
+        row.alternatives = _alternatives(asset, row, ctx, rate, upgrades, unit_cooling)
     return out
 
 
