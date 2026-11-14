@@ -37,17 +37,43 @@ MODEL_FACTORY: Optional[Callable[[], Any]] = None
 RECURSION_LIMIT = 400
 
 
+# The planner model id picks the provider by prefix, like the vision model ids:
+#   ollama/<model>     local Ollama (free; the model must support tool calling, e.g. qwen3:8b)
+#   gemini/<model>     Google Gemini API (GOOGLE_API_KEY in .env)
+#   openrouter/<model> OpenRouter's OpenAI-compatible API (OPENROUTER_API_KEY in .env)
+#   anything else      Amazon Bedrock model id (the plan's default)
+OLLAMA_PREFIX = "ollama/"
+GEMINI_PREFIX = "gemini/"
 OPENROUTER_PREFIX = "openrouter/"
+# Deep Agents sends a long system prompt (planner rules, subagent and file tool descriptions, todos).
+# Ollama's default context window is far smaller and silently drops the start of the prompt.
+OLLAMA_CONTEXT_TOKENS = 16384
 
 
-def make_model():
-    """Planner chat model. A Bedrock model id uses ChatBedrockConverse; an id of the form
-    "openrouter/<model>" uses OpenRouter's OpenAI-compatible API (needs OPENROUTER_API_KEY)."""
+def make_model(model_id: str | None = None):
+    """Planner chat model for the configured (or supplied) model id.
+
+    Bedrock ids use ChatBedrockConverse; ollama/, gemini/ and openrouter/ ids use their provider.
+    """
     if MODEL_FACTORY is not None:
         return MODEL_FACTORY()
-    model_id = config.PLANNER_MODEL_ID
+    model_id = model_id if model_id is not None else config.PLANNER_MODEL_ID
     if not model_id:
         raise RuntimeError("WATTWALK_PLANNER_MODEL_ID is not set; use WATTWALK_AGENT_MODE=scripted")
+    if model_id.startswith(OLLAMA_PREFIX):
+        from langchain_ollama import ChatOllama
+
+        return ChatOllama(
+            model=model_id.removeprefix(OLLAMA_PREFIX),
+            base_url=config.OLLAMA_BASE_URL,
+            temperature=0,
+            num_ctx=OLLAMA_CONTEXT_TOKENS,
+            reasoning=False,  # no hidden "thinking" pass: faster, and tool calls come back directly
+        )
+    if model_id.startswith(GEMINI_PREFIX):
+        from langchain_google_genai import ChatGoogleGenerativeAI
+
+        return ChatGoogleGenerativeAI(model=model_id.removeprefix(GEMINI_PREFIX), temperature=0)
     if model_id.startswith(OPENROUTER_PREFIX):
         if not config.OPENROUTER_API_KEY:
             raise RuntimeError("WATTWALK_PLANNER_MODEL_ID is an openrouter/ id but OPENROUTER_API_KEY is not set")
@@ -202,19 +228,78 @@ def run(ctx: RunContext, model=None) -> None:
     _finish(ctx)
 
 
+def _complete_walk(ctx: RunContext) -> None:
+    """Run whatever part of the walk the planner skipped, in the scripted order. Each step is skipped
+    when its output already exists, so work the planner did is kept (list_rooms would restart the walk)."""
+    sid = ctx.sid
+    if store.read(sid, "building.json") is None:
+        tools.load_building(ctx)
+    if store.read(sid, "view_tasks.json") is None:
+        tools.list_rooms(ctx)
+    while "No pending views" not in tools.inspect_next_view(ctx):
+        ctx.check_cancel()
+    while "All observations resolved" not in tools.resolve_next(ctx):
+        ctx.check_cancel()
+    tools.build_inventory_tool(ctx)
+
+
+DEFAULT_PLAN = {"budget_usd": 5000.0, "objective": "max_bill", "role": "owner"}
+
+
+def _is_default_request(request: dict) -> bool:
+    return all(request.get(k) == v for k, v in DEFAULT_PLAN.items())
+
+
+def _views_left(sid: str) -> int:
+    tasks = store.read(sid, "view_tasks.json") or []
+    return max(0, len(tasks) - int(tools._state(sid).get("next_view", 0)))
+
+
+def _unresolved(sid: str) -> list[str]:
+    done = set(tools._state(sid)["resolved"])
+    return [o.id for o in store.observations(sid) if o.id not in done]
+
+
 def _finish(ctx: RunContext) -> None:
     """Guardrails: make missing steps visible, then finalise report.md from the planner's file."""
     sid = ctx.sid
     if store.read(sid, "inventory.json") is None:
-        raise RuntimeError("planner finished without an inventory (walker did not run build_inventory_tool)")
-    if store.read(sid, "plan_default.json") is None:
-        ctx.emit("planner", "error", "Planner skipped retrofit_planner; running plan_upgrades with defaults", {"code": "internal"})
+        ctx.emit("planner", "error", "Planner finished without a complete walk; finishing it with the same tools",
+                 {"code": "internal"})
+        _complete_walk(ctx)
+    corrected = False
+    views_left = _views_left(sid)
+    if views_left:
+        ctx.emit("planner", "error", f"Walker stopped with {views_left} planned views not inspected; inspecting "
+                 "them", {"code": "internal"})
+        while "No pending views" not in tools.inspect_next_view(ctx):
+            ctx.check_cancel()
+        corrected = True
+    pending = _unresolved(sid)
+    if pending or corrected:
+        if pending:
+            ctx.emit("planner", "error", f"Walker stopped with {len(pending)} unresolved observations; resolving "
+                     "them and rebuilding the inventory", {"code": "internal"})
+        while "All observations resolved" not in tools.resolve_next(ctx):
+            ctx.check_cancel()
+        tools.build_inventory_tool(ctx)
+        corrected = True
+    plan = store.read(sid, "plan_default.json")
+    if plan is None or corrected or not _is_default_request(plan.get("request", {})):
+        ctx.emit("planner", "error", "Default plan missing, stale or made with non-default inputs; running "
+                 "plan_upgrades with budget 5000, max_bill, owner", {"code": "internal"})
         tools.plan_upgrades(ctx)
-    if store.read(sid, "verify.json") is None:
-        ctx.emit("planner", "error", "Planner skipped the verifier; running verify_audit_tool", {"code": "internal"})
+        corrected = True
+    if store.read(sid, "verify.json") is None or corrected:
+        ctx.emit("planner", "error", "Verifier result missing or stale; running verify_audit_tool", {"code": "internal"})
         tools.verify_audit_tool(ctx)
     report = store.read_text(sid, "agent/report.md")
-    if report and report.strip():
+    if corrected and report and report.strip():
+        # The planner's draft quotes numbers from before the corrections: keep it as a draft only.
+        store.write(sid, "report.md", tools.template_report(sid))
+        ctx.emit("planner", "status", "Report written from audit files (the planner's draft in agent/report.md "
+                 "predates the corrections above)", {"report": "report.md"})
+    elif report and report.strip():
         store.write(sid, "report.md", report)
         ctx.emit("planner", "status", "Report written by the planner from audit files", {"report": "report.md"})
     else:
