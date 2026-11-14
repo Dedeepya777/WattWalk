@@ -103,6 +103,10 @@ def _deepseek(model_id: str, image: bytes, prompt: str) -> tuple[str, dict]:
         ],
         "temperature": 0,
         "max_tokens": MAX_TOKENS,
+        # Measured 14 Nov: with thinking on, DeepSeek spent all 1200 output tokens reasoning and returned
+        # no JSON (every detection empty); thinking off returns clean JSON in ~1.7 s and ~100 tokens.
+        "thinking": {"type": "disabled"},
+        "response_format": {"type": "json_object"},
     }).encode("utf-8")
 
     base_url = config.DEEPSEEK_BASE_URL

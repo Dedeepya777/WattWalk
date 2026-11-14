@@ -97,3 +97,22 @@ def test_deepseek_http_error(deepseek_env, monkeypatch):
         detect._call_model("deepseek/deepseek-flash", b"\xff\xd8jpeg", "prompt")
     assert exc.value.http_status == 401
     assert not exc.value.retryable
+
+
+def test_deepseek_turns_thinking_off_and_asks_for_json(deepseek_env, monkeypatch):
+    """With thinking on, DeepSeek spent the whole token budget reasoning and returned no JSON."""
+    import json as _json
+
+    seen = {}
+
+    def fake_urlopen(req, timeout):
+        seen.update(_json.loads(req.data))
+        raise RuntimeError("stop after capturing the request")
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+    try:
+        detect._call_model("deepseek/deepseek-flash", b"\xff\xd8jpeg", "Return JSON.")
+    except Exception:
+        pass
+    assert seen["thinking"] == {"type": "disabled"}
+    assert seen["response_format"] == {"type": "json_object"}
