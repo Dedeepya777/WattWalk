@@ -188,7 +188,11 @@ export function EvidenceCard() {
                 <figure className="crop-frame" key={observation.id}>
                   <div className="crop-placeholder" aria-hidden={url ? "true" : undefined}>
                     <span className="crop-box" />
-                    <span className="muted small">{observation.crop_ref}</span>
+                    <span className="muted small">
+                      {state.audit?.status.mode === "fixture"
+                        ? "Sample audit: no real photo"
+                        : observation.crop_ref}
+                    </span>
                   </div>
                   {url ? (
                     <img
@@ -197,6 +201,12 @@ export function EvidenceCard() {
                       alt={`Crop of ${labelText(asset.label)} from ${observation.pano_id} face ${observation.face}`}
                       onError={(event) => {
                         (event.currentTarget as HTMLImageElement).classList.add("broken");
+                      }}
+                      onLoad={(event) => {
+                        // Fixture audits ship 1x1 placeholder crops (no real photos in the repo):
+                        // show the labelled placeholder instead of a stretched black pixel.
+                        const img = event.currentTarget as HTMLImageElement;
+                        if (img.naturalWidth <= 2 || img.naturalHeight <= 2) img.classList.add("broken");
                       }}
                     />
                   ) : null}
