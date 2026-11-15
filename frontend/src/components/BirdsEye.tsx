@@ -1,67 +1,92 @@
-/** Bird's-eye view of the selected apartment's building (Vexcel oblique aerial), from four sides. */
+/**
+ * Bird's-eye views (Vexcel oblique aerial photos) of an apartment's building: a small thumbnail for
+ * the apartment list, and a larger viewer with the four sides.
+ */
 import { useEffect, useState } from "react";
 import { birdseyeUrl } from "../api";
-import { useAppState } from "../state";
 
 type Direction = "north" | "east" | "south" | "west";
-const SIDES: { dir: Direction; label: string; title: string }[] = [
-  { dir: "north", label: "N", title: "Looking north" },
-  { dir: "east", label: "E", title: "Looking east" },
-  { dir: "south", label: "S", title: "Looking south" },
-  { dir: "west", label: "W", title: "Looking west" },
+const SIDES: { dir: Direction; label: string }[] = [
+  { dir: "north", label: "North" },
+  { dir: "east", label: "East" },
+  { dir: "south", label: "South" },
+  { dir: "west", label: "West" },
 ];
 
-export function BirdsEye() {
-  const { selectedSid } = useAppState();
-  const [dir, setDir] = useState<Direction>("north");
-  const [status, setStatus] = useState<"loading" | "ok" | "missing">("loading");
-  const [big, setBig] = useState(false);
-  const url = birdseyeUrl(selectedSid, dir);
-
-  useEffect(() => setStatus(url ? "loading" : "missing"), [url]);
-
-  if (!url) return null;
+/** Thumbnail next to an apartment's name; a plain tile when there is no aerial photo. */
+export function BirdsEyeThumb({ sid, label, onOpen }: { sid: string; label: string; onOpen: () => void }) {
+  const url = birdseyeUrl(sid, "north");
+  const [state, setState] = useState<"loading" | "ok" | "missing">(url ? "loading" : "missing");
+  useEffect(() => setState(url ? "loading" : "missing"), [url]);
   return (
-    <section className="panel birdseye" aria-labelledby="birdseye-heading">
-      <div className="panel-heading">
-        <h2 id="birdseye-heading">Bird’s-eye</h2>
-        <div className="birdseye-sides" role="group" aria-label="Look from">
-          {SIDES.map((side) => (
-            <button
-              key={side.dir}
-              type="button"
-              className={dir === side.dir ? "active" : ""}
-              aria-pressed={dir === side.dir}
-              title={side.title}
-              onClick={() => setDir(side.dir)}
-            >
-              {side.label}
-            </button>
-          ))}
+    <button
+      type="button"
+      className={`birdseye-thumb ${state}`}
+      onClick={onOpen}
+      disabled={state === "missing"}
+      aria-label={`Bird’s-eye view of ${label}`}
+      title={state === "missing" ? "No aerial photo (needs VEXCEL_API_KEY in .env)" : "Bird’s-eye view"}
+    >
+      {url ? (
+        <img
+          src={url}
+          alt=""
+          loading="lazy"
+          onLoad={() => setState("ok")}
+          onError={() => setState("missing")}
+        />
+      ) : null}
+    </button>
+  );
+}
+
+/** Larger bird's-eye view of the building, looking from each side. */
+export function BirdsEyeViewer({ sid, label, onClose }: { sid: string; label: string; onClose: () => void }) {
+  const [dir, setDir] = useState<Direction>("north");
+  const [loading, setLoading] = useState(true);
+  const url = birdseyeUrl(sid, dir);
+
+  useEffect(() => setLoading(true), [url]);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div className="modal-backdrop" role="presentation" onClick={onClose}>
+      <div
+        className="birdseye-viewer"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Bird’s-eye view of ${label}`}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="birdseye-viewer-head">
+          <strong>{label}</strong>
+          <div className="birdseye-sides" role="group" aria-label="Look from">
+            {SIDES.map((side) => (
+              <button
+                key={side.dir}
+                type="button"
+                className={dir === side.dir ? "active" : ""}
+                aria-pressed={dir === side.dir}
+                onClick={() => setDir(side.dir)}
+              >
+                {side.label}
+              </button>
+            ))}
+          </div>
+          <button type="button" className="button" onClick={onClose} aria-label="Close">
+            ×
+          </button>
+        </div>
+        <div className={`birdseye-viewer-frame${loading ? " loading" : ""}`}>
+          <img key={url} src={url} alt={`Aerial view of ${label}, looking ${dir}`} onLoad={() => setLoading(false)} />
         </div>
       </div>
-      {status === "missing" ? (
-        <p className="birdseye-note">No aerial view for this building (needs VEXCEL_API_KEY in .env).</p>
-      ) : null}
-      <button
-        type="button"
-        className={`birdseye-frame${status === "loading" ? " loading" : ""}${status === "missing" ? " hidden" : ""}`}
-        onClick={() => setBig(true)}
-        aria-label="Open the bird’s-eye view larger"
-      >
-        <img
-          key={url}
-          src={url}
-          alt={`Aerial view of the building, looking ${dir}`}
-          onLoad={() => setStatus("ok")}
-          onError={() => setStatus("missing")}
-        />
-      </button>
-      {big ? (
-        <div className="modal-backdrop" role="presentation" onClick={() => setBig(false)}>
-          <img className="birdseye-big" src={url} alt={`Aerial view of the building, looking ${dir}`} />
-        </div>
-      ) : null}
-    </section>
+    </div>
   );
 }

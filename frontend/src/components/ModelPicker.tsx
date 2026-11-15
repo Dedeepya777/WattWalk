@@ -2,6 +2,7 @@
 import { useState } from "react";
 import type { TestModel } from "../contracts";
 import { useAppDispatch, useAppState } from "../state";
+import { BirdsEyeThumb, BirdsEyeViewer } from "./BirdsEye";
 import { FindBuilding } from "./FindBuilding";
 
 interface Props {
@@ -35,6 +36,7 @@ export function ModelPicker({
   const running = state.audit?.status.status === "running";
   const [pending, setPending] = useState<TestModel | null>(null);
   const [finding, setFinding] = useState(false);
+  const [aerial, setAerial] = useState<TestModel | null>(null);
   const currentAddress =
     state.testModels.find((model) => model.sid === state.selectedSid)?.address ??
     state.selectedSid;
@@ -72,7 +74,8 @@ export function ModelPicker({
             {state.testModels.map((model) => {
               const selected = model.sid === state.selectedSid;
               return (
-                <li key={model.sid}>
+                <li key={model.sid} className="model-item">
+                  <BirdsEyeThumb sid={model.sid} label={shortAddress(model)} onOpen={() => setAerial(model)} />
                   <button
                     type="button"
                     className={`model-row ${selected ? "selected" : ""}`}
@@ -96,6 +99,10 @@ export function ModelPicker({
           </ul>
         </>
       )}
+
+      {aerial ? (
+        <BirdsEyeViewer sid={aerial.sid} label={shortAddress(aerial)} onClose={() => setAerial(null)} />
+      ) : null}
 
       {finding ? (
         <FindBuilding

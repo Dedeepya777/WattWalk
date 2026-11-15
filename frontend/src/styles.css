@@ -3644,22 +3644,77 @@ select:disabled {
   font-weight: 700;
 }
 
-/* Bird's-eye view (components/BirdsEye.tsx) */
+/* Bird's-eye views (components/BirdsEye.tsx) */
+.model-item {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 8px;
+  align-items: stretch;
+}
+.birdseye-thumb {
+  width: 52px;
+  min-height: 52px;
+  padding: 0;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--panel-2);
+  cursor: zoom-in;
+}
+.birdseye-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.birdseye-thumb.loading {
+  background: linear-gradient(90deg, var(--panel-2), var(--sage), var(--panel-2));
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+.birdseye-thumb.loading img {
+  opacity: 0;
+}
+.birdseye-thumb.missing {
+  cursor: default;
+  background: var(--panel-2)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a3b77f' stroke-width='1.6'%3E%3Crect x='5' y='3' width='14' height='18' rx='1.5'/%3E%3Cpath d='M9 7h2M13 7h2M9 11h2M13 11h2M11 21v-4h2v4'/%3E%3C/svg%3E")
+    center / 24px no-repeat;
+}
+.birdseye-thumb.missing img {
+  display: none;
+}
+.birdseye-viewer {
+  width: min(900px, 94vw);
+  background: var(--panel);
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+}
+.birdseye-viewer-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.birdseye-viewer-head strong {
+  flex: 1;
+  font-size: 16px;
+}
 .birdseye-sides {
   display: inline-flex;
   gap: 2px;
-  padding: 2px;
+  padding: 3px;
   border-radius: 999px;
   background: var(--panel-2);
 }
 .birdseye-sides button {
-  min-width: 24px;
-  height: 22px;
+  padding: 4px 10px;
   border: 0;
   border-radius: 999px;
   background: none;
   font: inherit;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--muted);
   cursor: pointer;
@@ -3668,39 +3723,20 @@ select:disabled {
   background: var(--forest);
   color: #ffffff;
 }
-.birdseye-frame {
-  display: block;
-  width: 100%;
-  padding: 0;
-  border: 0;
+.birdseye-viewer-frame {
+  aspect-ratio: 4 / 3;
   border-radius: 12px;
   overflow: hidden;
   background: var(--panel-2);
-  aspect-ratio: 4 / 3;
-  cursor: zoom-in;
 }
-.birdseye-frame.loading {
+.birdseye-viewer-frame.loading {
   background: linear-gradient(90deg, var(--panel-2), var(--sage), var(--panel-2));
   background-size: 200% 100%;
   animation: shimmer 1.4s linear infinite;
 }
-.birdseye-frame.hidden {
-  display: none;
-}
-.birdseye-frame img {
+.birdseye-viewer-frame img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-.birdseye-note {
-  margin: 0;
-  font-size: 12px;
-  color: var(--muted);
-}
-.birdseye-big {
-  max-width: min(1000px, 92vw);
-  max-height: 86vh;
-  border-radius: 16px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
 }
