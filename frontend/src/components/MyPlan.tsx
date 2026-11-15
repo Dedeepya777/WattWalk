@@ -10,27 +10,21 @@ const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
 
 /**
  * Amazon product for each small library upgrade (the same products the cards link to). Big appliances
- * (fridge, heat pump) and AI ideas are not put in a cart.
+ * (fridge, heat pump) and AI ideas are not in the shopping list.
  */
-const CART_PRODUCTS: Record<string, string> = {
-  window_film: "B00FRLG65K", // BDF S2 Window Film Heat Control, one per window
-  led: "B0CVBMQC5R", // Philips Ultra Efficient LED A19, one per light fixture
-  smart_thermostat: "B08HRPDYTP", // Google Nest Thermostat, one per apartment
+const SHOP_PRODUCTS: Record<string, { name: string; asin: string; per: string }> = {
+  window_film: { name: "BDF S2 window film", asin: "B00FRLG65K", per: "window" },
+  led: { name: "Philips LED A19 bulb", asin: "B0CVBMQC5R", per: "fixture" },
+  smart_thermostat: { name: "Google Nest Thermostat", asin: "B08HRPDYTP", per: "apartment" },
 };
 
-/** Amazon's add-to-cart link for several products at once (opens a page to confirm the items). */
-function cartLink(picks: Pick[]): { url: string; items: number } | null {
+/** One line per product with how many to buy (one per item it was picked for). */
+function shoppingList(picks: Pick[]) {
   const counts = new Map<string, number>();
   for (const pick of picks) {
-    const asin = CART_PRODUCTS[pick.upgradeId];
-    if (asin) counts.set(asin, (counts.get(asin) ?? 0) + (pick.units ?? 1));
+    if (SHOP_PRODUCTS[pick.upgradeId]) counts.set(pick.upgradeId, (counts.get(pick.upgradeId) ?? 0) + (pick.units ?? 1));
   }
-  if (counts.size === 0) return null;
-  const params = [...counts.entries()].flatMap(([asin, quantity], i) => [
-    `ASIN.${i + 1}=${asin}`,
-    `Quantity.${i + 1}=${Math.min(quantity, 999)}`,
-  ]);
-  return { url: `https://www.amazon.com/gp/aws/cart/add.html?${params.join("&")}`, items: [...counts.values()].reduce((a, b) => a + b, 0) };
+  return [...counts.entries()].map(([id, quantity]) => ({ ...SHOP_PRODUCTS[id], quantity }));
 }
 
 interface Line {
@@ -85,7 +79,7 @@ export function MyPlan({ onClose }: { onClose: () => void }) {
   const picks = lines.flatMap((line) => line.assetIds.map((id) => state.picks[line.sid][id]));
   const times = (pick: Pick) => pick.units ?? 1; // a building-wide pick counts for every unit
   const saves = picks.reduce((sum, pick) => sum + pick.saves * times(pick), 0);
-  const cart = cartLink(picks);
+  const shopping = shoppingList(picks);
   const cost = picks.reduce((sum, pick) => sum + pick.cost * times(pick), 0);
   // Heat the picked items add to the rooms, before and after (only picks that know their heat).
   const heatBefore = picks.reduce((sum, pick) => sum + (pick.heatBefore ?? 0) * times(pick), 0);
@@ -116,17 +110,6 @@ export function MyPlan({ onClose }: { onClose: () => void }) {
         <div className="my-plan-top">
           <span className="my-plan-place">Your plan</span>
           <div className="my-plan-actions">
-            {cart ? (
-              <a
-                className="button pm-cart"
-                href={cart.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Window film, LED bulbs and thermostats in your plan, with their quantities"
-              >
-                Add all to Amazon cart ↗
-              </a>
-            ) : null}
             <button type="button" className="button primary" onClick={() => window.print()}>
               Download PDF
             </button>
@@ -196,6 +179,24 @@ export function MyPlan({ onClose }: { onClose: () => void }) {
             </ul>
           </section>
         ))}
+
+        {shopping.length ? (
+          <section className="pm-shop" aria-label="Shopping list">
+            <h3>Shopping list</h3>
+            <ul>
+              {shopping.map((item) => (
+                <li key={item.asin}>
+                  <span>
+                    {item.name} <span className="pm-qty">× {item.quantity}</span>
+                  </span>
+                  <a href={`https://www.amazon.com/dp/${item.asin}`} target="_blank" rel="noopener noreferrer">
+                    Buy on Amazon ↗
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
       </div>
     </div>
   );
