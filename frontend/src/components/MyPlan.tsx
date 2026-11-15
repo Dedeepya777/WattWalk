@@ -44,6 +44,14 @@ export function MyPlan({ onClose }: { onClose: () => void }) {
   const lines = ordered.flatMap((g) => g.lines);
   const saves = lines.reduce((sum, l) => sum + l.pick.saves, 0);
   const cost = lines.reduce((sum, l) => sum + l.pick.cost, 0);
+  // Heat the picked items add to the rooms, before and after (only picks that know their heat).
+  const heatBefore = lines.reduce((sum, l) => sum + (l.pick.heatBefore ?? 0), 0);
+  const heatAfter = lines.reduce((sum, l) => sum + (l.pick.heatAfter ?? l.pick.heatBefore ?? 0), 0);
+  const heatCut = heatBefore > 0 ? Math.round(((heatBefore - heatAfter) / heatBefore) * 100) : 0;
+  const lineCut = (pick: Pick) =>
+    pick.heatBefore && pick.heatAfter !== undefined
+      ? Math.round(((pick.heatBefore - pick.heatAfter) / pick.heatBefore) * 100)
+      : 0;
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -82,7 +90,13 @@ export function MyPlan({ onClose }: { onClose: () => void }) {
           <h2 id="my-plan-title">
             Save <span>{money(saves)}</span> a year
           </h2>
-          {cost > 0 ? <p>about {money(cost)} to install</p> : null}
+          {cost > 0 || heatCut > 0 ? (
+            <p>
+              {[cost > 0 ? `about ${money(cost)} to install` : null, heatCut > 0 ? `${heatCut}% less heat` : null]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          ) : null}
         </header>
 
         {ordered.map((group) => (
@@ -97,7 +111,9 @@ export function MyPlan({ onClose }: { onClose: () => void }) {
                   <div>
                     <span className="pm-title">{line.pick.title}</span>
                     <span className="pm-where">
-                      {[line.unit, line.pick.item, line.pick.room].filter(Boolean).join(" · ")}
+                      {[line.unit, line.pick.item, line.pick.room, lineCut(line.pick) > 0 ? `${lineCut(line.pick)}% less heat` : null]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </span>
                   </div>
                   <span className="pm-save">+{money(line.pick.saves)}</span>

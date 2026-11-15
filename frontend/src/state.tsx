@@ -83,6 +83,9 @@ export interface Pick {
   cost: number;
   item: string;
   room: string;
+  /** Heat the item adds to the room per year, before and after the upgrade (kWh, midpoints). */
+  heatBefore?: number;
+  heatAfter?: number;
 }
 
 /** Picks per apartment (sid) and item (asset id). */

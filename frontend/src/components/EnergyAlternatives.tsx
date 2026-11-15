@@ -9,6 +9,7 @@ import type { AiAlternativesResponse, AssetEnergy, EnergyAlternative } from "../
 import { formatRange, labelText } from "../format";
 import { useAppDispatch, useAppState } from "../state";
 import { REMOVES_HEAT, buildScale, gradient, position, toHex, type EnergyScale } from "../viewer/energyColor";
+import { heatChange, heatCutPercent } from "../viewer/afterUpgrades";
 
 /** "4–6 months" under a year, else "1.5–2.8 years". */
 export function formatPayback(range: [number, number] | null): string {
@@ -153,6 +154,8 @@ function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEn
   const picked = state.chosenUpgrades[row.asset_id] === alt.upgrade_id;
   const room = state.audit?.rooms.find((r) => r.id === row.room_id)?.label ?? "";
   const midpoint = (r: [number, number]) => (r[0] + r[1]) / 2;
+  const heat = heatChange(row, alt);
+  const heatCut = heatCutPercent(heat);
   const toggle = () =>
     dispatch({
       type: "chooseUpgrade",
@@ -167,6 +170,8 @@ function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEn
             cost: midpoint(alt.cost_usd),
             item: labelText(row.label),
             room,
+            heatBefore: heat?.before,
+            heatAfter: heat?.after,
           },
     });
   const free = alt.cost_usd[1] <= 0;
@@ -195,7 +200,11 @@ function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEn
           Save ${Math.round((alt.saves_usd_yr[0] + alt.saves_usd_yr[1]) / 2).toLocaleString()}
           <span className="pop-unit">/yr</span>
         </div>
-        {free ? <div className="pop-sub">Free</div> : null}
+        {free || heatCut > 0 ? (
+          <div className="pop-sub">
+            {[free ? "Free" : null, heatCut > 0 ? `${heatCut}% less heat` : null].filter(Boolean).join(" · ")}
+          </div>
+        ) : null}
         {alt.products?.[0] ? (
           <a
             className="pop-buy"

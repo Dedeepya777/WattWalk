@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { AiAlternativesResponse, AssetEnergy, EnergyAlternative } from "../contracts";
-import { afterRow, afterTotals, chosenAlternative } from "./afterUpgrades";
+import { afterRow, afterTotals, chosenAlternative, heatChange, heatCutPercent } from "./afterUpgrades";
 
 function alt(id: string, saves: [number, number], extra: Partial<EnergyAlternative> = {}): EnergyAlternative {
   return {
@@ -41,5 +41,14 @@ describe("after upgrades", () => {
     const fan = { ...window, asset_id: "f1" };
     expect(afterTotals([window, fan], {}, {})).toEqual({ usd: 0, heat: 0, cost: 0, upgraded: 0 });
     expect(afterTotals([window, fan], {}, { w1: "window_film" })).toEqual({ usd: 9, heat: 60, cost: 15, upgraded: 1 });
+  });
+
+  it("works out how much less heat an upgrade lets into the room", () => {
+    const change = heatChange(window, film);
+    expect(change).toEqual({ before: 200, after: 140 });
+    expect(heatCutPercent(change)).toBe(30);
+    const ac = { ...window, heat_kwh_yr: [-500, -400] as [number, number] };
+    expect(heatChange(ac, film)).toBeNull();
+    expect(heatCutPercent(null)).toBe(0);
   });
 });
