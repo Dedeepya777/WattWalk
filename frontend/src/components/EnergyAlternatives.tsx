@@ -4,11 +4,13 @@
  * "Compare alternatives" button. Plain on purpose: the expanding animation and the glows come later.
  */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { fileUrl, postResearchAlternatives } from "../api";
+import { fileUrl, getAssetEnergy, getAudit, postResearchAlternatives } from "../api";
+import { FIXTURE_SID } from "../fixtures";
 import type { AiAlternativesResponse, AssetEnergy, EnergyAlternative } from "../contracts";
 import { formatRange, labelText } from "../format";
 import { useAppDispatch, useAppState } from "../state";
 import { REMOVES_HEAT, buildScale, gradient, position, toHex, type EnergyScale } from "../viewer/energyColor";
+import { heatChange, heatCutPercent } from "../viewer/afterUpgrades";
 
 /** "4–6 months" under a year, else "1.5–2.8 years". */
 export function formatPayback(range: [number, number] | null): string {
@@ -122,7 +124,6 @@ function NowRow({ row, scale }: { row: AssetEnergy; scale: EnergyScale | null })
 /** Pop-out: today's cost as the one big number, heat as a short line under it. */
 function PopNow({ row, scale }: { row: AssetEnergy; scale: EnergyScale | null }) {
   const heat = mid(row.heat_kwh_yr);
-  const cools = row.heat_kwh_yr !== null && row.heat_kwh_yr[0] < 0;
   return (
     <section className="energy-alt-now pop-row pop-now">
       <div>
@@ -134,24 +135,111 @@ function PopNow({ row, scale }: { row: AssetEnergy; scale: EnergyScale | null })
           {formatRange(row.usd_yr, "", true)}
           <span className="pop-unit">/yr</span>
         </div>
-        <div className="pop-sub">
-          {row.heat_kwh_yr ? `${heatText(row.heat_kwh_yr)}${cools ? "" : " of heat"} a year` : ""}
-        </div>
       </div>
     </section>
   );
 }
 
 /** Pop-out: the upgrade, what it saves (big), and cost and payback in one line. */
+/** Options worth showing in the card: they save at least $2 a year and pay back within 15 years. */
+export function worthShowing(alt: EnergyAlternative): boolean {
+  const saves = (alt.saves_usd_yr[0] + alt.saves_usd_yr[1]) / 2;
+  const payback = alt.payback_years ? (alt.payback_years[0] + alt.payback_years[1]) / 2 : 0;
+  return saves >= 2 && payback <= 15;
+}
+
+
+/** The item's heat as a short bar: the part the upgrade cuts turns cool, with the % in bold. */
+function HeatShift({ before, after, label }: { before: number; after: number; label: string }) {
+  const kept = Math.max(0, Math.min(1, after / Math.max(before, 1)));
+  const cut = Math.round((1 - kept) * 100);
+  return (
+    <div className="heat-shift" role="img" aria-label={label} title={label}>
+      <span className="heat-shift-bar" aria-hidden="true">
+        <span className="heat-shift-kept" style={{ width: `${kept * 100}%` }} />
+        <span className="heat-shift-cut" style={{ width: `${(1 - kept) * 100}%` }} />
+      </span>
+      <span className="heat-shift-pct">{cut}% less heat</span>
+    </div>
+  );
+}
+
 function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEnergy; ai?: boolean }) {
   const dispatch = useAppDispatch();
-  const picked = useAppState().chosenUpgrades[row.asset_id] === alt.upgrade_id;
+  const state = useAppState();
+  const picked = state.chosenUpgrades[row.asset_id] === alt.upgrade_id;
+  const spread = picked && Boolean(state.picks[state.selectedSid]?.[row.asset_id]?.spread);
+  const copies = picked
+    ? Object.values(state.picks).flatMap((items) => Object.values(items)).filter((p) => p.via === `${state.selectedSid}:${row.asset_id}`).length
+    : 0;
+  const [spreading, setSpreading] = useState(false);
+  const [noneElsewhere, setNoneElsewhere] = useState(false);
+  // Only library upgrades exist in every apartment's options; AI ideas belong to one item.
+  const canSpread = picked && !ai && state.testModels.length > 1;
+
+  // Find the same kind of item with the same upgrade in the landlord's other audited apartments.
+  const spreadEverywhere = async () => {
+    setSpreading(true);
+    setNoneElsewhere(false);
+    const others = state.testModels.filter((m) => m.sid !== state.selectedSid && m.sid !== FIXTURE_SID);
+    const found = await Promise.all(
+      others.map(async (model) => {
+        try {
+          const [energy, audit] = await Promise.all([getAssetEnergy(model.sid), getAudit(model.sid)]);
+          const rooms = new Map(audit.rooms.map((r) => [r.id, r.label]));
+          return energy.assets.flatMap((other) => {
+            if (other.label !== row.label) return [];
+            const match = other.alternatives.find((a) => a.upgrade_id === alt.upgrade_id);
+            if (!match) return [];
+            const change = heatChange(other, match);
+            return [{
+              sid: model.sid,
+              assetId: other.asset_id,
+              pick: {
+                upgradeId: match.upgrade_id,
+                title: match.title,
+                saves: midpoint(match.saves_usd_yr),
+                cost: midpoint(match.cost_usd),
+                item: labelText(other.label),
+                room: rooms.get(other.room_id ?? "") ?? "",
+                heatBefore: change?.before,
+                heatAfter: change?.after,
+              },
+            }];
+          });
+        } catch {
+          return []; // not audited yet, or not reachable: skipped
+        }
+      }),
+    );
+    const list = found.flat();
+    if (list.length) dispatch({ type: "spreadPick", assetId: row.asset_id, copies: list });
+    else setNoneElsewhere(true);
+    setSpreading(false);
+  };
+  const room = state.audit?.rooms.find((r) => r.id === row.room_id)?.label ?? "";
+  const midpoint = (r: [number, number]) => (r[0] + r[1]) / 2;
+  const heat = heatChange(row, alt);
+  const heatCut = heatCutPercent(heat);
   const toggle = () =>
-    dispatch({ type: "chooseUpgrade", assetId: row.asset_id, upgradeId: picked ? null : alt.upgrade_id });
+    dispatch({
+      type: "chooseUpgrade",
+      assetId: row.asset_id,
+      upgradeId: picked ? null : alt.upgrade_id,
+      pick: picked
+        ? undefined
+        : {
+            upgradeId: alt.upgrade_id,
+            title: alt.title,
+            saves: midpoint(alt.saves_usd_yr),
+            cost: midpoint(alt.cost_usd),
+            item: labelText(row.label),
+            room,
+            heatBefore: heat?.before,
+            heatAfter: heat?.after,
+          },
+    });
   const free = alt.cost_usd[1] <= 0;
-  const today = mid(row.kwh_yr);
-  const saved = mid(alt.saves_kwh_yr);
-  const cut = today && saved !== null && today > 0 ? Math.round(Math.min(1, saved / today) * 100) : null;
   return (
     <li
       className={`energy-alt-option energy-alt-with-glow pop-row pop-pickable${picked ? " pop-picked" : ""}`}
@@ -171,40 +259,50 @@ function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEn
       <div>
         <div className="pop-title">
           {alt.title}
-          {ai ? <span className="pop-ai-tag" title={alt.basis}>estimate</span> : null}
+          {ai ? <span className="pop-ai-mark" title={`AI estimate. ${alt.basis}`} aria-label="AI estimate">✦</span> : null}
         </div>
         <div className="pop-save">
-          Save {formatRange(alt.saves_usd_yr, "", true)}
+          Save ${Math.round((alt.saves_usd_yr[0] + alt.saves_usd_yr[1]) / 2).toLocaleString()}
           <span className="pop-unit">/yr</span>
         </div>
-        <div className="pop-sub">
-          {free ? "Free, just a habit change" : `${formatRange(alt.cost_usd, "", true)} · pays back in ${formatPayback(alt.payback_years)}`}
-          {cut !== null && cut > 0 ? ` · uses ${cut}% less energy` : ""}
-        </div>
-        {alt.products?.length ? (
-          <ul className="pop-products" aria-label={`Products for ${alt.title}`}>
-            {alt.products.map((product) => (
-              <li key={product.name}>
-                <a
-                  href={product.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={`${product.name}${product.why ? `: ${product.why}` : ""}. Opens on Amazon (the price there is the real one).`}
-                  // Opening a product must not pick or unpick the upgrade.
-                  onClick={(event) => event.stopPropagation()}
-                  onKeyDown={(event) => event.stopPropagation()}
-                >
-                  <span className="pop-product-name">
-                    <span className="pop-product-shop">Shop</span> {product.name}
-                  </span>
-                  {product.approx_price_usd ? (
-                    <span className="pop-product-price">~${Math.round(product.approx_price_usd).toLocaleString()}</span>
-                  ) : null}
-                  <span className="pop-product-go" aria-hidden="true">↗</span>
-                </a>
-              </li>
-            ))}
-          </ul>
+        {heat && heatCut > 0 ? <HeatShift before={heat.before} after={heat.after} label={`${heatCut}% less heat`} /> : null}
+        {free ? <div className="pop-sub">Free</div> : null}
+        {alt.products?.[0] ? (
+          <a
+            className="pop-buy"
+            href={alt.products[0].url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={alt.products[0].name}
+            // Opening a product must not pick or unpick the upgrade.
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") event.stopPropagation(); }}
+          >
+            Buy on Amazon <span aria-hidden="true">↗</span>
+          </a>
+        ) : null}
+        {canSpread ? (
+          <button
+            type="button"
+            className={`pop-scope${spread ? " on" : ""}`}
+            aria-pressed={spread}
+            disabled={spreading}
+            onClick={(event) => {
+              event.stopPropagation();
+              if (spread) dispatch({ type: "unspreadPick", assetId: row.asset_id });
+              else void spreadEverywhere();
+            }}
+            onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") event.stopPropagation(); }}
+          >
+            <span className="pop-scope-box" aria-hidden="true">{spread ? "✓" : ""}</span>
+            {spreading
+              ? "Finding the same item in your apartments…"
+              : spread
+                ? `Also on ${copies} more ${labelText(row.label).toLowerCase()}${copies === 1 ? "" : "s"} in your apartments`
+                : noneElsewhere
+                  ? `No other ${labelText(row.label).toLowerCase()}s like this in your audited apartments`
+                  : `Apply to all ${labelText(row.label).toLowerCase()}s in your audited apartments`}
+          </button>
         ) : null}
       </div>
     </li>
@@ -237,7 +335,6 @@ function PopPhoto({ assetId }: { assetId: string }) {
           if (img.naturalWidth <= 2 || img.naturalHeight <= 2) setHidden(true);
         }}
       />
-      {ids.size > 1 ? <figcaption>Seen {ids.size} times</figcaption> : null}
     </figure>
   );
 }
@@ -303,17 +400,17 @@ function PopAiAlternatives({ sid, row }: { sid: string; row: AssetEnergy }) {
       {data.today_usd_yr ? (
         <p className="pop-ai-today">
           Today, roughly <strong>{formatRange(data.today_usd_yr, "", true)}/yr</strong>
-          <span className="pop-ai-tag">estimate</span>
+          <span className="pop-ai-mark" title="AI estimate" aria-label="AI estimate">✦</span>
         </p>
       ) : null}
-      {data.alternatives.length ? (
+      {data.alternatives.some(worthShowing) ? (
         <ul className="energy-alt-list">
-          {data.alternatives.map((alt) => (
+          {data.alternatives.filter(worthShowing).map((alt) => (
             <PopAlt key={alt.upgrade_id} alt={alt} row={base} ai />
           ))}
         </ul>
       ) : (
-        <p className="empty">{data.note}</p>
+        <p className="empty">{data.alternatives.length ? "No other upgrade here is worth it." : data.note}</p>
       )}
       <button className="pop-link" onClick={() => void find(true)}>
         Look again
@@ -392,32 +489,47 @@ export function EnergyAlternatives() {
   const cardRef = useRef<HTMLDivElement | null>(null);
   const [place, setPlace] = useState<{ left: number; top: number; ox: number; oy: number; h: number } | null>(null);
 
-  // Pop-out mode (opened from a 3D pin or glow): measure before the first paint, sit beside the clicked
-  // point (right of it, or left if there is no room), stay on screen, and grow out of that point.
+  // Pop-out mode (opened from a 3D pin or glow): measure before the first paint and sit beside the clicked
+  // item (left of it on the right half of the screen, right of it otherwise), centred on it vertically and
+  // always fully on screen.
   useLayoutEffect(() => {
     if (!assetId || !origin || !cardRef.current) {
       setPlace(null);
       return;
     }
-    const cardRect = cardRef.current.getBoundingClientRect();
-    const h = cardRect.height;
+    const h = cardRef.current.getBoundingClientRect().height;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    // Put the card's "Today" glow exactly on the pressed button, so the button becomes that glow and the
-    // card grows out around it. Clamp to the screen (the reveal still starts at the button).
-    const todayGlow = cardRef.current.querySelector(".energy-alt-now .energy-alt-glow-box");
-    let gx = 46;
-    let gy = 110;
-    if (todayGlow) {
-      const g = todayGlow.getBoundingClientRect();
-      gx = g.left - cardRect.left + g.width / 2;
-      gy = g.top - cardRect.top + g.height / 2;
-    }
-    const left = Math.max(POP_MARGIN, Math.min(origin.x - gx, vw - POP_WIDTH - POP_MARGIN));
-    const top = Math.max(POP_MARGIN, Math.min(origin.y - gy, vh - h - POP_MARGIN));
-    const ox = origin.x - left;
-    const oy = origin.y - top;
-    setPlace({ left, top, ox, oy, h });
+    const gap = 28;
+    const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(v, Math.max(lo, hi)));
+    const side = origin.x > vw / 2 ? origin.x - gap - POP_WIDTH : origin.x + gap;
+    const left = clamp(side, POP_MARGIN, vw - POP_WIDTH - POP_MARGIN);
+    const top = clamp(origin.y - h / 2, POP_MARGIN, vh - h - POP_MARGIN);
+    setPlace({ left, top, ox: origin.x - left, oy: origin.y - top, h });
+  }, [assetId, origin]);
+
+  // The card grows after it opens (photo, more options): slide it back so it stays fully on screen.
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card || !origin) return undefined;
+    const keepInView = () => {
+      const h = card.getBoundingClientRect().height;
+      const vh = window.innerHeight;
+      const vw = window.innerWidth;
+      setPlace((current) => {
+        if (!current) return current;
+        const top = Math.max(POP_MARGIN, Math.min(current.top, Math.max(POP_MARGIN, vh - h - POP_MARGIN)));
+        const left = Math.max(POP_MARGIN, Math.min(current.left, Math.max(POP_MARGIN, vw - POP_WIDTH - POP_MARGIN)));
+        return top === current.top && left === current.left && h === current.h ? current : { ...current, top, left, h };
+      });
+    };
+    const observer = new ResizeObserver(keepInView);
+    observer.observe(card);
+    window.addEventListener("resize", keepInView);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", keepInView);
+    };
   }, [assetId, origin]);
 
   useEffect(() => {
@@ -506,7 +618,7 @@ export function EnergyAlternatives() {
           </p>
         ) : (
           <ul className="energy-alt-list">
-            {row.alternatives.map((alt, index) =>
+            {row.alternatives.filter((alt) => !popout || worthShowing(alt)).map((alt, index) =>
               popout ? (
                 <PopAlt key={alt.upgrade_id} alt={alt} row={row} />
               ) : (
@@ -516,17 +628,7 @@ export function EnergyAlternatives() {
           </ul>
         )}
         {popout && state.selectedSid ? <PopAiAlternatives sid={state.selectedSid} row={row} /> : null}
-        {popout ? (
-          <button
-            className="pop-link"
-            onClick={() => {
-              dispatch({ type: "focusEnergy", assetId: null });
-              dispatch({ type: "selectAsset", assetId: row.asset_id });
-            }}
-          >
-            See photos and details →
-          </button>
-        ) : (
+        {popout ? null : (
           <p className="muted small">
             Ranges come from the same assumptions as the upgrade plan. Upgrade costs are installed cost
             ranges from the plan's upgrade library.

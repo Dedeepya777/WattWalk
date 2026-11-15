@@ -17,14 +17,6 @@ interface Props {
   otherRunSid?: string | null;
 }
 
-const STATUS_TEXT: Record<string, string> = {
-  idle: "Not started",
-  running: "Running",
-  completed: "Done",
-  failed: "Failed",
-  cancelled: "Stopped",
-};
-
 const INTEGRATION_LABEL: Record<string, string> = {
   costar_kit: "CoStar",
   ebewe: "EBEWE",
@@ -42,7 +34,7 @@ export function StartControls({
   const running = state.audit?.status.status === "running";
   const [mode, setMode] = useState<Mode>(isFixtureMode ? "fixture" : "live");
   const [busy, setBusy] = useState<null | "start" | "cancel" | "reset">(null);
-  const [showOptions, setShowOptions] = useState(false);
+  const showOptions = false; // the source, Enable live and Reset menu is not shown (kept for later)
   const [liveFailed, setLiveFailed] = useState(false);
   const [probe, setProbe] = useState<Health | null>(null);
   const [probing, setProbing] = useState(false);
@@ -163,18 +155,7 @@ export function StartControls({
   return (
     <section className="audit-bar" aria-label={`Audit of ${title}${subtitle ? `, ${subtitle}` : ""}`}>
       <div className="audit-bar-row">
-        <span className={`status-dot status-${status}`}>{STATUS_TEXT[status] ?? status}</span>
         <div className="audit-bar-actions">
-      {!running ? (
-        <button
-          type="button"
-          className="audit-link audit-options-toggle"
-          aria-expanded={showOptions}
-          onClick={() => setShowOptions((open) => !open)}
-        >
-          Options
-        </button>
-      ) : null}
       {running ? (
         <button
           className="button audit-main"

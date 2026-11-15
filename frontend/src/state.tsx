@@ -54,6 +54,8 @@ export interface AppState {
   aiAlternatives: Record<string, AiAlternativesResponse>;
   /** Upgrade the user picked for each asset in its card (one per asset), by asset id. */
   chosenUpgrades: Record<string, string>;
+  /** Every pick, per apartment; chosenUpgrades is the selected apartment's share of it. */
+  picks: Picks;
   openQuestion: Question | null;
   health: Health | null;
   healthError: string | null;
@@ -72,6 +74,65 @@ export interface AppState {
   fixtureNotice: string | null;
 }
 
+/** An upgrade picked for one item of one apartment, kept with what the plan needs to show it. */
+export interface Pick {
+  upgradeId: string;
+  title: string;
+  /** Yearly saving and install cost (midpoints, USD). */
+  saves: number;
+  cost: number;
+  item: string;
+  room: string;
+  /** Heat the item adds to the room per year, before and after the upgrade (kWh, midpoints). */
+  heatBefore?: number;
+  heatAfter?: number;
+  /** Applied to every unit of the building: how many units it counts for (unset = this unit only). */
+  units?: number;
+  /** Copied from another apartment's pick ("sid:assetId" of that pick) by Apply to all. */
+  via?: string;
+  /** This pick was applied to the same items in the landlord's other audited apartments. */
+  spread?: boolean;
+}
+
+/** Picks per apartment (sid) and item (asset id). */
+export type Picks = Record<string, Record<string, Pick>>;
+
+const PICKS_KEY = "wattwalk.picks.v1";
+
+function loadPicks(): Picks {
+  try {
+    const raw = window.localStorage.getItem(PICKS_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return parsed && typeof parsed === "object" ? (parsed as Picks) : {};
+  } catch {
+    return {};
+  }
+}
+
+/** Remember the picks in this browser (they survive reloads). */
+export function savePicks(picks: Picks): void {
+  try {
+    window.localStorage.setItem(PICKS_KEY, JSON.stringify(picks));
+  } catch {
+    // private mode or storage blocked: picks last for this session only
+  }
+}
+
+/** Picks without the copies made from one pick ("sid:assetId"), and that pick no longer marked as spread. */
+function dropCopies(state: { picks: Picks; selectedSid: string }, key: string, sid: string, assetId: string) {
+  const picks: Picks = {};
+  for (const [unitSid, items] of Object.entries(state.picks)) {
+    const kept = Object.fromEntries(Object.entries(items).filter(([, pick]) => pick.via !== key));
+    if (unitSid === sid && kept[assetId]) kept[assetId] = { ...kept[assetId], spread: false };
+    if (Object.keys(kept).length) picks[unitSid] = kept;
+  }
+  return { picks, chosenUpgrades: chosenFor(picks, state.selectedSid) };
+}
+
+function chosenFor(picks: Picks, sid: string): Record<string, string> {
+  return Object.fromEntries(Object.entries(picks[sid] ?? {}).map(([assetId, pick]) => [assetId, pick.upgradeId]));
+}
+
 export const initialState: AppState = {
   selectedSid: FIXTURE_SID,
   audit: null,
@@ -87,6 +148,7 @@ export const initialState: AppState = {
   focusOrigin: null,
   aiAlternatives: {},
   chosenUpgrades: {},
+  picks: typeof window === "undefined" ? {} : loadPicks(),
   openQuestion: null,
   health: null,
   healthError: null,
@@ -113,7 +175,11 @@ export type Action =
   | { type: "energy"; energy: AssetEnergyResponse | null }
   | { type: "pinColor"; mode: PinColorMode }
   | { type: "aiAlternatives"; data: AiAlternativesResponse }
-  | { type: "chooseUpgrade"; assetId: string; upgradeId: string | null }
+  | { type: "chooseUpgrade"; assetId: string; upgradeId: string | null; pick?: Pick }
+  | { type: "removePick"; sid: string; assetId: string }
+  | { type: "pickScope"; assetId: string; units: number | null }
+  | { type: "spreadPick"; assetId: string; copies: { sid: string; assetId: string; pick: Pick }[] }
+  | { type: "unspreadPick"; assetId: string }
   | { type: "buildingView"; key: string | null }
   | { type: "focusEnergy"; assetId: string | null; origin?: { x: number; y: number; r?: number; color?: string } | null }
   | { type: "planRequest"; request: PlanRequest }
@@ -145,6 +211,7 @@ export function reducer(state: AppState, action: Action): AppState {
         ...state,
         buildingView: null,
         selectedSid: action.sid,
+        chosenUpgrades: chosenFor(state.picks, action.sid),
         audit: null,
         energy: null,
         auditError: null,
@@ -156,7 +223,6 @@ export function reducer(state: AppState, action: Action): AppState {
         focusAssetId: null,
         focusOrigin: null,
         aiAlternatives: {},
-        chosenUpgrades: {},
         openQuestion: null,
         correctionDiff: [],
         correctionError: null,
@@ -201,10 +267,50 @@ export function reducer(state: AppState, action: Action): AppState {
     case "buildingView":
       return { ...state, buildingView: action.key };
     case "chooseUpgrade": {
-      const chosen = { ...state.chosenUpgrades };
-      if (action.upgradeId) chosen[action.assetId] = action.upgradeId;
-      else delete chosen[action.assetId];
-      return { ...state, chosenUpgrades: chosen };
+      // One pick per item, kept with its apartment so switching apartments never loses or mixes picks.
+      const sid = state.selectedSid;
+      const base = state.picks[sid]?.[action.assetId]?.spread
+        ? dropCopies(state, `${sid}:${action.assetId}`, sid, action.assetId).picks
+        : state.picks;
+      const unit = { ...(base[sid] ?? {}) };
+      if (action.upgradeId && action.pick) unit[action.assetId] = action.pick;
+      else delete unit[action.assetId];
+      const picks = { ...base, [sid]: unit };
+      if (Object.keys(unit).length === 0) delete picks[sid];
+      return { ...state, picks, chosenUpgrades: chosenFor(picks, sid) };
+    }
+    case "pickScope": {
+      const sid = state.selectedSid;
+      const pick = state.picks[sid]?.[action.assetId];
+      if (!pick) return state;
+      const updated = { ...pick, units: action.units ?? undefined };
+      return { ...state, picks: { ...state.picks, [sid]: { ...state.picks[sid], [action.assetId]: updated } } };
+    }
+    case "spreadPick": {
+      // Apply this apartment's pick to the same items in the landlord's other audited apartments; an item
+      // that already has its own pick keeps it.
+      const sid = state.selectedSid;
+      const source = state.picks[sid]?.[action.assetId];
+      if (!source) return state;
+      const key = `${sid}:${action.assetId}`;
+      const picks: Picks = { ...state.picks, [sid]: { ...state.picks[sid], [action.assetId]: { ...source, spread: true } } };
+      for (const copy of action.copies) {
+        const unit = { ...(picks[copy.sid] ?? {}) };
+        if (!unit[copy.assetId]) unit[copy.assetId] = { ...copy.pick, via: key };
+        picks[copy.sid] = unit;
+      }
+      return { ...state, picks, chosenUpgrades: chosenFor(picks, sid) };
+    }
+    case "unspreadPick": {
+      const sid = state.selectedSid;
+      return { ...state, ...dropCopies(state, `${sid}:${action.assetId}`, sid, action.assetId) };
+    }
+    case "removePick": {
+      const unit = { ...(state.picks[action.sid] ?? {}) };
+      delete unit[action.assetId];
+      const picks = { ...state.picks, [action.sid]: unit };
+      if (Object.keys(unit).length === 0) delete picks[action.sid];
+      return { ...state, picks, chosenUpgrades: chosenFor(picks, state.selectedSid) };
     }
     case "aiAlternatives":
       return { ...state, aiAlternatives: { ...state.aiAlternatives, [action.data.asset_id]: action.data } };
@@ -277,7 +383,7 @@ export function reducer(state: AppState, action: Action): AppState {
         focusAssetId: null,
         focusOrigin: null,
         aiAlternatives: {},
-        chosenUpgrades: {},
+        chosenUpgrades: chosenFor(state.picks, state.selectedSid),
         openQuestion: null,
         correctionDiff: [],
         correctionError: null,

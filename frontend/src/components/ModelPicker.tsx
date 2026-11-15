@@ -1,6 +1,7 @@
 /** Model picker (plan 11.3). Five configured test models from GET /models/test. */
 import { useState } from "react";
 import type { TestModel } from "../contracts";
+import { isFixtureMode } from "../api";
 import { FIXTURE_SID } from "../fixtures";
 import { useAppDispatch, useAppState } from "../state";
 import { BirdsEyeThumb, BirdsEyeViewer } from "./BirdsEye";
@@ -34,6 +35,8 @@ export interface BuildingGroup {
 export function groupModels(models: TestModel[]): BuildingGroup[] {
   const groups = new Map<string, BuildingGroup>();
   for (const model of models) {
+    // The illustrative example apartment is only for offline (fixture) mode; real buildings only otherwise.
+    if (model.sid === FIXTURE_SID && !isFixtureMode) continue;
     const street = model.address.split(",")[0].trim();
     const key = street.toLowerCase();
     if (!groups.has(key)) groups.set(key, { key, street, models: [] });

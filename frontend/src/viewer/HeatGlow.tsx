@@ -11,7 +11,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Asset, AssetEnergy, Pano } from "../contracts";
-import { formatRange, labelText } from "../format";
+import { labelText } from "../format";
 import { useAppDispatch, useAppState } from "../state";
 import { pinColor, position, toHex, type EnergyScale } from "./energyColor";
 import type { MpSdk } from "./sdkAdapter";
@@ -96,11 +96,10 @@ function forward(rotation: { x: number; y: number }) {
   return { x: -Math.sin(ry) * Math.cos(rx), y: Math.sin(rx), z: -Math.cos(ry) * Math.cos(rx) };
 }
 
-function glowLabel(row: AssetEnergy, scale: EnergyScale): string {
-  if (scale.mode === "cost") return row.usd_yr ? `${formatRange(row.usd_yr, "", true)}/yr` : "";
-  if (row.heat_kwh_yr && row.heat_kwh_yr[0] < 0) return "removes heat";
-  if (row.power_w) return formatRange(row.power_w, "W");
-  return row.heat_kwh_yr ? `${formatRange(row.heat_kwh_yr, "kWh")}/yr` : "";
+/** The glow's colour shows heat; its label shows what the item costs a year, the number people act on. */
+function glowLabel(row: AssetEnergy): string {
+  if (!row.usd_yr) return "";
+  return `$${Math.round((row.usd_yr[0] + row.usd_yr[1]) / 2).toLocaleString()}/yr`;
 }
 
 export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, upgraded, scale, onCount }: Props) {
@@ -133,7 +132,7 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, upgrad
         world: modelToSdk(fit, asset.anchor),
         color: toHex(color),
         strength: t,
-        label: t >= LABEL_FROM || value < 0 || upgraded?.has(asset.id) ? glowLabel(row, scale) : "",
+        label: t >= LABEL_FROM || value < 0 || upgraded?.has(asset.id) ? glowLabel(row) : "",
         upgrade: upgraded?.get(asset.id),
       }];
     });
@@ -195,8 +194,8 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, upgrad
         const look = current(changesRef.current.get(s.id), s.strength, s.color, now);
         if (look.running) animating = true;
         else changesRef.current.delete(s.id);
-        const radiusM = 0.4 + 2.0 * look.t;
-        const r = Math.min(size.h * 0.7, Math.max(14, (radiusM * size.h * 0.9) / dist));
+        const radiusM = 0.25 + 0.9 * look.t; // metres around the item (kept tight so it does not wash over the room)
+        const r = Math.min(size.h * 0.26, Math.max(12, (radiusM * size.h * 0.9) / dist));
         next.push({ id: s.id, name: s.name, x: screen.x, y: screen.y, r, color: look.color, label: s.label, upgrade: s.upgrade });
       }
       // Draw big glows first so small ones stay visible on top; label the biggest first and skip a
@@ -256,7 +255,7 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, upgrad
             top: g.y - g.r,
             width: g.r * 2,
             height: g.r * 2,
-            background: `radial-gradient(circle, ${g.color}b3 0%, ${g.color}73 28%, ${g.color}2e 52%, ${g.color}00 72%)`,
+            background: `radial-gradient(circle, ${g.color}cc 0%, ${g.color}80 22%, ${g.color}26 42%, ${g.color}00 58%)`,
             animationDelay: `${(index % 7) * -0.45}s`,
           }}
         >

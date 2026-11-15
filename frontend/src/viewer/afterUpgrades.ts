@@ -40,6 +40,20 @@ export function afterRow(row: AssetEnergy, alt: EnergyAlternative | null): Asset
   return { ...row, kwh_yr: kwh, usd_yr: usd, heat_kwh_yr: heat, power_w: alt.power_w ?? row.power_w };
 }
 
+/** Heat the item adds per year before and after the upgrade (midpoints); null when it adds none. */
+export function heatChange(row: AssetEnergy, alt: EnergyAlternative): { before: number; after: number } | null {
+  const before = mid(row.heat_kwh_yr);
+  if (before <= 0) return null;
+  const after = Math.max(0, mid(afterRow(row, alt).heat_kwh_yr));
+  return { before, after };
+}
+
+/** Share of heat cut, as a whole percent (0 when nothing changes). */
+export function heatCutPercent(change: { before: number; after: number } | null): number {
+  if (!change || change.before <= 0) return 0;
+  return Math.round(((change.before - change.after) / change.before) * 100);
+}
+
 /** Yearly money and heat saved by the picked upgrades, plus their total cost (midpoints). */
 export function afterTotals(
   rows: AssetEnergy[],

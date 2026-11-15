@@ -1,27 +1,69 @@
 /**
- * "My upgrade plan": every upgrade picked in the heat map cards, with cost, saving and payback, and the
- * totals. Prints as a one-page report (Print / Save as PDF) a renter can hand to the landlord.
+ * "Your plan": every upgrade picked, across all the landlord's apartments, grouped by building, with one
+ * total. Prints as a one-page report (Download PDF).
  */
 import { useEffect } from "react";
-import { formatRange } from "../format";
-import { useAppDispatch, useAppState } from "../state";
-import { afterTotals } from "../viewer/afterUpgrades";
-import { planLines, planTotals } from "../viewer/planMath";
-import { formatPayback } from "./EnergyAlternatives";
+import { useAppDispatch, useAppState, type Pick } from "../state";
+import { unitName } from "./ModelPicker";
+
+const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
+
+interface Line {
+  sid: string;
+  /** The items this line covers (the same upgrade on several items of one apartment is one line). */
+  assetIds: string[];
+  unit: string | null;
+  pick: Pick;
+  count: number;
+  saves: number;
+}
+
+interface Group {
+  street: string;
+  saves: number;
+  lines: Line[];
+}
 
 export function MyPlan({ onClose }: { onClose: () => void }) {
   const state = useAppState();
   const dispatch = useAppDispatch();
-  const rooms = new Map((state.audit?.rooms ?? []).map((room) => [room.id, room.label]));
-  const lines = planLines(
-    state.energy?.assets ?? [],
-    state.aiAlternatives,
-    state.chosenUpgrades,
-    (id) => (id ? rooms.get(id) ?? "" : ""),
-  );
-  const totals = planTotals(lines);
-  const address = state.testModels.find((model) => model.sid === state.selectedSid)?.address ?? state.selectedSid ?? "";
-  const anyAi = lines.some((line) => line.ai);
+
+  // Group every pick by building (street), then by apartment; biggest saving first.
+  const groups = new Map<string, Group>();
+  for (const [sid, items] of Object.entries(state.picks)) {
+    const model = state.testModels.find((m) => m.sid === sid);
+    const street = model ? model.address.split(",")[0].trim() : sid;
+    const sameBuilding = state.testModels.filter((m) => m.address.split(",")[0].trim() === street).length;
+    const unit = model && sameBuilding > 1 ? unitName(model) : null;
+    const group = groups.get(street) ?? { street, saves: 0, lines: [] };
+    // One line per upgrade per apartment: "Solar control window film · 7 windows".
+    const byUpgrade = new Map<string, Line>();
+    for (const [assetId, pick] of Object.entries(items)) {
+      const amount = pick.saves * (pick.units ?? 1);
+      const line = byUpgrade.get(pick.upgradeId);
+      if (line) {
+        line.assetIds.push(assetId);
+        line.count += 1;
+        line.saves += amount;
+      } else {
+        byUpgrade.set(pick.upgradeId, { sid, assetIds: [assetId], unit, pick, count: 1, saves: amount });
+      }
+      group.saves += amount;
+    }
+    group.lines.push(...byUpgrade.values());
+    groups.set(street, group);
+  }
+  const ordered = [...groups.values()].sort((a, b) => b.saves - a.saves);
+  ordered.forEach((g) => g.lines.sort((a, b) => b.saves - a.saves));
+  const lines = ordered.flatMap((g) => g.lines);
+  const picks = Object.values(state.picks).flatMap((items) => Object.values(items));
+  const times = (pick: Pick) => pick.units ?? 1; // a building-wide pick counts for every unit
+  const saves = picks.reduce((sum, pick) => sum + pick.saves * times(pick), 0);
+  const cost = picks.reduce((sum, pick) => sum + pick.cost * times(pick), 0);
+  // Heat the picked items add to the rooms, before and after (only picks that know their heat).
+  const heatBefore = picks.reduce((sum, pick) => sum + (pick.heatBefore ?? 0) * times(pick), 0);
+  const heatAfter = picks.reduce((sum, pick) => sum + (pick.heatAfter ?? pick.heatBefore ?? 0) * times(pick), 0);
+  const heatCut = heatBefore > 0 ? Math.round(((heatBefore - heatAfter) / heatBefore) * 100) : 0;
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -35,20 +77,17 @@ export function MyPlan({ onClose }: { onClose: () => void }) {
     if (lines.length === 0) onClose();
   }, [lines.length, onClose]);
 
-  const heat = afterTotals(state.energy?.assets ?? [], state.aiAlternatives, state.chosenUpgrades).heat;
-  const count = lines.length;
-
   return (
     <div className="modal-backdrop my-plan-backdrop" role="presentation" onClick={onClose}>
       <div
-        className="my-plan"
+        className="my-plan plan-min"
         role="dialog"
         aria-modal="true"
         aria-labelledby="my-plan-title"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="my-plan-top">
-          <span className="my-plan-place">{address}</span>
+          <span className="my-plan-place">Your plan</span>
           <div className="my-plan-actions">
             <button type="button" className="button primary" onClick={() => window.print()}>
               Download PDF
@@ -59,72 +98,66 @@ export function MyPlan({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        <header className="my-plan-hero">
-          <p className="my-plan-kicker">Your plan</p>
-          <h2 id="my-plan-title">
-            Save <span className="my-plan-money">{formatRange(totals.saves, "", true)}</span> a year
+        <header className="pm-hero">
+          <h2 id="my-plan-title" className="sr-only">
+            Save {money(saves)} a year{heatCut > 0 ? `, ${heatCut}% less heat` : ""}
           </h2>
-          <dl className="my-plan-stats">
+          <div className="pm-stats" aria-hidden="true">
             <div>
-              <dt>To install</dt>
-              <dd>{formatRange(totals.cost, "", true)}</dd>
+              <span className="pm-stat pm-stat-money">{money(saves)}</span>
+              <span className="pm-stat-label">saved a year</span>
             </div>
-            <div>
-              <dt>Pays for itself in</dt>
-              <dd>{totals.payback ? formatPayback(totals.payback) : "–"}</dd>
-            </div>
-            {heat > 0 ? (
+            {heatCut > 0 ? (
               <div>
-                <dt>Less heat a year</dt>
-                <dd>{Math.round(heat).toLocaleString()} kWh</dd>
+                <span className="pm-stat pm-stat-heat">{heatCut}%</span>
+                <span className="pm-stat-label">less heat in these rooms</span>
               </div>
             ) : null}
-          </dl>
+          </div>
+          {cost > 0 ? <p>about {money(cost)} to install</p> : null}
         </header>
 
-        <h3 className="my-plan-steps-title">
-          {count === 1 ? "1 upgrade" : `${count} upgrades`}, biggest saving first
-        </h3>
-        <ol className="my-plan-steps">
-          {lines.map((line, index) => {
-            const free = line.alt.cost_usd[1] <= 0;
-            return (
-              <li key={line.assetId} className="my-plan-step">
-                <span className="my-plan-num" aria-hidden="true">{index + 1}</span>
-                <div className="my-plan-step-body">
-                  <div className="my-plan-step-title">
-                    {line.alt.title}
-                    {line.ai ? <span className="my-plan-ai">estimate</span> : null}
+        {ordered.map((group) => (
+          <section key={group.street} className="pm-building">
+            <div className="pm-building-head">
+              <h3>{group.street}</h3>
+              <span>{money(group.saves)} a year</span>
+            </div>
+            <ul>
+              {group.lines.map((line) => (
+                <li key={`${line.sid}:${line.pick.upgradeId}`}>
+                  <div>
+                    <span className="pm-title">{line.pick.title}</span>
+                    <span className="pm-where">
+                      {(line.pick.units
+                        ? [`All ${line.pick.units} units`, line.pick.item]
+                        : line.count > 1
+                          ? [line.unit, `${line.count} ${line.pick.item.toLowerCase()}s`]
+                          : [line.unit, line.pick.item, line.pick.room]
+                      )
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </span>
                   </div>
-                  <div className="my-plan-step-sub">
-                    {line.item}
-                    {line.room ? `, ${line.room}` : ""} ·{" "}
-                    {free
-                      ? "free"
-                      : `${formatRange(line.alt.cost_usd, "", true)}, pays back in ${formatPayback(line.alt.payback_years)}`}
-                  </div>
-                </div>
-                <span className="my-plan-step-save">
-                  +{formatRange(line.alt.saves_usd_yr, "", true)}
-                  <small>/yr</small>
-                </span>
-                <button
-                  type="button"
-                  className="my-plan-remove"
-                  aria-label={`Remove ${line.alt.title}`}
-                  title="Remove from the plan"
-                  onClick={() => dispatch({ type: "chooseUpgrade", assetId: line.assetId, upgradeId: null })}
-                >
-                  ×
-                </button>
-              </li>
-            );
-          })}
-        </ol>
-
-        <p className="my-plan-note">
-          Estimates from the apartment scan.{anyAi ? " AI ideas are rough guesses." : ""}
-        </p>
+                  <span className="pm-save">
+                    {line.pick.units ? "≈ " : ""}+{money(line.saves)}
+                  </span>
+                  <button
+                    type="button"
+                    className="pm-remove"
+                    aria-label={`Remove ${line.pick.title}`}
+                    title="Remove from the plan"
+                    onClick={() =>
+                      line.assetIds.forEach((assetId) => dispatch({ type: "removePick", sid: line.sid, assetId }))
+                    }
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
       </div>
     </div>
   );

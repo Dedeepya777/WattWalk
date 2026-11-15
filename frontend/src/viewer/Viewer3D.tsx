@@ -261,7 +261,7 @@ export function Viewer3D({ readiness, attempt, onReady, onFailed, onRetry }: Vie
           .map((asset) => ({
             asset,
             spec: tagSpec(asset, alignment.fit, roomLabels.get(asset.room_id ?? "") ?? "Unknown room",
-              energyById.get(asset.id), pinColor(energyById.get(asset.id), energyScale), energyScale !== null),
+              energyById.get(asset.id), pinColor(energyById.get(asset.id), energyScale)),
           }))
           .filter((item): item is { asset: Asset; spec: TagSpec } => item.spec !== null);
         const added = await addTags(sdk, placed.map((item) => item.spec));
