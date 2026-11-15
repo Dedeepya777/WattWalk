@@ -59,7 +59,8 @@
             2.8
           ],
           "who": "the tenant can do it with the owner's approval",
-          "basis": "film blocks 30% of the sun heat through 1.8 m2 of glass"
+          "basis": "film blocks 30% of the sun heat through 1.8 m2 of glass",
+          "products": []
         }
       ]
     },
@@ -120,7 +121,8 @@
             2.8
           ],
           "who": "the tenant can do it with the owner's approval",
-          "basis": "film blocks 30% of the sun heat through 1.2 m2 of glass"
+          "basis": "film blocks 30% of the sun heat through 1.2 m2 of glass",
+          "products": []
         }
       ]
     },
@@ -179,7 +181,8 @@
             20.5
           ],
           "who": "the owner pays",
-          "basis": "same cooling with EER 18 instead of 9"
+          "basis": "same cooling with EER 18 instead of 9",
+          "products": []
         }
       ]
     },
@@ -246,7 +249,8 @@
             0.5
           ],
           "who": "the tenant can do it",
-          "basis": "2 bulb(s) at 9 W instead of today's bulbs, 3 h/day; saves nothing if it is already efficient (detail not seen), so payback is the best case"
+          "basis": "2 bulb(s) at 9 W instead of today's bulbs, 3 h/day; saves nothing if it is already efficient (detail not seen), so payback is the best case",
+          "products": []
         }
       ]
     },
@@ -313,7 +317,8 @@
             0.5
           ],
           "who": "the tenant can do it",
-          "basis": "2 bulb(s) at 9 W instead of today's bulbs, 3 h/day; saves nothing if it is already efficient (detail not seen), so payback is the best case"
+          "basis": "2 bulb(s) at 9 W instead of today's bulbs, 3 h/day; saves nothing if it is already efficient (detail not seen), so payback is the best case",
+          "products": []
         }
       ]
     },
@@ -380,7 +385,8 @@
             0.5
           ],
           "who": "the tenant can do it",
-          "basis": "2 bulb(s) at 9 W instead of today's bulbs, 3 h/day; saves nothing if it is already efficient (detail not seen), so payback is the best case"
+          "basis": "2 bulb(s) at 9 W instead of today's bulbs, 3 h/day; saves nothing if it is already efficient (detail not seen), so payback is the best case",
+          "products": []
         }
       ]
     },
@@ -447,7 +453,8 @@
             0.5
           ],
           "who": "the tenant can do it",
-          "basis": "2 bulb(s) at 9 W instead of today's bulbs, 3 h/day; saves nothing if it is already efficient (detail not seen), so payback is the best case"
+          "basis": "2 bulb(s) at 9 W instead of today's bulbs, 3 h/day; saves nothing if it is already efficient (detail not seen), so payback is the best case",
+          "products": []
         }
       ]
     },
@@ -514,7 +521,8 @@
             17.8
           ],
           "who": "the owner pays",
-          "basis": "an ENERGY STAR model uses about 400 kWh/yr; saves nothing if it is already efficient (detail not seen), so payback is the best case"
+          "basis": "an ENERGY STAR model uses about 400 kWh/yr; saves nothing if it is already efficient (detail not seen), so payback is the best case",
+          "products": []
         }
       ]
     },

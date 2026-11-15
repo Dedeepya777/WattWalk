@@ -116,3 +116,45 @@ def test_an_item_with_no_electricity_gets_a_note_not_an_error(inventory, buildin
         pytest.skip("example inventory has no unestimated asset")
     out = ai.research(SID, asset.id, inventory, building, ask=_fake({"today_kwh_yr": None, "ideas": []}))
     assert out.alternatives == [] and "does not use electricity" in out.note
+
+
+def test_products_get_safe_amazon_links(inventory, building):
+    from urllib.parse import parse_qs, urlparse
+
+    asset, _ = _estimated(inventory, building, "window")
+    reply = {"ideas": [{
+        "title": "Insulated cellular shades", "why": "", "kwh_cut_pct": [10, 20], "cost_usd": [60, 150],
+        "who": "tenant",
+        "products": [
+            {"name": "Bali Cordless Light-Filtering Cellular Shade 36 in", "approx_price_usd": 45, "why": "Cordless"},
+            {"name": "https://evil.example/fake", "approx_price_usd": 1},      # a URL instead of a name: dropped
+            {"name": "bali cordless light-filtering cellular shade 36 in"},    # duplicate: dropped
+            {"name": "Chicology Cordless Blackout Cellular Shade", "approx_price_usd": -5},
+            {"name": "Redi Shade Easy Lift Cellular Shade"},
+            {"name": "One too many shade"},                                      # over the limit: dropped
+        ],
+    }]}
+    out = ai.research(SID, asset.id, inventory, building, ask=_fake(reply))
+    products = out.alternatives[0].products
+    assert [p.name for p in products] == [
+        "Bali Cordless Light-Filtering Cellular Shade 36 in",
+        "Chicology Cordless Blackout Cellular Shade",
+        "Redi Shade Easy Lift Cellular Shade",
+    ]
+    assert products[0].approx_price_usd == 45 and products[1].approx_price_usd is None
+    query = parse_qs(urlparse(products[0].url).query)["q"][0]
+    assert products[0].url.startswith("https://duckduckgo.com/?q=")
+    assert query == "\\ site:amazon.com Bali Cordless Light-Filtering Cellular Shade 36 in"
+
+
+def test_answers_saved_before_products_are_asked_again(inventory, building):
+    asset, _ = _estimated(inventory, building, "window")
+    calls = []
+    ai.research(SID, asset.id, inventory, building, ask=_fake(IDEAS, calls))
+    path = config.AUDITS_DIR / SID / ai.CACHE_FILE
+    cache = json.loads(path.read_text())
+    for alt in cache[asset.id]["alternatives"]:
+        alt.pop("products")
+    path.write_text(json.dumps(cache))
+    ai.research(SID, asset.id, inventory, building, ask=_fake(IDEAS, calls))
+    assert len(calls) == 2

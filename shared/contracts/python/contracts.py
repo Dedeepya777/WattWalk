@@ -247,6 +247,15 @@ class HeatShare(_Strict):
 Range2 = tuple[float, float]
 
 
+class ProductSuggestion(_Strict):
+    """A real product that fits an AI upgrade idea. url opens the product's page (a first-result search on
+    amazon.com for the exact name); approx_price_usd is the model's rough price, the page shows the real one."""
+    name: str
+    approx_price_usd: Optional[float] = Field(default=None, ge=0)
+    why: str = ""
+    url: str
+
+
 class EnergyAlternative(_Strict):
     """One upgrade from upgrades.json applied to one asset: what it would use afterwards and the saving.
 
@@ -265,6 +274,7 @@ class EnergyAlternative(_Strict):
     payback_years: Optional[Range2] = None
     who: str
     basis: str
+    products: list[ProductSuggestion] = Field(default_factory=list)
 
 
 class AssetEnergy(_Strict):

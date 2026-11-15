@@ -3418,3 +3418,48 @@ select:disabled {
   .intro,
   .intro-glow { animation: none; }
 }
+
+/* Pop-out: real products for an AI idea (open on Amazon) */
+.energy-pop .pop-products {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.energy-pop .pop-products a {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--panel-2);
+  border: 1px solid var(--border-soft);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 12px;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.energy-pop .pop-products a:hover {
+  border-color: var(--moss);
+  background: #ffffff;
+}
+.energy-pop .pop-products a:focus-visible {
+  outline: 2px solid var(--forest);
+  outline-offset: 1px;
+}
+.energy-pop .pop-product-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.energy-pop .pop-product-price {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.energy-pop .pop-product-go {
+  color: var(--forest);
+  font-weight: 700;
+}

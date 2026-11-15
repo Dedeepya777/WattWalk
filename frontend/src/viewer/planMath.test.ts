@@ -5,7 +5,7 @@ import { planLines, planTotals } from "./planMath";
 function alt(id: string, saves: [number, number], cost: [number, number]): EnergyAlternative {
   return {
     upgrade_id: id, title: id, kwh_yr: null, usd_yr: null, heat_kwh_yr: null, power_w: null,
-    saves_kwh_yr: [0, 0], saves_usd_yr: saves, cost_usd: cost, payback_years: null, who: "", basis: "",
+    saves_kwh_yr: [0, 0], saves_usd_yr: saves, cost_usd: cost, payback_years: null, who: "", basis: "", products: [],
   };
 }
 

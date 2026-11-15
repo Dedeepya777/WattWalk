@@ -6,7 +6,7 @@ function alt(id: string, saves: [number, number], extra: Partial<EnergyAlternati
   return {
     upgrade_id: id, title: id, kwh_yr: null, usd_yr: null, heat_kwh_yr: null, power_w: null,
     saves_kwh_yr: [saves[0] * 3, saves[1] * 3], saves_usd_yr: saves, cost_usd: [10, 20],
-    payback_years: [1, 2], who: "", basis: "", ...extra,
+    payback_years: [1, 2], who: "", basis: "", products: [], ...extra,
   };
 }
 
