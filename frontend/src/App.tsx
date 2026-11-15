@@ -22,7 +22,6 @@ import { BottomTabs } from "./components/BottomTabs";
 import { EnergyAlternatives } from "./components/EnergyAlternatives";
 import { EvidenceCard } from "./components/EvidenceCard";
 import { ModelPicker } from "./components/ModelPicker";
-import { ModeBanner } from "./components/ModeBanner";
 import { QuestionDialog } from "./components/QuestionDialog";
 import { StartControls } from "./components/StartControls";
 import { Logo } from "./components/Logo";
@@ -523,7 +522,6 @@ export default function App() {
           <Logo className="brand-logo" />
           WattWalk
         </div>
-        <ModeBanner />
       </header>
 
       {errorBanner ? (
