@@ -3803,46 +3803,55 @@ select:disabled {
   white-space: nowrap;
 }
 
-/* Apartment at a glance (components/ViewerStats.tsx) */
-.viewer-stats {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  padding: 10px 10px 8px;
+/* Apartment at a glance (components/ViewerStats.tsx): a sentence and a heat ribbon */
+.heat-story {
+  padding: 12px 14px 10px;
 }
-.viewer-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 10px 14px;
-  border-radius: 14px;
-  background: var(--panel-2);
-  border: 1px solid var(--border-soft);
+.heat-story-empty {
+  font-size: 14px;
+  color: var(--muted);
 }
-.viewer-stat:first-child {
-  background: var(--forest);
-  border-color: var(--forest);
-  color: #ffffff;
+.heat-story-line {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--muted);
+  letter-spacing: -0.005em;
 }
-.viewer-stat:first-child .viewer-stat-label {
-  color: rgba(255, 255, 255, 0.8);
-}
-.viewer-stat-value {
-  font-size: 26px;
+.heat-story-line strong {
+  color: var(--charcoal);
   font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
   font-variant-numeric: tabular-nums;
 }
-.viewer-stat-value small {
-  font-size: 13px;
-  font-weight: 600;
-  opacity: 0.7;
-  margin-left: 2px;
+.heat-story-money {
+  font-size: 30px;
+  letter-spacing: -0.03em;
+  color: var(--forest) !important;
+  vertical-align: -3px;
+  margin-right: 2px;
 }
-.viewer-stat-label {
+.heat-ribbon {
+  display: flex;
+  height: 24px;
+  margin-top: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  gap: 2px;
+}
+.heat-ribbon-part {
+  display: flex;
+  align-items: center;
+  min-width: 6px;
+  padding: 0 10px;
+  color: #ffffff;
   font-size: 12px;
-  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-shadow: 0 1px 2px rgba(40, 45, 40, 0.35);
+}
+.heat-ribbon-part b {
+  font-weight: 800;
+  margin-left: 3px;
 }
 .heat-key {
   display: inline-flex;
@@ -3855,9 +3864,4 @@ select:disabled {
   width: 90px;
   height: 8px;
   border-radius: 999px;
-}
-@media (max-width: 900px) {
-  .viewer-stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
