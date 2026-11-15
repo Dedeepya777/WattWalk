@@ -10,7 +10,10 @@
  * transports API values.
  */
 import type {
+  AddBuildingRequest,
   AiAlternativesResponse,
+  BuildingSearchResponse,
+  Portfolio,
   AnswerRequest,
   ApiError,
   AssetEnergyResponse,
@@ -313,6 +316,37 @@ export async function getHealth(): Promise<Health> {
 export async function getHealthProbe(signal?: AbortSignal): Promise<Health> {
   if (isFixtureMode) return clone(health);
   return request<Health>("/health?probe=1", { signal });
+}
+
+const NO_BUILDINGS_IN_FIXTURE = (): ApiFailure =>
+  new ApiFailure(503, {
+    error: {
+      code: "upstream_unavailable",
+      message: "Finding buildings needs the live backend (start the app with scripts/run.py).",
+      retryable: false,
+    },
+  });
+
+/** Los Angeles buildings whose street address matches `q`, with their 3D tours. */
+export async function searchBuildings(q: string, signal?: AbortSignal): Promise<BuildingSearchResponse> {
+  if (isFixtureMode) throw NO_BUILDINGS_IN_FIXTURE();
+  return request<BuildingSearchResponse>(`/buildings/search?q=${encodeURIComponent(q)}`, { signal });
+}
+
+/** The landlord's buildings. */
+export async function getPortfolio(): Promise<Portfolio> {
+  if (isFixtureMode) return { schema_version: "1.0.0", buildings: [] };
+  return request<Portfolio>("/portfolio");
+}
+
+/** Add a building (or change its units) in the landlord's list. */
+export async function addBuilding(req: AddBuildingRequest): Promise<Portfolio> {
+  if (isFixtureMode) throw NO_BUILDINGS_IN_FIXTURE();
+  return request<Portfolio>("/portfolio/buildings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
 }
 
 export async function getTestModels(): Promise<TestModel[]> {

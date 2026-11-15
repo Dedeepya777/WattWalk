@@ -282,3 +282,19 @@ def test_research_alternatives_endpoint(client, monkeypatch):
     assert body["asset_id"] == window["id"] and body["cached"] is False
     assert [a["title"] for a in body["alternatives"]] == ["Thermal curtains"]
     assert client.post(url).json()["cached"] is True
+
+
+def test_find_and_add_a_building(client):
+    r = client.get("/buildings/search", params={"q": "819 santee"})
+    assert r.status_code == 200
+    match = r.json()["buildings"][0]
+    assert match["address"].startswith("819 Santee St")
+    sids = [t["sid"] for t in match["tours"]][:3]
+    r = client.post("/portfolio/buildings", json={"building_id": match["building_id"], "sids": sids})
+    assert r.status_code == 200 and r.json()["buildings"][0]["sids"] == sids
+    assert client.get("/portfolio").json()["buildings"][0]["building_id"] == match["building_id"]
+    listed = {m["sid"] for m in client.get("/models/test").json()}
+    assert set(sids) <= listed
+    bad = client.post("/portfolio/buildings", json={"building_id": match["building_id"], "sids": ["zzz"]})
+    assert bad.status_code == 422
+    assert client.delete(f"/portfolio/buildings/{match['building_id']}").json()["buildings"] == []

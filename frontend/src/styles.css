@@ -3469,3 +3469,177 @@ select:disabled {
   color: var(--forest);
   font-weight: 700;
 }
+
+/* Find your building (components/FindBuilding.tsx) */
+.add-building {
+  border: 0;
+  background: none;
+  padding: 2px 4px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--forest);
+  cursor: pointer;
+  border-radius: 6px;
+}
+.add-building:hover {
+  background: var(--sage);
+}
+.find-building {
+  width: min(560px, calc(100vw - 32px));
+  max-height: 84vh;
+  overflow-y: auto;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 24px 60px rgba(40, 45, 40, 0.28);
+  padding: 20px 22px 22px;
+  align-self: start;
+  margin-top: 8vh;
+}
+.find-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.find-head h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.find-field {
+  position: relative;
+  display: block;
+  margin-top: 14px;
+}
+.find-field input {
+  width: 100%;
+  padding: 13px 44px 13px 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #ffffff;
+  font: inherit;
+  font-size: 16px;
+}
+.find-field input:focus {
+  outline: 2px solid var(--moss);
+  outline-offset: 1px;
+}
+.find-field .spinner {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  margin-top: -7px;
+}
+.find-hint {
+  margin: 6px 2px 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.find-examples,
+.find-empty {
+  margin: 16px 2px 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.find-example {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--forest);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.find-results {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.find-building-row {
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  background: var(--panel-2);
+  overflow: hidden;
+}
+.find-building-row.open {
+  border-color: var(--moss);
+  background: #ffffff;
+}
+.find-building-head {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: none;
+  padding: 12px 14px;
+  font: inherit;
+  cursor: pointer;
+}
+.find-address {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+}
+.find-meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.find-units {
+  padding: 0 14px 14px;
+}
+.find-units-title {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.find-units ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+.find-units label {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.find-units label:hover {
+  background: var(--panel-2);
+}
+.find-units input[type="checkbox"] {
+  accent-color: var(--forest);
+}
+.find-unit-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.find-unit-meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+.find-add {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+}

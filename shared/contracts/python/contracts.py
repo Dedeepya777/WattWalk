@@ -469,6 +469,52 @@ class Event(_Strict):
     data: dict = Field(default_factory=dict)
 
 
+class TourMatch(_Strict):
+    """One 3D tour (a scanned unit) at a building found by address search."""
+    sid: str
+    name: str
+    pano_count: int = Field(ge=0)
+    room_count: int = Field(ge=0)
+    scanned_on: Optional[str] = None
+    defurnished: bool = False
+
+
+class BuildingMatch(_Strict):
+    """A building found by address search (Los Angeles), with its scanned units."""
+    building_id: str
+    address: str
+    city: City
+    postal_code: Optional[str] = None
+    tours: list[TourMatch]
+
+
+class BuildingSearchResponse(_Strict):
+    """GET /buildings/search?q=: buildings whose street address matches, best match first."""
+    query: str
+    buildings: list[BuildingMatch]
+
+
+class PortfolioBuilding(_Strict):
+    """A building the landlord added, with the units (tours) they chose to track."""
+    building_id: str
+    address: str
+    city: City
+    sids: list[str] = Field(min_length=1)
+    added_at: str
+
+
+class Portfolio(_Strict):
+    """GET /portfolio: the landlord's buildings (one landlord, no login, for the demo)."""
+    schema_version: Literal["1.0.0"] = SCHEMA_VERSION
+    buildings: list[PortfolioBuilding]
+
+
+class AddBuildingRequest(_Strict):
+    """POST /portfolio/buildings: add (or update) a building with the chosen units."""
+    building_id: str
+    sids: list[str] = Field(min_length=1)
+
+
 class TestModel(_Strict):
     sid: str
     address: str

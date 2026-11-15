@@ -538,6 +538,7 @@ export default function App() {
         <aside className="left-column">
           <ModelPicker
             onRetry={() => void loadModels()}
+            onReload={loadModels}
             onCancelAndSwitch={cancelAndSwitch}
             switchBusy={switchBusy}
             switchError={switchError}

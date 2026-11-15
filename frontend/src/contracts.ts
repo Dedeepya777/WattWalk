@@ -365,6 +365,52 @@ export interface WattEvent {
   data: Record<string, unknown>;
 }
 
+/** One 3D tour (a scanned unit) at a building found by address search. */
+export interface TourMatch {
+  sid: string;
+  name: string;
+  pano_count: number;
+  room_count: number;
+  scanned_on: string | null;
+  defurnished: boolean;
+}
+
+/** A building found by address search (Los Angeles), with its scanned units. */
+export interface BuildingMatch {
+  building_id: string;
+  address: string;
+  city: City;
+  postal_code: string | null;
+  tours: TourMatch[];
+}
+
+/** GET /buildings/search?q= */
+export interface BuildingSearchResponse {
+  query: string;
+  buildings: BuildingMatch[];
+}
+
+/** A building the landlord added, with the units they track. */
+export interface PortfolioBuilding {
+  building_id: string;
+  address: string;
+  city: City;
+  sids: string[];
+  added_at: string;
+}
+
+/** GET /portfolio */
+export interface Portfolio {
+  schema_version: "1.0.0";
+  buildings: PortfolioBuilding[];
+}
+
+/** POST /portfolio/buildings */
+export interface AddBuildingRequest {
+  building_id: string;
+  sids: string[];
+}
+
 export interface TestModel {
   sid: string;
   address: string;

@@ -2,9 +2,12 @@
 import { useState } from "react";
 import type { TestModel } from "../contracts";
 import { useAppDispatch, useAppState } from "../state";
+import { FindBuilding } from "./FindBuilding";
 
 interface Props {
   onRetry: () => void;
+  /** Reload the apartments list (after a building was added). */
+  onReload: () => Promise<void>;
   /** Cancel the running audit (waiting up to 5 s), then select the target scan. */
   onCancelAndSwitch: (sid: string) => Promise<boolean>;
   switchBusy: boolean;
@@ -21,6 +24,7 @@ function shortAddress(model: TestModel): string {
 
 export function ModelPicker({
   onRetry,
+  onReload,
   onCancelAndSwitch,
   switchBusy,
   switchError,
@@ -30,6 +34,7 @@ export function ModelPicker({
   const dispatch = useAppDispatch();
   const running = state.audit?.status.status === "running";
   const [pending, setPending] = useState<TestModel | null>(null);
+  const [finding, setFinding] = useState(false);
   const currentAddress =
     state.testModels.find((model) => model.sid === state.selectedSid)?.address ??
     state.selectedSid;
@@ -48,6 +53,9 @@ export function ModelPicker({
     <section className="panel" aria-labelledby="models-heading">
       <div className="panel-heading">
         <h2 id="models-heading">Apartments</h2>
+        <button type="button" className="add-building" onClick={() => setFinding(true)}>
+          + Add building
+        </button>
       </div>
       {state.modelsError ? (
         <div className="inline-error">
@@ -88,6 +96,17 @@ export function ModelPicker({
           </ul>
         </>
       )}
+
+      {finding ? (
+        <FindBuilding
+          onClose={() => setFinding(false)}
+          onAdded={async (firstSid) => {
+            await onReload();
+            setFinding(false);
+            if (!running) dispatch({ type: "selectSid", sid: firstSid });
+          }}
+        />
+      ) : null}
 
       {pending ? (
         <div
