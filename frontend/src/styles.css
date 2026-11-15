@@ -3803,55 +3803,135 @@ select:disabled {
   white-space: nowrap;
 }
 
-/* Apartment at a glance (components/ViewerStats.tsx): a sentence and a heat ribbon */
-.heat-story {
-  padding: 12px 14px 10px;
+/* Apartment at a glance (components/ViewerStats.tsx): plain numbers and a slim heat bar */
+.glance {
+  padding: 4px 16px 12px;
 }
-.heat-story-empty {
-  font-size: 14px;
-  color: var(--muted);
-}
-.heat-story-line {
-  margin: 0;
-  font-size: 17px;
-  line-height: 1.45;
-  color: var(--muted);
-  letter-spacing: -0.005em;
-}
-.heat-story-line strong {
-  color: var(--charcoal);
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-}
-.heat-story-money {
-  font-size: 30px;
-  letter-spacing: -0.03em;
-  color: var(--forest) !important;
-  vertical-align: -3px;
-  margin-right: 2px;
-}
-.heat-ribbon {
+.glance-metrics {
   display: flex;
-  height: 24px;
-  margin-top: 10px;
+  margin: 0;
+}
+.glance-metric {
+  flex: 1;
+  min-width: 0;
+  padding: 2px 16px;
+  border-left: 1px solid var(--border);
+}
+.glance-metric:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+.glance-metric dt {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.glance-metric dd {
+  margin: 2px 0 0;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--charcoal);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.glance-metric dd span {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--muted);
+}
+.glance-heat {
+  margin-top: 12px;
+}
+.glance-bar {
+  display: flex;
+  gap: 2px;
+  height: 6px;
   border-radius: 999px;
   overflow: hidden;
-  gap: 2px;
 }
-.heat-ribbon-part {
+.glance-bar span {
+  min-width: 3px;
+}
+.glance-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--charcoal);
+}
+.glance-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.glance-legend i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.glance-legend span {
+  color: var(--muted);
+}
+
+/* Audit header above the viewer (components/StartControls.tsx) */
+.audit-bar {
+  padding: 14px 16px 6px;
+}
+.audit-bar-row {
   display: flex;
   align-items: center;
-  min-width: 6px;
-  padding: 0 10px;
-  color: #ffffff;
-  font-size: 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-shadow: 0 1px 2px rgba(40, 45, 40, 0.35);
+  justify-content: space-between;
+  gap: 16px;
 }
-.heat-ribbon-part b {
-  font-weight: 800;
-  margin-left: 3px;
+.audit-bar-title {
+  min-width: 0;
+}
+.audit-bar-title h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.audit-bar-title p {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.audit-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+.audit-bar .audit-main {
+  width: auto;
+  padding: 8px 18px;
+  font-size: 14px;
+  border-radius: 999px;
+}
+.audit-bar .audit-options-toggle {
+  display: inline;
+  margin: 0;
+}
+.audit-bar .audit-extras {
+  justify-content: flex-end;
+  border-top: 0;
+  padding-top: 0;
+}
+.audit-bar .progress-tracker,
+.audit-bar .audit-note {
+  margin-top: 10px;
 }
 .heat-key {
   display: inline-flex;

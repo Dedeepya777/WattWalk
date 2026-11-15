@@ -142,6 +142,16 @@ export function StartControls({
     replay: available.replay ? "Replay a recorded audit (instant)" : "This apartment has no recording",
     fixture: available.fixture ? "Illustrative demo data (instant)" : "This apartment has no demo data",
   };
+  // The apartment's name for the header: street, then unit and city underneath.
+  const addressParts = (model?.address ?? state.selectedSid).split(",").map((part) => part.trim());
+  const title = addressParts[0];
+  const subtitle = [
+    ...addressParts.slice(1).filter((part) => part && !/^(los angeles|ca|us|\d{5})\b/i.test(part)),
+    model?.city,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   const start = async () => {
     setBusy("start");
     try {
@@ -152,12 +162,26 @@ export function StartControls({
   };
 
   return (
-    <section className="panel audit-panel" aria-labelledby="run-heading">
-      <div className="panel-heading">
-        <h2 id="run-heading">Audit</h2>
-        <span className={`status-dot status-${status}`}>{STATUS_TEXT[status] ?? status}</span>
-      </div>
-
+    <section className="audit-bar" aria-labelledby="run-heading">
+      <div className="audit-bar-row">
+        <div className="audit-bar-title">
+          <h2 id="run-heading">{title}</h2>
+          <p>
+            {subtitle}
+            <span className={`status-dot status-${status}`}>{STATUS_TEXT[status] ?? status}</span>
+          </p>
+        </div>
+        <div className="audit-bar-actions">
+      {!running ? (
+        <button
+          type="button"
+          className="audit-link audit-options-toggle"
+          aria-expanded={showOptions}
+          onClick={() => setShowOptions((open) => !open)}
+        >
+          Options
+        </button>
+      ) : null}
       {running ? (
         <button
           className="button audit-main"
@@ -211,6 +235,8 @@ export function StartControls({
           {probing ? "Connecting\u2026" : busy === "start" ? "Starting\u2026" : done ? "Run audit again" : "Start audit"}
         </button>
       )}
+        </div>
+      </div>
       {liveFailed && !anyAvailable ? (
         <p className="hint small audit-note" title={liveReason ?? undefined}>
           Live services aren’t ready. Pick an Instant demo apartment.
@@ -218,17 +244,6 @@ export function StartControls({
       ) : null}
 
       <ProgressTracker />
-
-      {!running ? (
-        <button
-          type="button"
-          className="audit-link audit-options-toggle"
-          aria-expanded={showOptions}
-          onClick={() => setShowOptions((open) => !open)}
-        >
-          {showOptions ? "Hide options" : "Options"}
-        </button>
-      ) : null}
 
       {showOptions && !running ? (
       <div className="audit-extras">

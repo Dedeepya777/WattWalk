@@ -1,6 +1,6 @@
 /**
- * The selected apartment at a glance, above the heat map: one sentence with the big numbers in it, and a
- * heat ribbon showing where the heat in the rooms comes from (windows, lights, appliances...).
+ * The selected apartment at a glance, above the heat map: a few plain numbers with small labels, and a
+ * slim bar showing where the heat in the rooms comes from (windows, lights, appliances...).
  */
 import type { AssetEnergy } from "../contracts";
 import { useAppState } from "../state";
@@ -9,14 +9,14 @@ import { LEGEND_CSS } from "../viewer/energyColor";
 const mid = (r: [number, number] | null | undefined) => (r ? (r[0] + r[1]) / 2 : 0);
 
 const GROUPS: { name: string; labels: string[]; color: string }[] = [
-  { name: "Windows", labels: ["window"], color: "#d9533d" },
-  { name: "Lights", labels: ["ceiling_light", "lamp"], color: "#ef9a3c" },
-  { name: "Fridge", labels: ["refrigerator"], color: "#e8c547" },
-  { name: "Appliances", labels: ["stove", "oven", "microwave", "dishwasher", "washer", "dryer", "tv"], color: "#b9c86a" },
+  { name: "Windows", labels: ["window"], color: "#e0573f" },
+  { name: "Lights", labels: ["ceiling_light", "lamp"], color: "#f29b38" },
+  { name: "Fridge", labels: ["refrigerator"], color: "#e9c03f" },
+  { name: "Appliances", labels: ["stove", "oven", "microwave", "dishwasher", "washer", "dryer", "tv"], color: "#9fb563" },
 ];
-const OTHER = { name: "Other", color: "#a3b0a0" };
+const OTHER = { name: "Other", color: "#b9bdb5" };
 
-/** Heat into the rooms per year by source group, biggest first (heat removed by AC is left out). */
+/** Heat into the rooms per year by source, biggest first (heat removed by AC is left out). */
 function heatSources(rows: AssetEnergy[]) {
   const totals = new Map<string, { name: string; color: string; kwh: number }>();
   for (const row of rows) {
@@ -30,52 +30,46 @@ function heatSources(rows: AssetEnergy[]) {
   return [...totals.values()].sort((a, b) => b.kwh - a.kwh);
 }
 
-function money(n: number): string {
-  return `$${Math.round(n).toLocaleString()}`;
-}
-
 export function ViewerStats() {
   const state = useAppState();
   const rows = state.energy?.assets ?? [];
-  const items = state.audit?.inventory.length ?? 0;
-  const rooms = state.audit?.rooms.length ?? 0;
-  if (!state.energy || rows.length === 0) {
-    return (
-      <div className="heat-story heat-story-empty">
-        {state.audit ? "Working out this apartment’s energy…" : "Run an audit to see where this apartment’s heat and cost come from."}
-      </div>
-    );
-  }
-  const cost = mid(state.energy.total_usd_yr);
+  if (!state.energy || rows.length === 0) return null;
   const sources = heatSources(rows);
   const heat = sources.reduce((sum, s) => sum + s.kwh, 0);
+  const metrics = [
+    { label: "Energy", value: `$${Math.round(mid(state.energy.total_usd_yr)).toLocaleString()}`, unit: "per year" },
+    { label: "Heat", value: Math.round(heat).toLocaleString(), unit: "kWh a year" },
+    { label: "Items", value: String(state.audit?.inventory.length ?? 0), unit: "found" },
+    { label: "Rooms", value: String(state.audit?.rooms.length ?? 0), unit: "scanned" },
+  ];
 
   return (
-    <div className="heat-story">
-      <p className="heat-story-line">
-        <strong className="heat-story-money">{money(cost)}</strong> a year in energy, and{" "}
-        <strong>{Math.round(heat).toLocaleString()} kWh</strong> of heat poured into <strong>{rooms} rooms</strong> by
-        the <strong>{items}</strong> things we found.
-      </p>
+    <div className="glance">
+      <dl className="glance-metrics">
+        {metrics.map((metric) => (
+          <div key={metric.label} className="glance-metric">
+            <dt>{metric.label}</dt>
+            <dd>
+              {metric.value} <span>{metric.unit}</span>
+            </dd>
+          </div>
+        ))}
+      </dl>
       {heat > 0 ? (
-        <div className="heat-ribbon" aria-label="Where the heat comes from">
-          {sources.map((source) => {
-            const share = source.kwh / heat;
-            return (
-              <div
-                key={source.name}
-                className="heat-ribbon-part"
-                style={{ flexGrow: share, background: source.color }}
-                title={`${source.name}: ${Math.round(source.kwh).toLocaleString()} kWh a year (${Math.round(share * 100)}%)`}
-              >
-                {share >= 0.08 ? (
-                  <span>
-                    {source.name} <b>{Math.round(share * 100)}%</b>
-                  </span>
-                ) : null}
-              </div>
-            );
-          })}
+        <div className="glance-heat">
+          <div className="glance-bar" aria-hidden="true">
+            {sources.map((source) => (
+              <span key={source.name} style={{ flexGrow: source.kwh / heat, background: source.color }} />
+            ))}
+          </div>
+          <ul className="glance-legend" aria-label="Where the heat comes from">
+            {sources.map((source) => (
+              <li key={source.name}>
+                <i style={{ background: source.color }} aria-hidden="true" />
+                {source.name} <span>{Math.round((source.kwh / heat) * 100)}%</span>
+              </li>
+            ))}
+          </ul>
         </div>
       ) : null}
     </div>

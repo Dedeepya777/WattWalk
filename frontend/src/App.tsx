@@ -18,7 +18,6 @@ import {
 } from "./api";
 import { AgentLog } from "./components/AgentLog";
 import { BottomTabs } from "./components/BottomTabs";
-import { BuildingCard } from "./components/BuildingCard";
 import { EnergyAlternatives } from "./components/EnergyAlternatives";
 import { EvidenceCard } from "./components/EvidenceCard";
 import { ModelPicker } from "./components/ModelPicker";
@@ -544,6 +543,9 @@ export default function App() {
             switchError={switchError}
             onDismissSwitchError={() => setSwitchError(null)}
           />
+        </aside>
+
+        <section className="panel viewer-panel" aria-labelledby="viewer-heading">
           <StartControls
             onStart={handleStart}
             onCancel={handleCancel}
@@ -551,10 +553,6 @@ export default function App() {
             auditLoading={auditLoading}
             otherRunSid={activeRunSid && activeRunSid !== state.selectedSid ? activeRunSid : null}
           />
-          <BuildingCard />
-        </aside>
-
-        <section className="panel viewer-panel" aria-labelledby="viewer-heading">
           <div className="viewer-tab-row">
             <h2 id="viewer-heading" className="sr-only">
               Spatial viewer
