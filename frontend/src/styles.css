@@ -5128,3 +5128,13 @@ h1, h2, h3,
 .bvm-others button span {
   color: var(--muted);
 }
+
+/* Pop-out: one quiet shop link next to the payback */
+.energy-pop .pop-shop {
+  color: var(--forest);
+  font-weight: 600;
+  text-decoration: none;
+}
+.energy-pop .pop-shop:hover {
+  text-decoration: underline;
+}

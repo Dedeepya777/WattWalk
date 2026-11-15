@@ -122,7 +122,6 @@ function NowRow({ row, scale }: { row: AssetEnergy; scale: EnergyScale | null })
 /** Pop-out: today's cost as the one big number, heat as a short line under it. */
 function PopNow({ row, scale }: { row: AssetEnergy; scale: EnergyScale | null }) {
   const heat = mid(row.heat_kwh_yr);
-  const cools = row.heat_kwh_yr !== null && row.heat_kwh_yr[0] < 0;
   return (
     <section className="energy-alt-now pop-row pop-now">
       <div>
@@ -133,9 +132,6 @@ function PopNow({ row, scale }: { row: AssetEnergy; scale: EnergyScale | null })
         <div className="pop-big">
           {formatRange(row.usd_yr, "", true)}
           <span className="pop-unit">/yr</span>
-        </div>
-        <div className="pop-sub">
-          {row.heat_kwh_yr ? `${heatText(row.heat_kwh_yr)}${cools ? "" : " of heat"} a year` : ""}
         </div>
       </div>
     </section>
@@ -149,9 +145,6 @@ function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEn
   const toggle = () =>
     dispatch({ type: "chooseUpgrade", assetId: row.asset_id, upgradeId: picked ? null : alt.upgrade_id });
   const free = alt.cost_usd[1] <= 0;
-  const today = mid(row.kwh_yr);
-  const saved = mid(alt.saves_kwh_yr);
-  const cut = today && saved !== null && today > 0 ? Math.round(Math.min(1, saved / today) * 100) : null;
   return (
     <li
       className={`energy-alt-option energy-alt-with-glow pop-row pop-pickable${picked ? " pop-picked" : ""}`}
@@ -178,34 +171,25 @@ function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEn
           <span className="pop-unit">/yr</span>
         </div>
         <div className="pop-sub">
-          {free ? "Free, just a habit change" : `${formatRange(alt.cost_usd, "", true)} · pays back in ${formatPayback(alt.payback_years)}`}
-          {cut !== null && cut > 0 ? ` · uses ${cut}% less energy` : ""}
+          {free ? "Free" : `Pays back in ${formatPayback(alt.payback_years)}`}
+          {alt.products?.[0] ? (
+            <>
+              {" · "}
+              <a
+                className="pop-shop"
+                href={alt.products[0].url}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={`${alt.products[0].name} (opens on Amazon)`}
+                // Opening a product must not pick or unpick the upgrade.
+                onClick={(event) => event.stopPropagation()}
+                onKeyDown={(event) => event.stopPropagation()}
+              >
+                Shop ↗
+              </a>
+            </>
+          ) : null}
         </div>
-        {alt.products?.length ? (
-          <ul className="pop-products" aria-label={`Products for ${alt.title}`}>
-            {alt.products.map((product) => (
-              <li key={product.name}>
-                <a
-                  href={product.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={`${product.name}${product.why ? `: ${product.why}` : ""}. Opens on Amazon (the price there is the real one).`}
-                  // Opening a product must not pick or unpick the upgrade.
-                  onClick={(event) => event.stopPropagation()}
-                  onKeyDown={(event) => event.stopPropagation()}
-                >
-                  <span className="pop-product-name">
-                    <span className="pop-product-shop">Shop</span> {product.name}
-                  </span>
-                  {product.approx_price_usd ? (
-                    <span className="pop-product-price">~${Math.round(product.approx_price_usd).toLocaleString()}</span>
-                  ) : null}
-                  <span className="pop-product-go" aria-hidden="true">↗</span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        ) : null}
       </div>
     </li>
   );
@@ -237,7 +221,6 @@ function PopPhoto({ assetId }: { assetId: string }) {
           if (img.naturalWidth <= 2 || img.naturalHeight <= 2) setHidden(true);
         }}
       />
-      {ids.size > 1 ? <figcaption>Seen {ids.size} times</figcaption> : null}
     </figure>
   );
 }
@@ -516,17 +499,7 @@ export function EnergyAlternatives() {
           </ul>
         )}
         {popout && state.selectedSid ? <PopAiAlternatives sid={state.selectedSid} row={row} /> : null}
-        {popout ? (
-          <button
-            className="pop-link"
-            onClick={() => {
-              dispatch({ type: "focusEnergy", assetId: null });
-              dispatch({ type: "selectAsset", assetId: row.asset_id });
-            }}
-          >
-            See photos and details →
-          </button>
-        ) : (
+        {popout ? null : (
           <p className="muted small">
             Ranges come from the same assumptions as the upgrade plan. Upgrade costs are installed cost
             ranges from the plan's upgrade library.
