@@ -5343,3 +5343,37 @@ h1, h2, h3,
   max-height: calc(100vh - 24px);
   transition: top 220ms ease, left 220ms ease;
 }
+
+/* Card: apply a picked upgrade to every unit of the building */
+.energy-pop .pop-scope {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  color: var(--muted);
+  text-align: left;
+  cursor: pointer;
+}
+.energy-pop .pop-scope.on {
+  color: var(--charcoal);
+  font-weight: 600;
+}
+.energy-pop .pop-scope-box {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  border: 1.5px solid #c9c7bf;
+  font-size: 11px;
+  color: #ffffff;
+}
+.energy-pop .pop-scope.on .pop-scope-box {
+  border-color: var(--forest);
+  background: var(--forest);
+}

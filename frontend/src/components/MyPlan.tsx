@@ -35,18 +35,19 @@ export function MyPlan({ onClose }: { onClose: () => void }) {
     const group = groups.get(street) ?? { street, saves: 0, lines: [] };
     for (const [assetId, pick] of Object.entries(items)) {
       group.lines.push({ sid, assetId, unit, pick });
-      group.saves += pick.saves;
+      group.saves += pick.saves * (pick.units ?? 1);
     }
     groups.set(street, group);
   }
   const ordered = [...groups.values()].sort((a, b) => b.saves - a.saves);
-  ordered.forEach((g) => g.lines.sort((a, b) => b.pick.saves - a.pick.saves));
+  ordered.forEach((g) => g.lines.sort((a, b) => b.pick.saves * (b.pick.units ?? 1) - a.pick.saves * (a.pick.units ?? 1)));
   const lines = ordered.flatMap((g) => g.lines);
-  const saves = lines.reduce((sum, l) => sum + l.pick.saves, 0);
-  const cost = lines.reduce((sum, l) => sum + l.pick.cost, 0);
+  const times = (pick: Pick) => pick.units ?? 1; // a building-wide pick counts for every unit
+  const saves = lines.reduce((sum, l) => sum + l.pick.saves * times(l.pick), 0);
+  const cost = lines.reduce((sum, l) => sum + l.pick.cost * times(l.pick), 0);
   // Heat the picked items add to the rooms, before and after (only picks that know their heat).
-  const heatBefore = lines.reduce((sum, l) => sum + (l.pick.heatBefore ?? 0), 0);
-  const heatAfter = lines.reduce((sum, l) => sum + (l.pick.heatAfter ?? l.pick.heatBefore ?? 0), 0);
+  const heatBefore = lines.reduce((sum, l) => sum + (l.pick.heatBefore ?? 0) * times(l.pick), 0);
+  const heatAfter = lines.reduce((sum, l) => sum + (l.pick.heatAfter ?? l.pick.heatBefore ?? 0) * times(l.pick), 0);
   const heatCut = heatBefore > 0 ? Math.round(((heatBefore - heatAfter) / heatBefore) * 100) : 0;
 
   useEffect(() => {
@@ -113,10 +114,17 @@ export function MyPlan({ onClose }: { onClose: () => void }) {
                   <div>
                     <span className="pm-title">{line.pick.title}</span>
                     <span className="pm-where">
-                      {[line.unit, line.pick.item, line.pick.room].filter(Boolean).join(" · ")}
+                      {(line.pick.units
+                        ? [`All ${line.pick.units} units`, line.pick.item]
+                        : [line.unit, line.pick.item, line.pick.room]
+                      )
+                        .filter(Boolean)
+                        .join(" · ")}
                     </span>
                   </div>
-                  <span className="pm-save">+{money(line.pick.saves)}</span>
+                  <span className="pm-save">
+                    {line.pick.units ? "≈ " : ""}+{money(line.pick.saves * times(line.pick))}
+                  </span>
                   <button
                     type="button"
                     className="pm-remove"

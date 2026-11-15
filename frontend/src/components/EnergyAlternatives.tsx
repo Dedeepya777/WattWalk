@@ -167,6 +167,12 @@ function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEn
   const dispatch = useAppDispatch();
   const state = useAppState();
   const picked = state.chosenUpgrades[row.asset_id] === alt.upgrade_id;
+  const allUnits = picked && Boolean(state.picks[state.selectedSid]?.[row.asset_id]?.units);
+  // Units in this building: CoStar's count when known, otherwise the units scanned at this address.
+  const costarUnits = state.audit?.building?.units?.value;
+  const street = state.testModels.find((m) => m.sid === state.selectedSid)?.address.split(",")[0].trim();
+  const scanned = street ? state.testModels.filter((m) => m.address.split(",")[0].trim() === street).length : 1;
+  const buildingUnits = typeof costarUnits === "number" && costarUnits > 1 ? costarUnits : scanned;
   const room = state.audit?.rooms.find((r) => r.id === row.room_id)?.label ?? "";
   const midpoint = (r: [number, number]) => (r[0] + r[1]) / 2;
   const heat = heatChange(row, alt);
@@ -226,10 +232,25 @@ function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEn
             title={alt.products[0].name}
             // Opening a product must not pick or unpick the upgrade.
             onClick={(event) => event.stopPropagation()}
-            onKeyDown={(event) => event.stopPropagation()}
+            onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") event.stopPropagation(); }}
           >
             Buy on Amazon <span aria-hidden="true">↗</span>
           </a>
+        ) : null}
+        {picked && buildingUnits > 1 ? (
+          <button
+            type="button"
+            className={`pop-scope${allUnits ? " on" : ""}`}
+            aria-pressed={allUnits}
+            onClick={(event) => {
+              event.stopPropagation();
+              dispatch({ type: "pickScope", assetId: row.asset_id, units: allUnits ? null : buildingUnits });
+            }}
+            onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") event.stopPropagation(); }}
+          >
+            <span className="pop-scope-box" aria-hidden="true">{allUnits ? "✓" : ""}</span>
+            All {labelText(row.label).toLowerCase()}s in this building ({buildingUnits} units)
+          </button>
         ) : null}
       </div>
     </li>

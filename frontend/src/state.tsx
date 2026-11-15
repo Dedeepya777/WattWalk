@@ -86,6 +86,8 @@ export interface Pick {
   /** Heat the item adds to the room per year, before and after the upgrade (kWh, midpoints). */
   heatBefore?: number;
   heatAfter?: number;
+  /** Applied to every unit of the building: how many units it counts for (unset = this unit only). */
+  units?: number;
 }
 
 /** Picks per apartment (sid) and item (asset id). */
@@ -159,6 +161,7 @@ export type Action =
   | { type: "aiAlternatives"; data: AiAlternativesResponse }
   | { type: "chooseUpgrade"; assetId: string; upgradeId: string | null; pick?: Pick }
   | { type: "removePick"; sid: string; assetId: string }
+  | { type: "pickScope"; assetId: string; units: number | null }
   | { type: "buildingView"; key: string | null }
   | { type: "focusEnergy"; assetId: string | null; origin?: { x: number; y: number; r?: number; color?: string } | null }
   | { type: "planRequest"; request: PlanRequest }
@@ -254,6 +257,13 @@ export function reducer(state: AppState, action: Action): AppState {
       const picks = { ...state.picks, [sid]: unit };
       if (Object.keys(unit).length === 0) delete picks[sid];
       return { ...state, picks, chosenUpgrades: chosenFor(picks, sid) };
+    }
+    case "pickScope": {
+      const sid = state.selectedSid;
+      const pick = state.picks[sid]?.[action.assetId];
+      if (!pick) return state;
+      const updated = { ...pick, units: action.units ?? undefined };
+      return { ...state, picks: { ...state.picks, [sid]: { ...state.picks[sid], [action.assetId]: updated } } };
     }
     case "removePick": {
       const unit = { ...(state.picks[action.sid] ?? {}) };

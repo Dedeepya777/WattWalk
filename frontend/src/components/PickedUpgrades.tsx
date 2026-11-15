@@ -9,7 +9,7 @@ export function PickedUpgrades() {
   const close = useCallback(() => setOpen(false), []);
   const picks = Object.values(state.picks).flatMap((items) => Object.values(items));
   if (picks.length === 0) return null;
-  const saves = picks.reduce((sum, pick) => sum + pick.saves, 0);
+  const saves = picks.reduce((sum, pick) => sum + pick.saves * (pick.units ?? 1), 0);
   return (
     <>
       <section className="panel plan-card" aria-labelledby="plan-card-heading">
