@@ -185,7 +185,7 @@
         "escalated": {"type": "boolean"},
         "crop_ref": {"type": "string", "description": "Relative path under the audit folder, e.g. crops/o001.jpg"},
         "anchor": {"anyOf": [{"$ref": "#/$defs/Vec3"}, {"type": "null"}]},
-        "anchor_method": {"type": "string", "enum": ["wall_raycast", "ceiling_plane", "floor_plane", "none"]},
+        "anchor_method": {"type": "string", "enum": ["wall_raycast", "ceiling_plane", "floor_plane", "two_view", "none"]},
         "room_id": {"anyOf": [{"$ref": "#/$defs/Id"}, {"type": "null"}]},
         "quality": {"$ref": "#/$defs/Quality"},
         "created_at": {"$ref": "#/$defs/Timestamp"}

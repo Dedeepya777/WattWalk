@@ -174,7 +174,7 @@ class Observation(_Strict):
     escalated: bool
     crop_ref: str
     anchor: Optional[Vec3] = None
-    anchor_method: Literal["wall_raycast", "ceiling_plane", "floor_plane", "none"]
+    anchor_method: Literal["wall_raycast", "ceiling_plane", "floor_plane", "two_view", "none"]
     room_id: Optional[str] = None
     quality: Quality
     created_at: str

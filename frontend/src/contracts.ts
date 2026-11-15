@@ -102,7 +102,7 @@ export interface Observation {
   escalated: boolean;
   crop_ref: string;
   anchor: Vec3 | null;
-  anchor_method: "wall_raycast" | "ceiling_plane" | "floor_plane" | "none";
+  anchor_method: "wall_raycast" | "ceiling_plane" | "floor_plane" | "two_view" | "none";
   room_id: string | null;
   quality: Quality;
   created_at: string;

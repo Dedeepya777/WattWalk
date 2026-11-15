@@ -28,7 +28,7 @@ from .prompts import (ATTR_ORDER, KEY_ATTR, NON_VISUAL, SECOND_LOOK_LABELS, USER
 from .questions import apply_answer, make_question
 from .router import key_unknown, next_action
 from .state import load_state, lock, log_calls, next_observation_ids, next_question_id, save_state
-from .triangulate import rescue_blocked
+from .triangulate import anchor_unplaced, rescue_blocked
 from .types import (FINAL_ACTIONS, MAX_LARGE_CALLS_PER_AUDIT, AskFn, InspectResult, RawDetection, RejectedFace,
                     ResolveResult, RouterState, Signals)
 from .views import face_toward, neighbor_pano, plan_views, room_for  # noqa: F401  (plan_views re-exported, canonical)
@@ -189,7 +189,11 @@ def _rescue_doorway_anchors(sid: str, geometry: ModelGeometry, new: list[Observa
     that are fixed are written back now; the new ones are returned fixed for the caller to store."""
     stored = store.observations(sid)
     known = {o.id for o in new}
-    fixed = rescue_blocked([o for o in stored if o.id not in known] + new, geometry)
+    together = [o for o in stored if o.id not in known] + new
+    fixed = rescue_blocked(together, geometry)
+    # Objects with no wall to cast onto (scans without a floor plan): place them where two sight lines cross.
+    placed = anchor_unplaced([fixed.get(o.id, o) for o in together], geometry)
+    fixed.update(placed)
     if not fixed:
         return new
     earlier = [fixed[o.id] for o in stored if o.id in fixed and o.id not in known]
