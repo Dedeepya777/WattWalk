@@ -23,8 +23,8 @@ export function ProgressTracker() {
     return () => window.clearInterval(timer);
   }, [running]);
 
-  if (!running && state.events.length === 0) return null;
-  if (!running && status !== "completed") return null;
+  // Only while an audit runs: once it is done, the status next to the apartment's name says so.
+  if (!running) return null;
 
   const startedAt = state.audit?.status.started_at ? Date.parse(state.audit.status.started_at) : NaN;
   const elapsed = running && Number.isFinite(startedAt)
