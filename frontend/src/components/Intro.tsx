@@ -125,8 +125,8 @@ export function Intro({ onExplore, onSkip }: Props) {
       <main className="intro-hero">
         <div className="intro-copy">
           <h1 id="intro-title">
-            See where an apartment loses energy.
-            <span>And what to fix first.</span>
+            Better buildings. Lower bills. Cleaner planet.
+            <span>Energy intelligence for landlords and renters alike.</span>
           </h1>
           <div className="intro-actions">
             <button type="button" className="intro-cta" onClick={start} disabled={grow !== null}>
