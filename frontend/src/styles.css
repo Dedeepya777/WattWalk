@@ -3945,3 +3945,10 @@ select:disabled {
   height: 8px;
   border-radius: 999px;
 }
+
+/* Progress: the last, open-ended step */
+.progress-fill.finishing {
+  background: linear-gradient(90deg, var(--moss), var(--forest), var(--moss));
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
