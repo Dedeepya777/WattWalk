@@ -1,11 +1,10 @@
 /** "Pins: Details | Cost | Heat" switch and its colour legend (step 3 of the energy view). */
 import { useAppDispatch, useAppState } from "../state";
-import { LEGEND_CSS, NOT_ESTIMATED, REMOVES_HEAT, buildScale, legendLabels, toHex, type PinColorMode } from "../viewer/energyColor";
+import { LEGEND_CSS, REMOVES_HEAT, buildScale, legendLabels, toHex, type PinColorMode } from "../viewer/energyColor";
 
 const MODES: { mode: PinColorMode; label: string; title: string }[] = [
-  { mode: "details", label: "Details", title: "Green: every detail seen. Amber: some details unknown." },
-  { mode: "cost", label: "Cost", title: "Colour by electricity cost per year (blue low, red high)" },
   { mode: "heat", label: "Heat", title: "Colour by heat added to the room per year (blue low, red high)" },
+  { mode: "cost", label: "Cost", title: "Colour by electricity cost per year (blue low, red high)" },
 ];
 
 export function PinColorControls() {
@@ -17,8 +16,7 @@ export function PinColorControls() {
 
   return (
     <div className="pin-color-controls">
-      <div className="segmented" role="group" aria-label="Pin colours">
-        <span className="segmented-label muted small">Pins</span>
+      <div className="segmented" role="group" aria-label="Colour items by">
         {MODES.map(({ mode, label, title }) => {
           const disabled = mode !== "details" && !hasEnergy;
           return (
@@ -47,9 +45,6 @@ export function PinColorControls() {
               <span className="energy-swatch" style={{ background: toHex(REMOVES_HEAT) }} /> removes heat
             </span>
           ) : null}
-          <span className="energy-legend-key muted small">
-            <span className="energy-swatch" style={{ background: toHex(NOT_ESTIMATED) }} /> not estimated
-          </span>
         </div>
       ) : null}
     </div>

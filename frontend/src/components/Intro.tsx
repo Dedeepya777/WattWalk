@@ -89,23 +89,37 @@ export function Intro({ onExplore, onSkip }: Props) {
 
       <main className="intro-hero">
         <div className="intro-copy">
-          <p className="intro-kicker">Energy audits from a 3D tour</p>
+          <p className="intro-eyebrow">Energy audits from a 3D tour</p>
           <h1 id="intro-title">
-            See where your apartment loses energy, <span>and what to fix first.</span>
+            See where an apartment loses energy.
+            <span>And what to fix first.</span>
           </h1>
-          <p className="intro-sub">
-            Walk a 3D scan. Every light, window and appliance glows by the heat it adds. Pick upgrades and
-            get a plan.
-          </p>
           <div className="intro-actions">
             <button type="button" className="intro-cta" onClick={onExplore}>
-              Explore a demo apartment <span aria-hidden="true">→</span>
+              Explore a demo apartment
+            </button>
+            <button type="button" className="intro-link" onClick={onSkip}>
+              Open the app <span aria-hidden="true">›</span>
             </button>
           </div>
         </div>
         <div className="intro-visual">
           <RoomIllustration />
         </div>
+        <ol className="intro-steps">
+          <li>
+            <strong>Scan</strong>
+            <span>Uses the Matterport tour the listing already has. No site visit.</span>
+          </li>
+          <li>
+            <strong>See</strong>
+            <span>Every light, window and appliance glows by the heat it adds.</span>
+          </li>
+          <li>
+            <strong>Fix</strong>
+            <span>Pick upgrades and get one plan with cost, savings and payback.</span>
+          </li>
+        </ol>
       </main>
     </div>
   );

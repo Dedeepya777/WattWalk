@@ -124,10 +124,12 @@ function PopNow({ row, scale }: { row: AssetEnergy; scale: EnergyScale | null })
   const heat = mid(row.heat_kwh_yr);
   const cools = row.heat_kwh_yr !== null && row.heat_kwh_yr[0] < 0;
   return (
-    <section className="energy-alt-now energy-alt-with-glow pop-row">
-      <Glow size={GLOW_MAX} color={glowColor(heat, scale)} />
+    <section className="energy-alt-now pop-row pop-now">
       <div>
-        <div className="pop-kicker">Today</div>
+        <div className="pop-kicker">
+          <span className="pop-dot" style={{ background: glowColor(heat, scale) }} aria-hidden="true" />
+          Today
+        </div>
         <div className="pop-big">
           {formatRange(row.usd_yr, "", true)}
           <span className="pop-unit">/yr</span>
@@ -141,32 +143,6 @@ function PopNow({ row, scale }: { row: AssetEnergy; scale: EnergyScale | null })
 }
 
 /** Pop-out: the upgrade, what it saves (big), and cost and payback in one line. */
-/** Ring filled to the share of the item's electricity the upgrade cuts, with the % in the middle. */
-function CutRing({ pct }: { pct: number | null }) {
-  const r = 24;
-  const length = 2 * Math.PI * r;
-  const share = pct === null ? 0 : Math.max(0, Math.min(100, pct)) / 100;
-  return (
-    <div className="energy-alt-glow-box pop-ring" aria-label={pct === null ? "energy cut unknown" : `cuts ${pct}% of its energy`}>
-      <svg viewBox="0 0 60 60" width="60" height="60" aria-hidden="true">
-        <circle cx="30" cy="30" r={r} className="pop-ring-track" />
-        <circle
-          cx="30"
-          cy="30"
-          r={r}
-          className="pop-ring-fill"
-          strokeDasharray={`${length * share} ${length}`}
-          transform="rotate(-90 30 30)"
-        />
-      </svg>
-      <span className="pop-ring-text">
-        <strong>{pct === null ? "?" : `−${pct}%`}</strong>
-        <small>energy</small>
-      </span>
-    </div>
-  );
-}
-
 function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEnergy; ai?: boolean }) {
   const dispatch = useAppDispatch();
   const picked = useAppState().chosenUpgrades[row.asset_id] === alt.upgrade_id;
@@ -191,12 +167,11 @@ function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEn
         }
       }}
     >
-      <CutRing pct={cut} />
       <span className="pop-check" aria-hidden="true">{picked ? "✓" : ""}</span>
       <div>
         <div className="pop-title">
           {alt.title}
-          {ai ? <span className="pop-ai-tag" title={alt.basis}>AI estimate</span> : null}
+          {ai ? <span className="pop-ai-tag" title={alt.basis}>estimate</span> : null}
         </div>
         <div className="pop-save">
           Save {formatRange(alt.saves_usd_yr, "", true)}
@@ -204,6 +179,7 @@ function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEn
         </div>
         <div className="pop-sub">
           {free ? "Free, just a habit change" : `${formatRange(alt.cost_usd, "", true)} · pays back in ${formatPayback(alt.payback_years)}`}
+          {cut !== null && cut > 0 ? ` · uses ${cut}% less energy` : ""}
         </div>
         {alt.products?.length ? (
           <ul className="pop-products" aria-label={`Products for ${alt.title}`}>
@@ -298,14 +274,14 @@ function PopAiAlternatives({ sid, row }: { sid: string; row: AssetEnergy }) {
   if (ai.status === "idle") {
     return (
       <button className="pop-ai-button" onClick={() => void find(false)}>
-        ✨ Find more alternatives
+        More options
       </button>
     );
   }
   if (ai.status === "loading") {
     return (
       <div className="pop-ai-button pop-ai-loading" role="status">
-        <span className="spinner" aria-hidden="true" /> Researching alternatives…
+        <span className="spinner" aria-hidden="true" /> Looking for more options…
       </div>
     );
   }
@@ -327,7 +303,7 @@ function PopAiAlternatives({ sid, row }: { sid: string; row: AssetEnergy }) {
       {data.today_usd_yr ? (
         <p className="pop-ai-today">
           Today, roughly <strong>{formatRange(data.today_usd_yr, "", true)}/yr</strong>
-          <span className="pop-ai-tag">AI estimate</span>
+          <span className="pop-ai-tag">estimate</span>
         </p>
       ) : null}
       {data.alternatives.length ? (
@@ -340,7 +316,7 @@ function PopAiAlternatives({ sid, row }: { sid: string; row: AssetEnergy }) {
         <p className="empty">{data.note}</p>
       )}
       <button className="pop-link" onClick={() => void find(true)}>
-        Ask again
+        Look again
       </button>
     </section>
   );
