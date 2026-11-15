@@ -5,6 +5,10 @@ energy-relevant assets (windows, lights, AC units, appliances…), places them a
 plan and in the 3D tour, and produces a costed upgrade plan that shows what the landlord pays and what
 the tenant saves. Built at HackPrinceton Fall 2026 (CoStar "Inside and Out: AI for the Built World").
 
+[![Watch the 30-second WattWalk demo on YouTube](docs/demo-thumbnail.jpg)](https://youtu.be/pm9TwyjIKaM)
+
+▶ [Watch the 30-second demo on YouTube](https://youtu.be/pm9TwyjIKaM)
+
 ## How it works
 
 ```mermaid
