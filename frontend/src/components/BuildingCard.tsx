@@ -30,10 +30,20 @@ export function BuildingCard() {
   const running = state.audit?.status.status === "running";
 
   return (
-    <section className="panel" aria-labelledby="building-heading">
-      <div className="panel-heading">
+    <details className="panel building-details">
+      <summary className="panel-heading building-summary">
         <h2 id="building-heading">Building</h2>
-      </div>
+        <span className="muted small">
+          {building
+            ? [
+                building.year_built.value ? `Built ${building.year_built.value}` : null,
+                building.units.value ? `${building.units.value} units` : null,
+              ]
+                .filter(Boolean)
+                .join(" · ") || "Details"
+            : ""}
+        </span>
+      </summary>
       {!building ? (
         running ? (
           <div className="skeleton skeleton-card" />
@@ -113,6 +123,6 @@ export function BuildingCard() {
           </div>
         </div>
       )}
-    </section>
+    </details>
   );
 }

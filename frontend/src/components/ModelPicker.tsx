@@ -1,7 +1,6 @@
 /** Model picker (plan 11.3). Five configured test models from GET /models/test. */
 import { useState } from "react";
 import type { TestModel } from "../contracts";
-import { formatNumber } from "../format";
 import { useAppDispatch, useAppState } from "../state";
 
 interface Props {
@@ -11,6 +10,13 @@ interface Props {
   switchBusy: boolean;
   switchError: string | null;
   onDismissSwitchError: () => void;
+}
+
+/** "215 W 7th St, Unit 301" from "215 W 7th St, Unit 301, Los Angeles, CA" (city and state dropped). */
+function shortAddress(model: TestModel): string {
+  const parts = model.address.split(",").map((part) => part.trim());
+  const cut = parts.findIndex((part, index) => index > 0 && part.toLowerCase().startsWith(model.city.toLowerCase().split(" ")[0]));
+  return (cut > 0 ? parts.slice(0, cut) : parts.slice(0, 2)).join(", ");
 }
 
 export function ModelPicker({
@@ -41,8 +47,7 @@ export function ModelPicker({
   return (
     <section className="panel" aria-labelledby="models-heading">
       <div className="panel-heading">
-        <h2 id="models-heading">Choose a scan</h2>
-        <span className="muted small">{formatNumber(state.testModels.length)} models</span>
+        <h2 id="models-heading">Apartments</h2>
       </div>
       {state.modelsError ? (
         <div className="inline-error">
@@ -55,12 +60,6 @@ export function ModelPicker({
         <p className="empty">No test models configured.</p>
       ) : (
         <>
-          {running ? (
-            <p className="hint small">
-              An audit is running. Switching scans asks you to cancel it first; you can keep it
-              running and come back later.
-            </p>
-          ) : null}
           <ul className="model-list">
             {state.testModels.map((model) => {
               const selected = model.sid === state.selectedSid;
@@ -71,19 +70,16 @@ export function ModelPicker({
                     className={`model-row ${selected ? "selected" : ""}`}
                     onClick={() => choose(model)}
                     aria-pressed={selected}
+                    title={`${model.address}\n${model.note}`}
                   >
-                    <span className="model-address">{model.address}</span>
+                    <span className="model-address">{shortAddress(model)}</span>
                     <span className="model-meta">
                       <span>{model.city}</span>
-                      <span className="model-sid">{model.sid}</span>
-                    </span>
-                    <span className="model-note">{model.note}</span>
-                    <span className="badge-row">
-                      {model.has_fixture ? <span className="badge badge-ok">fixture</span> : null}
-                      {model.has_replay ? <span className="badge badge-info">replay</span> : null}
-                      {!model.has_fixture && !model.has_replay ? (
-                        <span className="badge badge-muted">live only</span>
-                      ) : null}
+                      {model.has_fixture || model.has_replay ? (
+                        <span className="model-tag model-tag-ready">Instant demo</span>
+                      ) : (
+                        <span className="model-tag">Live scan</span>
+                      )}
                     </span>
                   </button>
                 </li>

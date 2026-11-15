@@ -23,7 +23,6 @@ import { EnergyAlternatives } from "./components/EnergyAlternatives";
 import { EvidenceCard } from "./components/EvidenceCard";
 import { ModelPicker } from "./components/ModelPicker";
 import { ModeBanner } from "./components/ModeBanner";
-import { PlanPanel } from "./components/PlanPanel";
 import { QuestionDialog } from "./components/QuestionDialog";
 import { StartControls } from "./components/StartControls";
 import { Logo } from "./components/Logo";
@@ -593,9 +592,6 @@ export default function App() {
           </div>
         </section>
 
-        <aside className="right-column">
-          <PlanPanel />
-        </aside>
       </div>
 
       {panelOpen ? (

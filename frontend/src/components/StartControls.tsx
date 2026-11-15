@@ -18,6 +18,14 @@ interface Props {
   otherRunSid?: string | null;
 }
 
+const STATUS_TEXT: Record<string, string> = {
+  idle: "Not started",
+  running: "Running",
+  completed: "Done",
+  failed: "Failed",
+  cancelled: "Stopped",
+};
+
 const INTEGRATION_LABEL: Record<string, string> = {
   costar_kit: "CoStar",
   ebewe: "EBEWE",
@@ -35,6 +43,8 @@ export function StartControls({
   const running = state.audit?.status.status === "running";
   const [mode, setMode] = useState<Mode>(isFixtureMode ? "fixture" : "live");
   const [busy, setBusy] = useState<null | "start" | "cancel" | "reset">(null);
+  const [showOptions, setShowOptions] = useState(false);
+  const [liveFailed, setLiveFailed] = useState(false);
   const [probe, setProbe] = useState<Health | null>(null);
   const [probing, setProbing] = useState(false);
   const [probeError, setProbeError] = useState<string | null>(null);
@@ -43,9 +53,9 @@ export function StartControls({
 
   const model = state.testModels.find((item) => item.sid === state.selectedSid);
 
-  const probeLive = async (force = false) => {
-    if (probingRef.current) return;
-    if (!force && Date.now() - lastProbeRef.current < 60_000) return;
+  const probeLive = async (force = false): Promise<Health | null> => {
+    if (probingRef.current) return null;
+    if (!force && Date.now() - lastProbeRef.current < 60_000) return probe;
     probingRef.current = true;
     setProbing(true);
     setProbeError(null);
@@ -55,12 +65,14 @@ export function StartControls({
       const result = await getHealthProbe(controller.signal);
       setProbe(result);
       lastProbeRef.current = Date.now();
+      return result;
     } catch (error) {
       setProbeError(
         error instanceof ApiFailure
           ? error.message
           : "Could not check the live integrations.",
       );
+      return null;
     } finally {
       window.clearTimeout(timer);
       probingRef.current = false;
@@ -105,10 +117,6 @@ export function StartControls({
     return `Live needs Matterport and Bedrock. ${missing.join(". ")}.`;
   })();
 
-  const noModeReason = available.replay || available.fixture
-    ? "No audit mode is available for this scan. Choose another scan or check the integrations."
-    : "No audit mode is available. Live needs Matterport and Bedrock, and this scan has no replay or fixture.";
-
   const startDisabled =
     running ||
     busy !== null ||
@@ -122,109 +130,38 @@ export function StartControls({
     state.audit?.status.error?.error.message ??
     null;
 
+  const status = state.audit?.status.status ?? "idle";
+  const done = status === "completed";
+  const MODE_LABEL: Record<Mode, string> = { live: "Live", replay: "Replay", fixture: "Demo data" };
+  const MODE_TITLE: Record<Mode, string> = {
+    live: liveReady
+      ? degraded.length
+        ? `Live scan and AI. Running with less detail: ${degraded.join(", ")} unavailable.`
+        : "Live scan and AI"
+      : liveReason ?? "Live needs Matterport and the AI model",
+    replay: available.replay ? "Replay a recorded audit (instant)" : "This apartment has no recording",
+    fixture: available.fixture ? "Illustrative demo data (instant)" : "This apartment has no demo data",
+  };
+  const start = async () => {
+    setBusy("start");
+    try {
+      await onStart(mode);
+    } finally {
+      setBusy(null);
+    }
+  };
+
   return (
-    <section className="panel" aria-labelledby="run-heading">
+    <section className="panel audit-panel" aria-labelledby="run-heading">
       <div className="panel-heading">
         <h2 id="run-heading">Audit</h2>
-        <span className={`status-dot status-${state.audit?.status.status ?? "idle"}`}>
-          {state.audit?.status.status ?? "idle"}
-        </span>
+        <span className={`status-dot status-${status}`}>{STATUS_TEXT[status] ?? status}</span>
       </div>
 
-      <div className="field">
-        <span>Mode</span>
-        <div
-          className="segmented"
-          role="group"
-          aria-label="Audit mode"
-          onFocus={() => void probeLive()}
-          onMouseDown={() => void probeLive()}
-        >
-          <button
-            type="button"
-            className={mode === "live" ? "segmented-button active" : "segmented-button"}
-            aria-pressed={mode === "live"}
-            disabled={!available.live || running || busy !== null}
-            title={liveReason ?? "Live audit with Matterport, Bedrock and property data"}
-            onClick={() => setMode("live")}
-          >
-            {probing ? <span className="spinner" aria-hidden="true" /> : null}
-            live
-          </button>
-          <button
-            type="button"
-            className={mode === "replay" ? "segmented-button active" : "segmented-button"}
-            aria-pressed={mode === "replay"}
-            disabled={!available.replay || running || busy !== null}
-            title={available.replay ? "Replay a recorded audit" : "This scan has no replay recording"}
-            onClick={() => setMode("replay")}
-          >
-            replay
-          </button>
-          <button
-            type="button"
-            className={mode === "fixture" ? "segmented-button active" : "segmented-button"}
-            aria-pressed={mode === "fixture"}
-            disabled={!available.fixture || running || busy !== null}
-            title={available.fixture ? "Run the illustrative fixture" : "This scan has no fixture"}
-            onClick={() => setMode("fixture")}
-          >
-            fixture
-          </button>
-        </div>
-      </div>
-
-      {liveReason ? (
-        <p className="hint small">
-          {liveReason}{" "}
-          {!probing ? (
-            <button className="button small" onClick={() => void probeLive(true)}>
-              Check integrations
-            </button>
-          ) : null}
-        </p>
-      ) : degraded.length > 0 ? (
-        <p className="hint small">
-          Live will run with reduced detail: {degraded.join(", ")} unavailable. The audit degrades
-          gracefully.
-        </p>
-      ) : null}
-
-      {otherRunSid ? (
-        <p className="hint small">
-          An audit for {otherRunSid} is still running. Cancel it or wait before starting another.
-        </p>
-      ) : null}
-
-      <div className="button-row">
-        {anyAvailable ? (
-          <button
-            className="button primary"
-            onClick={async () => {
-              setBusy("start");
-              try {
-                await onStart(mode);
-              } finally {
-                setBusy(null);
-              }
-            }}
-            disabled={startDisabled}
-          >
-            {busy === "start" || auditLoading ? (
-              <span className="spinner" aria-hidden="true" />
-            ) : null}
-            {auditLoading
-              ? "Checking scan\u2026"
-              : busy === "start"
-                ? "Starting\u2026"
-                : "Start audit"}
-          </button>
-        ) : (
-          <p className="hint">{noModeReason}</p>
-        )}
+      {running ? (
         <button
-          className="button"
-          disabled={!running || busy !== null}
+          className="button audit-main"
+          disabled={busy !== null}
           onClick={async () => {
             setBusy("cancel");
             try {
@@ -234,31 +171,122 @@ export function StartControls({
             }
           }}
         >
-          Cancel
+          {busy === "cancel" ? <span className="spinner" aria-hidden="true" /> : null}
+          Stop audit
         </button>
+      ) : anyAvailable ? (
+        <button className="button primary audit-main" onClick={() => void start()} disabled={startDisabled}>
+          {busy === "start" || auditLoading ? <span className="spinner" aria-hidden="true" /> : null}
+          {auditLoading
+            ? "Checking apartment…"
+            : busy === "start"
+              ? "Starting…"
+              : done
+                ? "Run audit again"
+                : "Start audit"}
+        </button>
+      ) : (
+        // Live-only apartment: check the live services, then start a live audit straight away.
         <button
-          className="button"
-          disabled={running || busy !== null}
+          className="button primary audit-main"
+          disabled={probing || busy !== null || auditLoading || Boolean(otherRunSid)}
           onClick={async () => {
-            setBusy("reset");
+            setLiveFailed(false);
+            const health = await probeLive(true);
+            const ok = health?.integrations.matterport === "live" && health?.integrations.bedrock === "live";
+            if (!ok) {
+              setLiveFailed(true);
+              return;
+            }
+            setMode("live");
+            setBusy("start");
             try {
-              await onReset();
+              await onStart("live");
             } finally {
               setBusy(null);
             }
           }}
         >
-          Reset
+          {probing || busy === "start" ? <span className="spinner" aria-hidden="true" /> : null}
+          {probing ? "Connecting\u2026" : busy === "start" ? "Starting\u2026" : done ? "Run audit again" : "Start audit"}
         </button>
-      </div>
+      )}
+      {liveFailed && !anyAvailable ? (
+        <p className="hint small audit-note" title={liveReason ?? undefined}>
+          Live services aren’t ready. Pick an Instant demo apartment.
+        </p>
+      ) : null}
 
       <ProgressTracker />
 
-      {isFixtureMode ? (
-        <p className="hint">
-          The API is in fixture mode, so Start always plays the illustrative fixture audit and the
-          banner stays labelled fixture.
-        </p>
+      {!running ? (
+        <button
+          type="button"
+          className="audit-link audit-options-toggle"
+          aria-expanded={showOptions}
+          onClick={() => setShowOptions((open) => !open)}
+        >
+          {showOptions ? "Hide options" : "Options"}
+        </button>
+      ) : null}
+
+      {showOptions && !running ? (
+      <div className="audit-extras">
+        <div
+          className="segmented audit-mode"
+          role="group"
+          aria-label="Audit source"
+          onFocus={() => void probeLive()}
+          onMouseDown={() => void probeLive()}
+        >
+          {(["live", "replay", "fixture"] as Mode[]).map((m) => (
+            <button
+              key={m}
+              type="button"
+              className={mode === m ? "segmented-button active" : "segmented-button"}
+              aria-pressed={mode === m}
+              disabled={!available[m] || running || busy !== null}
+              title={MODE_TITLE[m]}
+              onClick={() => setMode(m)}
+            >
+              {m === "live" && probing ? <span className="spinner" aria-hidden="true" /> : null}
+              {MODE_LABEL[m]}
+            </button>
+          ))}
+        </div>
+        {!liveReady && !probing ? (
+          <button
+            className="audit-link"
+            title={liveReason ?? undefined}
+            onClick={() => void probeLive(true)}
+          >
+            Enable live
+          </button>
+        ) : null}
+        {!running && state.audit && status !== "idle" ? (
+          <button
+            className="audit-link"
+            disabled={busy !== null}
+            title="Clear this apartment's results"
+            onClick={async () => {
+              setBusy("reset");
+              try {
+                await onReset();
+              } finally {
+                setBusy(null);
+              }
+            }}
+          >
+            Reset
+          </button>
+        ) : null}
+      </div>
+      ) : null}
+
+      {probeError && showOptions ? <p className="hint small">{liveReason}</p> : null}
+
+      {otherRunSid ? (
+        <p className="hint small">Another apartment is still being audited. Stop it or wait first.</p>
       ) : null}
 
       {error ? (
@@ -268,10 +296,10 @@ export function StartControls({
         </div>
       ) : null}
 
-      {state.audit?.status.status === "failed" ? (
-        <p className="hint">
-          Retry, or switch the mode to fixture/replay. Check MATTERPORT_API_KEY and
-          MATTERPORT_API_TOKEN in .env for upstream_auth.
+      {status === "failed" ? (
+        <p className="hint small">
+          Try again, or pick Replay or Demo data. If it says upstream_auth, check MATTERPORT_API_KEY and
+          MATTERPORT_API_TOKEN in .env.
         </p>
       ) : null}
     </section>
