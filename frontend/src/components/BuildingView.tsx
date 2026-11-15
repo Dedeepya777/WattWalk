@@ -119,8 +119,7 @@ export function BuildingView() {
   const audited = (units ?? []).filter((u) => u.status === "audited").sort((a, b) => b.cost - a.cost);
   const others = (units ?? []).filter((u) => u.status !== "audited");
   const avgCost = audited.length ? audited.reduce((s, u) => s + u.cost, 0) / audited.length : 0;
-  const buildingUnits = (units ?? []).map((u) => u.buildingUnits).find((n) => n !== null) ?? null;
-  const scale = buildingUnits ?? audited.length; // whole building when its unit count is known
+  const scale = audited.length; // the landlord's own audited units only, not the whole building
   const spend = avgCost * scale;
   const avgSave = audited.length ? audited.reduce((s, u) => s + u.saveAll, 0) / audited.length : 0;
   const avgInstall = audited.length ? audited.reduce((s, u) => s + u.installAll, 0) / audited.length : 0;
@@ -138,7 +137,11 @@ export function BuildingView() {
     <div className="building-view bv-min">
       <header className="bvm-head">
         <h2>{group.street}</h2>
-        <p>{buildingUnits ? `${buildingUnits} units` : `${group.models.length} units`}</p>
+        <p>
+          {audited.length
+            ? `Your ${audited.length} audited unit${audited.length === 1 ? "" : "s"}`
+            : `${group.models.length} unit${group.models.length === 1 ? "" : "s"}`}
+        </p>
       </header>
 
       {units === null ? (
