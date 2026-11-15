@@ -64,19 +64,22 @@ export function MyPlan({ onClose }: { onClose: () => void }) {
           <h2 id="my-plan-title">
             Save <span className="my-plan-money">{formatRange(totals.saves, "", true)}</span> a year
           </h2>
-          <p className="my-plan-facts">
-            <span>
-              <strong>{formatRange(totals.cost, "", true)}</strong> to install
-            </span>
-            <span>
-              pays for itself in <strong>{totals.payback ? formatPayback(totals.payback) : "–"}</strong>
-            </span>
+          <dl className="my-plan-stats">
+            <div>
+              <dt>To install</dt>
+              <dd>{formatRange(totals.cost, "", true)}</dd>
+            </div>
+            <div>
+              <dt>Pays for itself in</dt>
+              <dd>{totals.payback ? formatPayback(totals.payback) : "–"}</dd>
+            </div>
             {heat > 0 ? (
-              <span>
-                <strong>{Math.round(heat).toLocaleString()} kWh</strong> less heat a year
-              </span>
+              <div>
+                <dt>Less heat a year</dt>
+                <dd>{Math.round(heat).toLocaleString()} kWh</dd>
+              </div>
             ) : null}
-          </p>
+          </dl>
         </header>
 
         <h3 className="my-plan-steps-title">
@@ -91,7 +94,7 @@ export function MyPlan({ onClose }: { onClose: () => void }) {
                 <div className="my-plan-step-body">
                   <div className="my-plan-step-title">
                     {line.alt.title}
-                    {line.ai ? <span className="my-plan-ai">AI estimate</span> : null}
+                    {line.ai ? <span className="my-plan-ai">estimate</span> : null}
                   </div>
                   <div className="my-plan-step-sub">
                     {line.item}

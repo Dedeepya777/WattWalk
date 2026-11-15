@@ -546,6 +546,7 @@ export default function App() {
             switchError={switchError}
             onDismissSwitchError={() => setSwitchError(null)}
           />
+          <PickedUpgrades />
         </aside>
 
         <section className="panel viewer-panel" aria-labelledby="viewer-heading">
@@ -587,7 +588,6 @@ export default function App() {
               </button>
             </div>
             <CostsButton open={costsOpen} onToggle={() => setCostsOpen((open) => !open)} />
-            {state.viewMode === "3d" ? <PickedUpgrades /> : null}
             <span className="toolbar-spacer" />
             <StartControls
               onStart={handleStart}

@@ -1,4 +1,4 @@
-/** Heat map: one clear button for the upgrades picked so far, opening "Your plan". */
+/** "Your plan" card in the left column: the upgrades picked so far, opening the plan. */
 import { useCallback, useState } from "react";
 import { useAppState } from "../state";
 import { afterTotals } from "../viewer/afterUpgrades";
@@ -12,19 +12,17 @@ export function PickedUpgrades() {
   if (totals.upgraded === 0) return null;
   return (
     <>
-      <button
-        type="button"
-        className="plan-cta"
-        onClick={() => setOpen(true)}
-        title="Glows marked ✓ show the item with the upgrade you picked"
-      >
-        <span className="plan-cta-count" aria-hidden="true">{totals.upgraded}</span>
-        <span className="plan-cta-text">
-          <strong>See your plan</strong>
-          <span>Save ${Math.round(totals.usd).toLocaleString()} a year</span>
-        </span>
-        <span className="plan-cta-arrow" aria-hidden="true">→</span>
-      </button>
+      <section className="panel plan-card" aria-labelledby="plan-card-heading">
+        <div>
+          <h2 id="plan-card-heading">Your plan</h2>
+          <p className="muted small">
+            {totals.upgraded} upgrade{totals.upgraded === 1 ? "" : "s"} · save ${Math.round(totals.usd).toLocaleString()} a year
+          </p>
+        </div>
+        <button type="button" className="button small" onClick={() => setOpen(true)}>
+          View
+        </button>
+      </section>
       {open ? <MyPlan onClose={close} /> : null}
     </>
   );

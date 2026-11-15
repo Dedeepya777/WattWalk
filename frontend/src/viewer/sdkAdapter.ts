@@ -151,6 +151,10 @@ export interface TagSpec {
   anchorPosition: Vec3;
   stemVector: Vec3;
   color: { r: number; g: number; b: number };
+  /** 0 hides the pin's disc (the heat glow marks the item instead). */
+  opacity?: number;
+  /** false hides the pin's stem. */
+  stemVisible?: boolean;
 }
 
 export async function addTags(
