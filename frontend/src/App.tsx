@@ -26,6 +26,7 @@ import { ModeBanner } from "./components/ModeBanner";
 import { QuestionDialog } from "./components/QuestionDialog";
 import { StartControls } from "./components/StartControls";
 import { Logo } from "./components/Logo";
+import { Intro } from "./components/Intro";
 import type { StartAuditRequest, WattEvent } from "./contracts";
 import { useAppDispatch, useAppState, type RequestError } from "./state";
 import { FloorPlan2D } from "./viewer/FloorPlan2D";
@@ -50,9 +51,24 @@ function toRequestError(error: unknown): RequestError {
   };
 }
 
+const DEMO_SID = "r1NfhYW4TAr"; // 215 W 7th St, the hero demo apartment
+
 export default function App() {
   const state = useAppState();
   const dispatch = useAppDispatch();
+  // The intro page shows each time the site opens; the app loads underneath it.
+  const [showIntro, setShowIntro] = useState(true);
+  const closeIntro = useCallback(() => setShowIntro(false), []);
+  const exploreDemo = useCallback(() => {
+    const models = state.testModels;
+    const demo =
+      models.find((model) => model.sid === DEMO_SID) ??
+      models.find((model) => model.has_fixture || model.has_replay) ??
+      null;
+    if (demo && demo.sid !== state.selectedSid) dispatch({ type: "selectSid", sid: demo.sid });
+    dispatch({ type: "view", view: "3d" });
+    setShowIntro(false);
+  }, [dispatch, state.selectedSid, state.testModels]);
   const stateRef = useRef(state);
   stateRef.current = state;
 
@@ -499,6 +515,7 @@ export default function App() {
 
   return (
     <div className="app">
+      {showIntro ? <Intro onExplore={exploreDemo} onSkip={closeIntro} /> : null}
       <header className="app-header">
         <div className="brand" aria-label="WattWalk">
           <Logo className="brand-logo" />
