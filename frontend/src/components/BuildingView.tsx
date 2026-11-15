@@ -22,24 +22,38 @@ interface UnitData {
   heat: number;
   topSource: string | null;
   bestFix: EnergyAlternative | null;
+  /** Every item's best upgrade together: yearly saving and install cost (midpoints). */
+  saveAll: number;
+  installAll: number;
+  fixes: number;
   buildingUnits: number | null;
 }
 
 function summarize(sid: string, name: string, audit: AuditResponse | null, energy: AssetEnergyResponse | null): UnitData {
-  if (!audit) return { sid, name, status: "not_audited", cost: 0, heat: 0, topSource: null, bestFix: null, buildingUnits: null };
+  if (!audit) return { sid, name, status: "not_audited", cost: 0, heat: 0, topSource: null, bestFix: null, saveAll: 0, installAll: 0, fixes: 0, buildingUnits: null };
   const units = audit.building?.units?.value;
   const buildingUnits = typeof units === "number" && units > 0 ? units : null;
   if (audit.status.status === "running") {
-    return { sid, name, status: "running", cost: 0, heat: 0, topSource: null, bestFix: null, buildingUnits };
+    return { sid, name, status: "running", cost: 0, heat: 0, topSource: null, bestFix: null, saveAll: 0, installAll: 0, fixes: 0, buildingUnits };
   }
-  if (!energy) return { sid, name, status: "not_audited", cost: 0, heat: 0, topSource: null, bestFix: null, buildingUnits };
+  if (!energy) return { sid, name, status: "not_audited", cost: 0, heat: 0, topSource: null, bestFix: null, saveAll: 0, installAll: 0, fixes: 0, buildingUnits };
   const bySource = new Map<string, number>();
   let best: EnergyAlternative | null = null;
+  let saveAll = 0;
+  let installAll = 0;
+  let fixes = 0;
   for (const row of energy.assets) {
     const heat = mid(row.heat_kwh_yr);
     if (heat > 0) bySource.set(row.label, (bySource.get(row.label) ?? 0) + heat);
+    let itemBest: EnergyAlternative | null = null;
     for (const alt of row.alternatives) {
       if (!best || mid(alt.saves_usd_yr) > mid(best.saves_usd_yr)) best = alt;
+      if (mid(alt.saves_usd_yr) > 0 && (!itemBest || mid(alt.saves_usd_yr) > mid(itemBest.saves_usd_yr))) itemBest = alt;
+    }
+    if (itemBest) {
+      saveAll += mid(itemBest.saves_usd_yr);
+      installAll += mid(itemBest.cost_usd);
+      fixes += 1;
     }
   }
   const sources = [...bySource.entries()].sort((a, b) => b[1] - a[1]);
@@ -52,6 +66,9 @@ function summarize(sid: string, name: string, audit: AuditResponse | null, energ
     heat,
     topSource: sources.length ? `${labelText(sources[0][0])}s ${Math.round((sources[0][1] / heat) * 100)}%` : null,
     bestFix: best,
+    saveAll,
+    installAll,
+    fixes,
     buildingUnits,
   };
 }
@@ -78,7 +95,7 @@ export function BuildingView() {
           audit = await getAudit(model.sid);
         } catch (error) {
           if (!(error instanceof ApiFailure && error.status === 404)) {
-            return { sid: model.sid, name, status: "error", cost: 0, heat: 0, topSource: null, bestFix: null, buildingUnits: null } as UnitData;
+            return { sid: model.sid, name, status: "error", cost: 0, heat: 0, topSource: null, bestFix: null, saveAll: 0, installAll: 0, fixes: 0, buildingUnits: null } as UnitData;
           }
         }
         if (audit && audit.status.status === "completed") {
@@ -103,9 +120,14 @@ export function BuildingView() {
   const others = (units ?? []).filter((u) => u.status !== "audited");
   const avgCost = audited.length ? audited.reduce((s, u) => s + u.cost, 0) / audited.length : 0;
   const buildingUnits = (units ?? []).map((u) => u.buildingUnits).find((n) => n !== null) ?? null;
-  const total = buildingUnits && audited.length ? avgCost * buildingUnits : null;
-  const fixes = audited.filter((u) => u.bestFix).map((u) => u.bestFix as EnergyAlternative);
-  const avgSave = fixes.length ? fixes.reduce((s, f) => s + mid(f.saves_usd_yr), 0) / fixes.length : 0;
+  const scale = buildingUnits ?? audited.length; // whole building when its unit count is known
+  const spend = avgCost * scale;
+  const avgSave = audited.length ? audited.reduce((s, u) => s + u.saveAll, 0) / audited.length : 0;
+  const avgInstall = audited.length ? audited.reduce((s, u) => s + u.installAll, 0) / audited.length : 0;
+  const save = avgSave * scale;
+  const install = avgInstall * scale;
+  const share = spend > 0 ? Math.min(1, save / spend) : 0;
+  const payback = save > 0 ? install / save : null;
   const maxCost = audited[0]?.cost ?? 1;
   const open = (sid: string) => {
     dispatch({ type: "selectSid", sid });
@@ -127,29 +149,38 @@ export function BuildingView() {
         <div className="bv-loading">Loading the units…</div>
       ) : (
         <>
-          <section className="bv-totals">
-            <div>
-              <span className="bv-total-label">Average unit</span>
-              <span className="bv-total-value">{audited.length ? money(avgCost) : "–"}</span>
-              <span className="bv-total-unit">per year in energy</span>
-            </div>
-            <div>
-              <span className="bv-total-label">Whole building</span>
-              <span className="bv-total-value">{total ? `≈ ${money(total)}` : "–"}</span>
-              <span className="bv-total-unit">
-                {total ? `per year, if all ${buildingUnits} units are like these` : "audit a unit to estimate"}
-              </span>
-            </div>
-            <div>
-              <span className="bv-total-label">Best fixes, every unit</span>
-              <span className="bv-total-value bv-save">
-                {fixes.length && buildingUnits ? `≈ ${money(avgSave * buildingUnits)}` : fixes.length ? money(avgSave) : "–"}
-              </span>
-              <span className="bv-total-unit">
-                {fixes.length ? (buildingUnits ? "saved per year across the building" : "saved per year per unit") : "no fixes yet"}
-              </span>
-            </div>
-          </section>
+          {audited.length ? (
+            <section className="bv-money" aria-label="What the building spends and could save">
+              <div className="bv-money-row">
+                <div className="bv-money-item">
+                  <span className="bv-total-label">{buildingUnits ? "The building spends" : "These units spend"}</span>
+                  <span className="bv-money-value">≈ {money(spend)}</span>
+                  <span className="bv-total-unit">a year on energy{buildingUnits ? `, ${buildingUnits} units` : ""}</span>
+                </div>
+                <span className="bv-money-arrow" aria-hidden="true">→</span>
+                <div className="bv-money-item">
+                  <span className="bv-total-label">Smart upgrades could save</span>
+                  <span className="bv-money-value bv-save">≈ {money(save)}</span>
+                  <span className="bv-total-unit">
+                    a year ({Math.round(share * 100)}% less)
+                    {install > 0 ? ` · ≈ ${money(install)} to install` : ""}
+                    {payback !== null && install > 0 ? ` · pays back in ${formatPayback([payback, payback])}` : ""}
+                  </span>
+                </div>
+              </div>
+              <div className="bv-money-bar" aria-hidden="true">
+                <span className="bv-money-keep" style={{ flexGrow: 1 - share }} />
+                <span className="bv-money-saved" style={{ flexGrow: share }} />
+              </div>
+              <p className="bv-money-note">
+                Based on {audited.length} audited unit{audited.length === 1 ? "" : "s"} (average {money(avgCost)} a year each)
+                {buildingUnits ? `, scaled to all ${buildingUnits} units` : ""}. The best upgrade for each item, from the
+                upgrade library.
+              </p>
+            </section>
+          ) : (
+            <p className="bv-money-note">Audit a unit to see what this building spends and could save.</p>
+          )}
 
           <ol className="bv-units">
             {audited.map((unit, index) => (
@@ -169,10 +200,12 @@ export function BuildingView() {
                   <span className="bv-unit-fix">
                     {unit.bestFix ? (
                       <>
-                        <span className="bv-fix-title">{unit.bestFix.title}</span>
+                        <span className="bv-fix-title">Top fix: {unit.bestFix.title}</span>
                         <span className="bv-fix-detail">
-                          saves {money(mid(unit.bestFix.saves_usd_yr))}/yr
-                          {unit.bestFix.payback_years ? ` · pays back in ${formatPayback(unit.bestFix.payback_years)}` : ""}
+                          {unit.fixes > 1
+                            ? `${unit.fixes} upgrades save ${money(unit.saveAll)}/yr`
+                            : `saves ${money(mid(unit.bestFix.saves_usd_yr))}/yr`}
+                          {unit.fixes <= 1 && unit.bestFix.payback_years ? ` · pays back in ${formatPayback(unit.bestFix.payback_years)}` : ""}
                         </span>
                       </>
                     ) : (
