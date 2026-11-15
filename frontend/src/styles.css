@@ -4904,14 +4904,19 @@ h1, h2, h3,
   inset: 0;
   z-index: 10;
   background: var(--forest);
-  clip-path: circle(var(--r0) at var(--cx) var(--cy));
-  animation: intro-grow 450ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  clip-path: inset(var(--it) var(--ir) var(--ib) var(--il) round var(--rr));
+  animation: intro-grow 520ms cubic-bezier(0.65, 0, 0.25, 1) forwards;
   will-change: clip-path;
 }
+/* the pill itself grows: same shape at the start, a rounded rectangle on the way, the full screen at the end */
 @keyframes intro-grow {
-  0% { clip-path: circle(var(--r0) at var(--cx) var(--cy)); background: var(--forest); }
-  60% { background: var(--forest); }
-  100% { clip-path: circle(var(--r1) at var(--cx) var(--cy)); background: var(--bg); }
+  0% { clip-path: inset(var(--it) var(--ir) var(--ib) var(--il) round var(--rr)); background: var(--forest); }
+  65% { background: var(--forest); }
+  100% { clip-path: inset(0 0 0 0 round 0); background: var(--bg); }
+}
+/* the real button hides under its growing copy */
+.intro.intro-leaving .intro-cta {
+  visibility: hidden;
 }
 /* the button floats gently until hovered */
 .intro-cta {

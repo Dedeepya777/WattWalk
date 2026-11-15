@@ -143,16 +143,12 @@ export function Intro({ onExplore, onSkip }: Props) {
         <div
           className="intro-grow"
           style={{
-            ["--cx" as string]: `${grow.x + grow.w / 2}px`,
-            ["--cy" as string]: `${grow.y + grow.h / 2}px`,
-            ["--r0" as string]: `${grow.h / 2}px`,
-            // just enough to reach the farthest corner, so the whole animation is visible growth
-            ["--r1" as string]: `${Math.ceil(
-              Math.hypot(
-                Math.max(grow.x + grow.w / 2, window.innerWidth - (grow.x + grow.w / 2)),
-                Math.max(grow.y + grow.h / 2, window.innerHeight - (grow.y + grow.h / 2)),
-              ),
-            )}px`,
+            // the button's exact box, as insets from the screen edges, and its pill radius
+            ["--it" as string]: `${grow.y}px`,
+            ["--il" as string]: `${grow.x}px`,
+            ["--ir" as string]: `${window.innerWidth - grow.x - grow.w}px`,
+            ["--ib" as string]: `${window.innerHeight - grow.y - grow.h}px`,
+            ["--rr" as string]: `${grow.h / 2}px`,
           } as React.CSSProperties}
           onAnimationEnd={onExplore}
           aria-hidden="true"
