@@ -173,9 +173,12 @@ def models_test() -> list[TestModel]:
     from .. import portfolio
 
     out = []
+    in_buildings = portfolio.unit_addresses()
     for m in json.loads(TEST_MODELS_FILE.read_text(encoding="utf-8")):
         m["has_fixture"] = runner.fixture_available(m["sid"])
         m["has_replay"] = replay.has_replay(m["sid"])
+        if m["sid"] in in_buildings:
+            m["address"] = in_buildings[m["sid"]]  # name the unit inside the landlord's building
         out.append(TestModel.model_validate(m))
     # Units from the landlord's buildings follow the configured apartments.
     for m in portfolio.portfolio_models({m.sid for m in out}):

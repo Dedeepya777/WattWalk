@@ -183,26 +183,35 @@ def remove_building(bid: str) -> Portfolio:
     return _save(Portfolio(buildings=[b for b in portfolio.buildings if b.building_id != bid]))
 
 
-def portfolio_models(already: set[str]) -> list[TestModel]:
-    """The landlord's units as apartments for the picker (after the configured ones)."""
+def unit_addresses() -> dict[str, str]:
+    """Address with the unit name ("1830 N Cherokee Ave, Studio - 331, Los Angeles, CA") for every unit in
+    the landlord's buildings, so the picker can group units under their building."""
     buildings = _buildings(_index_path())
-    out: list[TestModel] = []
+    out: dict[str, str] = {}
     for b in load().buildings:
         entry = buildings.get(b.building_id)
         names = {t.sid: t.name for t in entry["tours"]} if entry else {}
         street = b.address.split(",")[0]
         for sid in b.sids:
-            if sid in already:
-                continue
-            already.add(sid)
-            out.append(TestModel(
-                sid=sid,
-                address=f"{street}, {names.get(sid, sid)}, Los Angeles, CA",
-                city="Los Angeles",
-                note=f"Your building: {street}",
-                has_fixture=False,
-                has_replay=False,
-            ))
+            out.setdefault(sid, f"{street}, {names.get(sid, sid)}, Los Angeles, CA")
+    return out
+
+
+def portfolio_models(already: set[str]) -> list[TestModel]:
+    """The landlord's units as apartments for the picker (after the configured ones)."""
+    out: list[TestModel] = []
+    for sid, address in unit_addresses().items():
+        if sid in already:
+            continue
+        already.add(sid)
+        out.append(TestModel(
+            sid=sid,
+            address=address,
+            city="Los Angeles",
+            note=f"Your building: {address.split(',')[0]}",
+            has_fixture=False,
+            has_replay=False,
+        ))
     return out
 
 

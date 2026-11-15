@@ -56,3 +56,11 @@ def test_units_become_apartments_once():
     sids = [m.sid for m in models]
     assert "wYFF3KYdETV" not in sids  # already in the configured list
     assert all(m.address.startswith("819 Santee St, ") and m.note.startswith("Your building") for m in models)
+
+
+def test_units_in_a_building_are_named():
+    match = p.search("1830 N Cherokee Ave").buildings[0]
+    p.add_building(match.building_id, [t.sid for t in match.tours])
+    names = p.unit_addresses()
+    unit = next(t for t in match.tours if t.sid == "2ibibwUGQAe")
+    assert names["2ibibwUGQAe"] == f"1830 N Cherokee Ave, {unit.name}, Los Angeles, CA"
