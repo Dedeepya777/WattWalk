@@ -24,6 +24,38 @@
     "has_replay": false
   },
   {
+    "sid": "spCrjWWgKCN",
+    "address": "334 S Main St, Los Angeles, CA",
+    "city": "Los Angeles",
+    "note": "Studio, 600 sq ft; downtown LA; building in LA EBEWE (site EUI 39.6, 2025); 6 rooms, 28 walls; 9 panoramas",
+    "has_fixture": false,
+    "has_replay": false
+  },
+  {
+    "sid": "twzjd9KgETu",
+    "address": "241 S Mariposa Ave, Los Angeles, CA",
+    "city": "Los Angeles",
+    "note": "Studio, 500 sq ft; Koreatown; building in LA EBEWE (site EUI 46.8, 2025); 5 rooms, 17 walls; 9 panoramas",
+    "has_fixture": false,
+    "has_replay": false
+  },
+  {
+    "sid": "nLCUnY3gjSU",
+    "address": "601 N Rossmore Ave, Los Angeles, CA",
+    "city": "Los Angeles",
+    "note": "Studio, 655 sq ft; Hancock Park; efficient building in LA EBEWE (site EUI 15.5, 2023); 5 rooms, 26 walls; 9 panoramas",
+    "has_fixture": false,
+    "has_replay": false
+  },
+  {
+    "sid": "wYFF3KYdETV",
+    "address": "819 Santee St, Los Angeles, CA",
+    "city": "Los Angeles",
+    "note": "Studio, 735 sq ft; Fashion District; high-energy building in LA EBEWE (site EUI 93.8, 2025); 3 rooms, 40 walls; 9 panoramas",
+    "has_fixture": false,
+    "has_replay": false
+  },
+  {
     "sid": "fixtureUnitA",
     "address": "100 Example St, Los Angeles, CA 90000",
     "city": "Los Angeles",
