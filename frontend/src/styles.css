@@ -5557,3 +5557,23 @@ h1, h2, h3,
     width: 100% !important;
   }
 }
+
+/* Your plan: reset every pick (asks first) */
+.pm-clear {
+  display: block;
+  margin: 22px auto 0;
+  padding: 4px 10px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+.pm-clear:hover {
+  color: #c0392b;
+}
+@media print {
+  .pm-clear {
+    display: none;
+  }
+}

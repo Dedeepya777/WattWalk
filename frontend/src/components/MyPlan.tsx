@@ -202,6 +202,16 @@ export function MyPlan({ onClose }: { onClose: () => void }) {
             </section>
           );
         })}
+
+        <button
+          type="button"
+          className="pm-clear"
+          onClick={() => {
+            if (window.confirm("Remove all upgrades from every building?")) dispatch({ type: "clearPicks" });
+          }}
+        >
+          Clear plan
+        </button>
       </div>
     </div>,
     document.body,

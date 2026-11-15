@@ -177,6 +177,7 @@ export type Action =
   | { type: "aiAlternatives"; data: AiAlternativesResponse }
   | { type: "chooseUpgrade"; assetId: string; upgradeId: string | null; pick?: Pick }
   | { type: "removePick"; sid: string; assetId: string }
+  | { type: "clearPicks" }
   | { type: "pickScope"; assetId: string; units: number | null }
   | { type: "spreadPick"; assetId: string; copies: { sid: string; assetId: string; pick: Pick }[] }
   | { type: "unspreadPick"; assetId: string }
@@ -312,6 +313,8 @@ export function reducer(state: AppState, action: Action): AppState {
       if (Object.keys(unit).length === 0) delete picks[action.sid];
       return { ...state, picks, chosenUpgrades: chosenFor(picks, state.selectedSid) };
     }
+    case "clearPicks":
+      return { ...state, picks: {}, chosenUpgrades: chosenFor({}, state.selectedSid) };
     case "aiAlternatives":
       return { ...state, aiAlternatives: { ...state.aiAlternatives, [action.data.asset_id]: action.data } };
     case "energy":
