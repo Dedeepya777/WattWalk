@@ -5,6 +5,49 @@ energy-relevant assets (windows, lights, AC units, appliances…), places them a
 plan and in the 3D tour, and produces a costed upgrade plan that shows what the landlord pays and what
 the tenant saves. Built at HackPrinceton Fall 2026 (CoStar "Inside and Out: AI for the Built World").
 
+## How it works
+
+```mermaid
+flowchart TD
+    MP["Matterport scan<br/>panoramas, floor plan"]
+    CS["CoStar + LA EBEWE<br/>building and energy data"]
+    VX["Vexcel<br/>aerial imagery"]
+
+    AG["AI agent<br/>plans which views to check"]
+    VI["Vision model<br/>DeepSeek labels each item"]
+    SP["Spatial engine<br/>pixels to 3D positions"]
+    IN["Inventory<br/>merge, dedupe, coverage"]
+    EN["Cost engine<br/>costs, heat map, plan"]
+    AI["AI upgrade ideas<br/>labelled estimates"]
+    UI["React app<br/>3D tour, 2D plan, PDF"]
+
+    MP --> AG
+    CS --> AG
+    VX --> AG
+    AG --> VI --> SP --> IN --> EN --> UI
+    AI --> EN
+
+    classDef ai fill:#eeedfe,stroke:#534ab7,color:#3c3489
+    classDef code fill:#e1f5ee,stroke:#0f6e56,color:#085041
+    classDef io fill:#f1efe8,stroke:#5f5e5a,color:#444441
+    class AG,VI,AI ai
+    class SP,IN,EN code
+    class MP,CS,VX,UI io
+```
+
+Purple steps use an AI model, green steps are deterministic code, grey boxes are data in and the app out.
+The AI only finds items and suggests ideas: every dollar figure comes from the cost engine and the sourced
+values in `shared/contracts/assumptions.json`, and AI ideas are clamped and labelled as estimates.
+
+| Step | Where in the code |
+|---|---|
+| AI agent (Deep Agents planner, or the scripted fallback) | `backend/wattwalk/agent/` |
+| Vision model (labels checked against a fixed vocabulary) | `backend/wattwalk/vision/` |
+| Spatial engine (raycasts, calibration, doorway triangulation) | `backend/wattwalk/spatial/`, `backend/wattwalk/vision/triangulate.py` |
+| Cost engine (baseline, savings, optimizer, heat shares) | `backend/wattwalk/engine/` |
+| AI upgrade ideas and product links | `backend/wattwalk/engine/ai_alternatives.py`, `backend/wattwalk/engine/products.py` |
+| React app (Matterport SDK, 2D plan, plan sheet) | `frontend/src/` |
+
 ## Fastest way (two commands)
 
 You need Python 3.11+, Node.js 20+ and Git. Then, from the repository root:
