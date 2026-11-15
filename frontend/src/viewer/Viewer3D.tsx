@@ -87,6 +87,7 @@ function tagSpec(
   roomLabel: string,
   energy?: AssetEnergy,
   energyColor?: Rgb | null,
+  hidden = false,
 ): TagSpec | null {
   if (!asset.anchor) return null;
   const unknown = unknownAttrCount(asset.attrs);
@@ -98,6 +99,8 @@ function tagSpec(
     anchorPosition: modelToSdk(fit, asset.anchor),
     stemVector: modelDirToSdk(fit, { x: 0, y: 0, z: down ? -STEM_M : STEM_M }),
     color: energyColor ?? (unknown > 0 ? UNKNOWN : KNOWN),
+    // With the heat glow on, the glow marks the item; the tag stays only so the camera can fly to it.
+    ...(hidden ? { opacity: 0, stemVisible: false } : {}),
   };
 }
 
@@ -117,7 +120,7 @@ export function Viewer3D({ readiness, attempt, onReady, onFailed, onRetry }: Vie
   );
   const [loadedSid, setLoadedSid] = useState<string | null>(null);
   const [tagCount, setTagCount] = useState(0);
-  const [glowCount, setGlowCount] = useState<number | null>(null);
+  const [, setGlowCount] = useState<number | null>(null);
 
   const realModel = selectedSid !== FIXTURE_SID && isModelId(selectedSid);
   const panos = useMemo(() => audit?.panos ?? [], [audit?.panos]);
@@ -258,7 +261,7 @@ export function Viewer3D({ readiness, attempt, onReady, onFailed, onRetry }: Vie
           .map((asset) => ({
             asset,
             spec: tagSpec(asset, alignment.fit, roomLabels.get(asset.room_id ?? "") ?? "Unknown room",
-              energyById.get(asset.id), pinColor(energyById.get(asset.id), energyScale)),
+              energyById.get(asset.id), pinColor(energyById.get(asset.id), energyScale), energyScale !== null),
           }))
           .filter((item): item is { asset: Asset; spec: TagSpec } => item.spec !== null);
         const added = await addTags(sdk, placed.map((item) => item.spec));
@@ -459,14 +462,11 @@ export function Viewer3D({ readiness, attempt, onReady, onFailed, onRetry }: Vie
           onCount={setGlowCount}
         />
       ) : null}
-      <p className={`viewer-tour-note pins-${phase.kind}`} role="status">
-        {statusText(phase, tagCount, inventory.length)}
-        {phase.kind === "ready" && energyScale
-          ? ` \u00b7 Heat glow: ${glowCount === null ? "starting" : `${glowCount} source${glowCount === 1 ? "" : "s"} in view`}`
-          : phase.kind === "ready" && state.pinColorMode === "details"
-            ? " \u00b7 Choose Pins: Heat or Cost to see the heat glow"
-            : ""}
-      </p>
+      {phase.kind === "ready" ? null : (
+        <p className={`viewer-tour-note pins-${phase.kind}`} role="status">
+          {statusText(phase, tagCount, inventory.length)}
+        </p>
+      )}
       {phase.kind === "misaligned" || phase.kind === "error" ? (
         <div className="button-row viewer-tour-actions">
           <button className="button small" onClick={() => dispatch({ type: "view", view: "2d" })}>

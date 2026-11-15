@@ -116,7 +116,7 @@ export function FloorPlan2D() {
     return color ? toHex(color) : null;
   };
   const dispatch = useAppDispatch();
-  const [pinMode, setPinMode] = useState<PinMode>("anchor");
+  const [pinMode] = useState<PinMode>("anchor");
 
   const audit = state.audit;
   const rooms: Room[] = audit?.rooms ?? [];
@@ -223,36 +223,11 @@ export function FloorPlan2D() {
 
   return (
     <div className="floorplan-wrap">
-      <div className="viewer-toolbar">
-        <div className="segmented" role="group" aria-label="Pin placement">
-          <button
-            type="button"
-            className={pinMode === "anchor" ? "segmented-button active" : "segmented-button"}
-            onClick={() => setPinMode("anchor")}
-            aria-pressed={pinMode === "anchor"}
-          >
-            Anchors
-          </button>
-          <button
-            type="button"
-            className={pinMode === "centroid" ? "segmented-button active" : "segmented-button"}
-            onClick={() => setPinMode("centroid")}
-            aria-pressed={pinMode === "centroid"}
-          >
-            Room centroids
-          </button>
+      {showHeat ? (
+        <div className="viewer-toolbar">
+          <span className="legend-inline">Heat map: share of modelled heat weight</span>
         </div>
-        {showHeat ? (
-          <span className="legend-inline">
-            Heat map: share of modelled heat weight
-          </span>
-        ) : null}
-        <span className="pin-basis-note">
-          {BASIS_STATUS === "calibrated"
-            ? "Face basis calibrated"
-            : "Pin positions unverified"}
-        </span>
-      </div>
+      ) : null}
 
       <svg
         className="floorplan"

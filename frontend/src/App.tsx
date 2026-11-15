@@ -550,6 +550,7 @@ export default function App() {
             auditLoading={auditLoading}
             otherRunSid={activeRunSid && activeRunSid !== state.selectedSid ? activeRunSid : null}
           />
+          <PickedUpgrades />
           <BuildingCard />
         </aside>
 
@@ -588,7 +589,6 @@ export default function App() {
               </button>
             </div>
             <PinColorControls />
-            {state.viewMode === "3d" ? <PickedUpgrades /> : null}
             <span className="muted small">
               {state.audit?.rooms.length ?? 0} rooms {"\u00b7"}{" "}
               {state.audit?.inventory.length ?? 0} assets
