@@ -135,111 +135,70 @@ export function BuildingView() {
   };
 
   return (
-    <div className="building-view">
-      <header className="bv-head">
-        <p className="bv-kicker">Building overview</p>
+    <div className="building-view bv-min">
+      <header className="bvm-head">
         <h2>{group.street}</h2>
-        <p className="bv-sub">
-          Los Angeles · {group.models.length} unit{group.models.length === 1 ? "" : "s"} scanned
-          {buildingUnits ? ` · ${buildingUnits} units in the building` : ""} · {audited.length} audited
-        </p>
+        <p>{buildingUnits ? `${buildingUnits} units` : `${group.models.length} units`}</p>
       </header>
 
       {units === null ? (
-        <div className="bv-loading">Loading the units…</div>
+        <div className="bv-loading">Loading…</div>
+      ) : audited.length === 0 ? (
+        <p className="bvm-empty">Audit a unit to see what this building spends.</p>
       ) : (
         <>
-          {audited.length ? (
-            <section className="bv-money" aria-label="What the building spends and could save">
-              <div className="bv-money-row">
-                <div className="bv-money-item">
-                  <span className="bv-total-label">{buildingUnits ? "The building spends" : "These units spend"}</span>
-                  <span className="bv-money-value">≈ {money(spend)}</span>
-                  <span className="bv-total-unit">a year on energy{buildingUnits ? `, ${buildingUnits} units` : ""}</span>
-                </div>
-                <span className="bv-money-arrow" aria-hidden="true">→</span>
-                <div className="bv-money-item">
-                  <span className="bv-total-label">Smart upgrades could save</span>
-                  <span className="bv-money-value bv-save">≈ {money(save)}</span>
-                  <span className="bv-total-unit">
-                    a year ({Math.round(share * 100)}% less)
-                    {install > 0 ? ` · ≈ ${money(install)} to install` : ""}
-                    {payback !== null && install > 0 ? ` · pays back in ${formatPayback([payback, payback])}` : ""}
-                  </span>
-                </div>
-              </div>
-              <div className="bv-money-bar" aria-hidden="true">
-                <span className="bv-money-keep" style={{ flexGrow: 1 - share }} />
-                <span className="bv-money-saved" style={{ flexGrow: share }} />
-              </div>
-              <p className="bv-money-note">
-                Based on {audited.length} audited unit{audited.length === 1 ? "" : "s"} (average {money(avgCost)} a year each)
-                {buildingUnits ? `, scaled to all ${buildingUnits} units` : ""}. The best upgrade for each item, from the
-                upgrade library.
-              </p>
-            </section>
-          ) : (
-            <p className="bv-money-note">Audit a unit to see what this building spends and could save.</p>
-          )}
+          <section className="bvm-hero">
+            <div>
+              <span className="bvm-label">Spends</span>
+              <span className="bvm-big">{money(spend)}</span>
+              <span className="bvm-unit">a year</span>
+            </div>
+            <div>
+              <span className="bvm-label">Could save</span>
+              <span className="bvm-big bvm-green">{money(save)}</span>
+              <span className="bvm-unit">
+                a year{payback !== null && install > 0 ? ` · pays back in ${formatPayback([payback, payback])}` : ""}
+              </span>
+            </div>
+          </section>
+          <div className="bvm-bar" title={`${Math.round(share * 100)}% of the energy bill can be saved`} aria-hidden="true">
+            <span style={{ flexGrow: 1 - share }} />
+            <span className="bvm-bar-save" style={{ flexGrow: share }} />
+          </div>
 
-          <ol className="bv-units">
-            {audited.map((unit, index) => (
+          <ol className="bvm-units">
+            {audited.map((unit) => (
               <li key={unit.sid}>
-                <button type="button" className="bv-unit" onClick={() => open(unit.sid)}>
-                  <span className="bv-rank">{index + 1}</span>
-                  <span className="bv-unit-main">
-                    <span className="bv-unit-name">{unit.name}</span>
-                    <span className="bv-unit-detail">
-                      {Math.round(unit.heat).toLocaleString()} kWh of heat a year
-                      {unit.topSource ? ` · mostly ${unit.topSource.toLowerCase()}` : ""}
-                    </span>
-                    <span className="bv-bar" aria-hidden="true">
-                      <span style={{ width: `${Math.max(4, (unit.cost / maxCost) * 100)}%` }} />
-                    </span>
+                <button type="button" onClick={() => open(unit.sid)} title={unit.bestFix ? `Top fix: ${unit.bestFix.title}` : undefined}>
+                  <span className="bvm-unit-name">{unit.name}</span>
+                  <span className="bvm-unit-bar" aria-hidden="true">
+                    <span style={{ width: `${Math.max(4, (unit.cost / maxCost) * 100)}%` }} />
                   </span>
-                  <span className="bv-unit-fix">
-                    {unit.bestFix ? (
-                      <>
-                        <span className="bv-fix-title">Top fix: {unit.bestFix.title}</span>
-                        <span className="bv-fix-detail">
-                          {unit.fixes > 1
-                            ? `${unit.fixes} upgrades save ${money(unit.saveAll)}/yr`
-                            : `saves ${money(mid(unit.bestFix.saves_usd_yr))}/yr`}
-                          {unit.fixes <= 1 && unit.bestFix.payback_years ? ` · pays back in ${formatPayback(unit.bestFix.payback_years)}` : ""}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="bv-fix-detail">No fix in the library yet</span>
-                    )}
-                  </span>
-                  <span className="bv-unit-cost">
-                    {money(unit.cost)}
-                    <small>/yr</small>
-                  </span>
+                  <span className="bvm-unit-cost">{money(unit.cost)}</span>
                 </button>
               </li>
             ))}
           </ol>
-
-          {others.length ? (
-            <div className="bv-others">
-              <p className="bv-others-title">Not audited yet</p>
-              <ul>
-                {others.map((unit) => (
-                  <li key={unit.sid}>
-                    <button type="button" className="bv-other" onClick={() => open(unit.sid)}>
-                      <span>{unit.name}</span>
-                      <span className="bv-other-status">
-                        {unit.status === "running" ? "Auditing…" : unit.status === "error" ? "Could not load" : "Open to audit →"}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
         </>
       )}
+
+      {units !== null && others.length ? (
+        <details className="bvm-others">
+          <summary>
+            {others.length} unit{others.length === 1 ? "" : "s"} not audited yet
+          </summary>
+          <ul>
+            {others.map((unit) => (
+              <li key={unit.sid}>
+                <button type="button" onClick={() => open(unit.sid)}>
+                  {unit.name}
+                  <span>{unit.status === "running" ? "Auditing…" : "Open"}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
     </div>
   );
 }
