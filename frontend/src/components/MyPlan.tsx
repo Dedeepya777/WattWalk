@@ -48,10 +48,6 @@ export function MyPlan({ onClose }: { onClose: () => void }) {
   const heatBefore = lines.reduce((sum, l) => sum + (l.pick.heatBefore ?? 0), 0);
   const heatAfter = lines.reduce((sum, l) => sum + (l.pick.heatAfter ?? l.pick.heatBefore ?? 0), 0);
   const heatCut = heatBefore > 0 ? Math.round(((heatBefore - heatAfter) / heatBefore) * 100) : 0;
-  const lineCut = (pick: Pick) =>
-    pick.heatBefore && pick.heatAfter !== undefined
-      ? Math.round(((pick.heatBefore - pick.heatAfter) / pick.heatBefore) * 100)
-      : 0;
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -87,16 +83,22 @@ export function MyPlan({ onClose }: { onClose: () => void }) {
         </div>
 
         <header className="pm-hero">
-          <h2 id="my-plan-title">
-            Save <span>{money(saves)}</span> a year
+          <h2 id="my-plan-title" className="sr-only">
+            Save {money(saves)} a year{heatCut > 0 ? `, ${heatCut}% less heat` : ""}
           </h2>
-          {cost > 0 || heatCut > 0 ? (
-            <p>
-              {[cost > 0 ? `about ${money(cost)} to install` : null, heatCut > 0 ? `${heatCut}% less heat` : null]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
-          ) : null}
+          <div className="pm-stats" aria-hidden="true">
+            <div>
+              <span className="pm-stat pm-stat-money">{money(saves)}</span>
+              <span className="pm-stat-label">saved a year</span>
+            </div>
+            {heatCut > 0 ? (
+              <div>
+                <span className="pm-stat pm-stat-heat">{heatCut}%</span>
+                <span className="pm-stat-label">less heat in these rooms</span>
+              </div>
+            ) : null}
+          </div>
+          {cost > 0 ? <p>about {money(cost)} to install</p> : null}
         </header>
 
         {ordered.map((group) => (
@@ -111,9 +113,7 @@ export function MyPlan({ onClose }: { onClose: () => void }) {
                   <div>
                     <span className="pm-title">{line.pick.title}</span>
                     <span className="pm-where">
-                      {[line.unit, line.pick.item, line.pick.room, lineCut(line.pick) > 0 ? `${lineCut(line.pick)}% less heat` : null]
-                        .filter(Boolean)
-                        .join(" · ")}
+                      {[line.unit, line.pick.item, line.pick.room].filter(Boolean).join(" · ")}
                     </span>
                   </div>
                   <span className="pm-save">+{money(line.pick.saves)}</span>

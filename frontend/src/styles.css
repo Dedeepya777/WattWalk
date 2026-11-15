@@ -5257,3 +5257,61 @@ h1, h2, h3,
     display: none;
   }
 }
+
+/* Heat as a picture: today's glow -> after (EnergyAlternatives HeatShift) */
+.energy-pop .heat-shift {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  color: var(--muted);
+}
+.energy-pop .heat-shift svg {
+  width: 18px;
+  height: 10px;
+}
+.energy-pop .heat-shift-glow {
+  display: inline-block;
+  border-radius: 50%;
+}
+.energy-pop .heat-shift-word {
+  margin-left: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4e78b0;
+}
+/* Your plan: two big numbers */
+.plan-min .pm-stats {
+  display: flex;
+  gap: 48px;
+}
+.plan-min .pm-stats > div {
+  display: flex;
+  flex-direction: column;
+}
+.pm-stat {
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+.pm-stat-money {
+  color: var(--forest);
+}
+.pm-stat-heat {
+  color: #4e78b0;
+}
+.pm-stat-label {
+  font-size: 14px;
+  color: var(--muted);
+}
+.plan-min .pm-hero p {
+  margin-top: 10px;
+}
+
+.energy-pop .pop-buy {
+  display: flex;
+  width: fit-content;
+}

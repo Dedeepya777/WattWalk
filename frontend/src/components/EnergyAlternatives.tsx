@@ -148,6 +148,32 @@ export function worthShowing(alt: EnergyAlternative): boolean {
 }
 
 
+/** Today's glow shrinking to the glow after the upgrade: the heat cut as a picture, not a number. */
+function HeatShift({ before, after, label }: { before: number; after: number; label: string }) {
+  const scale = buildScale(useAppState().energy?.assets ?? [], "heat");
+  const size = (heat: number) => Math.max(8, 26 * Math.sqrt(Math.min(1, heat / Math.max(before, 1))));
+  const glow = (heat: number) => {
+    const color = glowColor(heat, scale);
+    const d = size(heat);
+    return (
+      <span
+        className="heat-shift-glow"
+        style={{ width: d, height: d, background: `radial-gradient(circle, ${color} 0%, ${color}aa 45%, ${color}00 72%)` }}
+      />
+    );
+  };
+  return (
+    <div className="heat-shift" role="img" aria-label={label} title={label}>
+      {glow(before)}
+      <svg viewBox="0 0 20 10" aria-hidden="true">
+        <path d="M1 5h15M12 1.5 16 5l-4 3.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      {glow(after)}
+      <span className="heat-shift-word">cooler</span>
+    </div>
+  );
+}
+
 function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEnergy; ai?: boolean }) {
   const dispatch = useAppDispatch();
   const state = useAppState();
@@ -200,11 +226,8 @@ function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEn
           Save ${Math.round((alt.saves_usd_yr[0] + alt.saves_usd_yr[1]) / 2).toLocaleString()}
           <span className="pop-unit">/yr</span>
         </div>
-        {free || heatCut > 0 ? (
-          <div className="pop-sub">
-            {[free ? "Free" : null, heatCut > 0 ? `${heatCut}% less heat` : null].filter(Boolean).join(" · ")}
-          </div>
-        ) : null}
+        {heat && heatCut > 0 ? <HeatShift before={heat.before} after={heat.after} label={`${heatCut}% less heat`} /> : null}
+        {free ? <div className="pop-sub">Free</div> : null}
         {alt.products?.[0] ? (
           <a
             className="pop-buy"
