@@ -88,6 +88,10 @@ export interface Pick {
   heatAfter?: number;
   /** Applied to every unit of the building: how many units it counts for (unset = this unit only). */
   units?: number;
+  /** Copied from another apartment's pick ("sid:assetId" of that pick) by Apply to all. */
+  via?: string;
+  /** This pick was applied to the same items in the landlord's other audited apartments. */
+  spread?: boolean;
 }
 
 /** Picks per apartment (sid) and item (asset id). */
@@ -114,8 +118,20 @@ export function savePicks(picks: Picks): void {
   }
 }
 
-const chosenFor = (picks: Picks, sid: string): Record<string, string> =>
-  Object.fromEntries(Object.entries(picks[sid] ?? {}).map(([assetId, pick]) => [assetId, pick.upgradeId]));
+/** Picks without the copies made from one pick ("sid:assetId"), and that pick no longer marked as spread. */
+function dropCopies(state: { picks: Picks; selectedSid: string }, key: string, sid: string, assetId: string) {
+  const picks: Picks = {};
+  for (const [unitSid, items] of Object.entries(state.picks)) {
+    const kept = Object.fromEntries(Object.entries(items).filter(([, pick]) => pick.via !== key));
+    if (unitSid === sid && kept[assetId]) kept[assetId] = { ...kept[assetId], spread: false };
+    if (Object.keys(kept).length) picks[unitSid] = kept;
+  }
+  return { picks, chosenUpgrades: chosenFor(picks, state.selectedSid) };
+}
+
+function chosenFor(picks: Picks, sid: string): Record<string, string> {
+  return Object.fromEntries(Object.entries(picks[sid] ?? {}).map(([assetId, pick]) => [assetId, pick.upgradeId]));
+}
 
 export const initialState: AppState = {
   selectedSid: FIXTURE_SID,
@@ -162,6 +178,8 @@ export type Action =
   | { type: "chooseUpgrade"; assetId: string; upgradeId: string | null; pick?: Pick }
   | { type: "removePick"; sid: string; assetId: string }
   | { type: "pickScope"; assetId: string; units: number | null }
+  | { type: "spreadPick"; assetId: string; copies: { sid: string; assetId: string; pick: Pick }[] }
+  | { type: "unspreadPick"; assetId: string }
   | { type: "buildingView"; key: string | null }
   | { type: "focusEnergy"; assetId: string | null; origin?: { x: number; y: number; r?: number; color?: string } | null }
   | { type: "planRequest"; request: PlanRequest }
@@ -251,10 +269,13 @@ export function reducer(state: AppState, action: Action): AppState {
     case "chooseUpgrade": {
       // One pick per item, kept with its apartment so switching apartments never loses or mixes picks.
       const sid = state.selectedSid;
-      const unit = { ...(state.picks[sid] ?? {}) };
+      const base = state.picks[sid]?.[action.assetId]?.spread
+        ? dropCopies(state, `${sid}:${action.assetId}`, sid, action.assetId).picks
+        : state.picks;
+      const unit = { ...(base[sid] ?? {}) };
       if (action.upgradeId && action.pick) unit[action.assetId] = action.pick;
       else delete unit[action.assetId];
-      const picks = { ...state.picks, [sid]: unit };
+      const picks = { ...base, [sid]: unit };
       if (Object.keys(unit).length === 0) delete picks[sid];
       return { ...state, picks, chosenUpgrades: chosenFor(picks, sid) };
     }
@@ -264,6 +285,25 @@ export function reducer(state: AppState, action: Action): AppState {
       if (!pick) return state;
       const updated = { ...pick, units: action.units ?? undefined };
       return { ...state, picks: { ...state.picks, [sid]: { ...state.picks[sid], [action.assetId]: updated } } };
+    }
+    case "spreadPick": {
+      // Apply this apartment's pick to the same items in the landlord's other audited apartments; an item
+      // that already has its own pick keeps it.
+      const sid = state.selectedSid;
+      const source = state.picks[sid]?.[action.assetId];
+      if (!source) return state;
+      const key = `${sid}:${action.assetId}`;
+      const picks: Picks = { ...state.picks, [sid]: { ...state.picks[sid], [action.assetId]: { ...source, spread: true } } };
+      for (const copy of action.copies) {
+        const unit = { ...(picks[copy.sid] ?? {}) };
+        if (!unit[copy.assetId]) unit[copy.assetId] = { ...copy.pick, via: key };
+        picks[copy.sid] = unit;
+      }
+      return { ...state, picks, chosenUpgrades: chosenFor(picks, sid) };
+    }
+    case "unspreadPick": {
+      const sid = state.selectedSid;
+      return { ...state, ...dropCopies(state, `${sid}:${action.assetId}`, sid, action.assetId) };
     }
     case "removePick": {
       const unit = { ...(state.picks[action.sid] ?? {}) };

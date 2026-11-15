@@ -4,7 +4,8 @@
  * "Compare alternatives" button. Plain on purpose: the expanding animation and the glows come later.
  */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { fileUrl, postResearchAlternatives } from "../api";
+import { fileUrl, getAssetEnergy, getAudit, postResearchAlternatives } from "../api";
+import { FIXTURE_SID } from "../fixtures";
 import type { AiAlternativesResponse, AssetEnergy, EnergyAlternative } from "../contracts";
 import { formatRange, labelText } from "../format";
 import { useAppDispatch, useAppState } from "../state";
@@ -167,12 +168,55 @@ function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEn
   const dispatch = useAppDispatch();
   const state = useAppState();
   const picked = state.chosenUpgrades[row.asset_id] === alt.upgrade_id;
-  const allUnits = picked && Boolean(state.picks[state.selectedSid]?.[row.asset_id]?.units);
-  // Units in this building: CoStar's count when known, otherwise the units scanned at this address.
-  const costarUnits = state.audit?.building?.units?.value;
-  const street = state.testModels.find((m) => m.sid === state.selectedSid)?.address.split(",")[0].trim();
-  const scanned = street ? state.testModels.filter((m) => m.address.split(",")[0].trim() === street).length : 1;
-  const buildingUnits = typeof costarUnits === "number" && costarUnits > 1 ? costarUnits : scanned;
+  const spread = picked && Boolean(state.picks[state.selectedSid]?.[row.asset_id]?.spread);
+  const copies = picked
+    ? Object.values(state.picks).flatMap((items) => Object.values(items)).filter((p) => p.via === `${state.selectedSid}:${row.asset_id}`).length
+    : 0;
+  const [spreading, setSpreading] = useState(false);
+  const [noneElsewhere, setNoneElsewhere] = useState(false);
+  // Only library upgrades exist in every apartment's options; AI ideas belong to one item.
+  const canSpread = picked && !ai && state.testModels.length > 1;
+
+  // Find the same kind of item with the same upgrade in the landlord's other audited apartments.
+  const spreadEverywhere = async () => {
+    setSpreading(true);
+    setNoneElsewhere(false);
+    const others = state.testModels.filter((m) => m.sid !== state.selectedSid && m.sid !== FIXTURE_SID);
+    const found = await Promise.all(
+      others.map(async (model) => {
+        try {
+          const [energy, audit] = await Promise.all([getAssetEnergy(model.sid), getAudit(model.sid)]);
+          const rooms = new Map(audit.rooms.map((r) => [r.id, r.label]));
+          return energy.assets.flatMap((other) => {
+            if (other.label !== row.label) return [];
+            const match = other.alternatives.find((a) => a.upgrade_id === alt.upgrade_id);
+            if (!match) return [];
+            const change = heatChange(other, match);
+            return [{
+              sid: model.sid,
+              assetId: other.asset_id,
+              pick: {
+                upgradeId: match.upgrade_id,
+                title: match.title,
+                saves: midpoint(match.saves_usd_yr),
+                cost: midpoint(match.cost_usd),
+                item: labelText(other.label),
+                room: rooms.get(other.room_id ?? "") ?? "",
+                heatBefore: change?.before,
+                heatAfter: change?.after,
+              },
+            }];
+          });
+        } catch {
+          return []; // not audited yet, or not reachable: skipped
+        }
+      }),
+    );
+    const list = found.flat();
+    if (list.length) dispatch({ type: "spreadPick", assetId: row.asset_id, copies: list });
+    else setNoneElsewhere(true);
+    setSpreading(false);
+  };
   const room = state.audit?.rooms.find((r) => r.id === row.room_id)?.label ?? "";
   const midpoint = (r: [number, number]) => (r[0] + r[1]) / 2;
   const heat = heatChange(row, alt);
@@ -237,19 +281,27 @@ function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEn
             Buy on Amazon <span aria-hidden="true">↗</span>
           </a>
         ) : null}
-        {picked && buildingUnits > 1 ? (
+        {canSpread ? (
           <button
             type="button"
-            className={`pop-scope${allUnits ? " on" : ""}`}
-            aria-pressed={allUnits}
+            className={`pop-scope${spread ? " on" : ""}`}
+            aria-pressed={spread}
+            disabled={spreading}
             onClick={(event) => {
               event.stopPropagation();
-              dispatch({ type: "pickScope", assetId: row.asset_id, units: allUnits ? null : buildingUnits });
+              if (spread) dispatch({ type: "unspreadPick", assetId: row.asset_id });
+              else void spreadEverywhere();
             }}
             onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") event.stopPropagation(); }}
           >
-            <span className="pop-scope-box" aria-hidden="true">{allUnits ? "✓" : ""}</span>
-            All {labelText(row.label).toLowerCase()}s in this building ({buildingUnits} units)
+            <span className="pop-scope-box" aria-hidden="true">{spread ? "✓" : ""}</span>
+            {spreading
+              ? "Finding the same item in your apartments…"
+              : spread
+                ? `Also on ${copies} more ${labelText(row.label).toLowerCase()}${copies === 1 ? "" : "s"} in your apartments`
+                : noneElsewhere
+                  ? `No other ${labelText(row.label).toLowerCase()}s like this in your audited apartments`
+                  : `Apply to all ${labelText(row.label).toLowerCase()}s in your audited apartments`}
           </button>
         ) : null}
       </div>
