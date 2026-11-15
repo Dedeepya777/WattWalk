@@ -60,6 +60,8 @@ export interface AppState {
   testModels: TestModel[];
   modelsError: string | null;
   viewMode: ViewMode;
+  /** Building overview shown in the main panel (street address, lower case), or null for the unit view. */
+  buildingView: string | null;
   /** Pin colours: details known/unknown (default), cost per year, or heat per year. */
   pinColorMode: PinColorMode;
   benchmark: Benchmark | null;
@@ -91,6 +93,7 @@ export const initialState: AppState = {
   testModels: [],
   modelsError: null,
   viewMode: "2d",
+  buildingView: null,
   pinColorMode: "heat",
   benchmark: null,
   benchmarkError: null,
@@ -111,6 +114,7 @@ export type Action =
   | { type: "pinColor"; mode: PinColorMode }
   | { type: "aiAlternatives"; data: AiAlternativesResponse }
   | { type: "chooseUpgrade"; assetId: string; upgradeId: string | null }
+  | { type: "buildingView"; key: string | null }
   | { type: "focusEnergy"; assetId: string | null; origin?: { x: number; y: number; r?: number; color?: string } | null }
   | { type: "planRequest"; request: PlanRequest }
   | { type: "planLoading"; loading: boolean }
@@ -139,6 +143,7 @@ export function reducer(state: AppState, action: Action): AppState {
     case "selectSid":
       return {
         ...state,
+        buildingView: null,
         selectedSid: action.sid,
         audit: null,
         energy: null,
@@ -193,6 +198,8 @@ export function reducer(state: AppState, action: Action): AppState {
       return { ...state, focusAssetId: action.assetId, focusOrigin: action.origin ?? null };
     case "pinColor":
       return { ...state, pinColorMode: action.mode };
+    case "buildingView":
+      return { ...state, buildingView: action.key };
     case "chooseUpgrade": {
       const chosen = { ...state.chosenUpgrades };
       if (action.upgradeId) chosen[action.assetId] = action.upgradeId;

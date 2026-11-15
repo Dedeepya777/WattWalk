@@ -27,6 +27,7 @@ import { QuestionDialog } from "./components/QuestionDialog";
 import { StartControls } from "./components/StartControls";
 import { Logo } from "./components/Logo";
 import { Intro } from "./components/Intro";
+import { BuildingView } from "./components/BuildingView";
 import type { StartAuditRequest, WattEvent } from "./contracts";
 import { useAppDispatch, useAppState, type RequestError } from "./state";
 import { FloorPlan2D } from "./viewer/FloorPlan2D";
@@ -548,6 +549,10 @@ export default function App() {
         </aside>
 
         <section className="panel viewer-panel" aria-labelledby="viewer-heading">
+          {state.buildingView ? (
+            <BuildingView />
+          ) : (
+            <>
           <div className="viewer-tab-row">
             <h2 id="viewer-heading" className="sr-only">
               Spatial viewer
@@ -607,6 +612,8 @@ export default function App() {
               <FloorPlan2D />
             )}
           </div>
+            </>
+          )}
         </section>
 
       </div>

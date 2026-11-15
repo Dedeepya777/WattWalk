@@ -24,14 +24,14 @@ function shortAddress(model: TestModel): string {
   return (cut > 0 ? parts.slice(0, cut) : parts.slice(0, 2)).join(", ");
 }
 
-interface BuildingGroup {
+export interface BuildingGroup {
   key: string;
   street: string;
   models: TestModel[];
 }
 
 /** Apartments grouped by building (street address); the demo fixture last. */
-function groupModels(models: TestModel[]): BuildingGroup[] {
+export function groupModels(models: TestModel[]): BuildingGroup[] {
   const groups = new Map<string, BuildingGroup>();
   for (const model of models) {
     const street = model.address.split(",")[0].trim();
@@ -45,7 +45,7 @@ function groupModels(models: TestModel[]): BuildingGroup[] {
 }
 
 /** "Studio - 331" from "1830 N Cherokee Ave, Studio - 331, Los Angeles, CA". */
-function unitName(model: TestModel): string {
+export function unitName(model: TestModel): string {
   const parts = shortAddress(model).split(",").map((part) => part.trim());
   return parts.length > 1 ? parts.slice(1).join(", ") : "Scanned unit";
 }
@@ -145,8 +145,18 @@ export function ModelPicker({
                   </button>
                   {expanded ? (
                     <ul className="unit-list">
+                      <li>
+                        <button
+                          type="button"
+                          className={`unit-row unit-overview${state.buildingView === group.key ? " selected" : ""}`}
+                          onClick={() => dispatch({ type: "buildingView", key: group.key })}
+                        >
+                          <span className="unit-name">Building overview</span>
+                          <span aria-hidden="true">→</span>
+                        </button>
+                      </li>
                       {group.models.map((model) => {
-                        const selected = model.sid === state.selectedSid;
+                        const selected = model.sid === state.selectedSid && !state.buildingView;
                         return (
                           <li key={model.sid}>
                             <button
