@@ -3098,41 +3098,6 @@ select:disabled {
   .plan-cta { animation: none; }
 }
 
-/* Download PDF: only the plan, on white paper */
-@media print {
-  body * {
-    visibility: hidden;
-  }
-  .my-plan,
-  .my-plan * {
-    visibility: visible;
-  }
-  .my-plan-backdrop {
-    background: none !important;
-  }
-  .my-plan {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    max-height: none;
-    overflow: visible;
-    border: 0;
-    box-shadow: none;
-    padding: 0;
-    background: #ffffff;
-  }
-  .my-plan-actions,
-  .my-plan-remove {
-    display: none;
-  }
-  .my-plan-step,
-  .my-plan-num {
-    print-color-adjust: exact;
-    -webkit-print-color-adjust: exact;
-  }
-}
-
 /* Left column, simplified: apartments, one audit button, building details collapsed */
 .model-list {
   max-height: none;
@@ -5464,4 +5429,131 @@ h1, h2, h3,
 }
 .pm-shop a:hover {
   background: #f39200;
+}
+
+/* Your plan, one entry per upgrade */
+.pm-brand {
+  font-weight: 700;
+  color: var(--forest);
+}
+.pm-action {
+  margin-top: 22px;
+}
+.pm-action-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.pm-action-head h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--charcoal);
+}
+.pm-action-head .pm-save {
+  font-size: 15px;
+}
+.pm-buy {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #ff9f1c;
+  color: #1f1a12;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.pm-buy:hover {
+  background: #f39200;
+}
+.pm-action ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.pm-action li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 22px;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+.pm-place {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--charcoal);
+}
+.pm-place-save {
+  font-size: 14px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.pm-action li:hover .pm-remove,
+.pm-action .pm-remove:focus-visible {
+  opacity: 1;
+}
+
+/* Download PDF: a clean white page with only the plan */
+@media print {
+  @page {
+    margin: 16mm;
+  }
+  html,
+  body,
+  #root,
+  .app {
+    background: #ffffff !important;
+  }
+  .my-plan-backdrop {
+    background: #ffffff !important;
+    padding: 0 !important;
+  }
+  .my-plan {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  .my-plan-actions,
+  .pm-remove,
+  .pm-buy {
+    display: none !important;
+  }
+  .my-plan-top .my-plan-place {
+    font-size: 14px;
+    color: #282d28;
+  }
+  .pm-action,
+  .pm-action li {
+    break-inside: avoid;
+  }
+}
+
+/* Download PDF (body.printing-plan, set while printing): the app is removed, the plan flows once */
+@media print {
+  body.printing-plan #root {
+    display: none !important;
+  }
+  body.printing-plan .my-plan-backdrop {
+    position: static !important;
+    display: block !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+  }
+  body.printing-plan .my-plan {
+    position: static !important;
+    width: 100% !important;
+  }
 }
