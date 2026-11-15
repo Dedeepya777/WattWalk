@@ -195,8 +195,8 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, upgrad
         const look = current(changesRef.current.get(s.id), s.strength, s.color, now);
         if (look.running) animating = true;
         else changesRef.current.delete(s.id);
-        const radiusM = 0.4 + 2.0 * look.t;
-        const r = Math.min(size.h * 0.7, Math.max(14, (radiusM * size.h * 0.9) / dist));
+        const radiusM = 0.25 + 0.9 * look.t; // metres around the item (kept tight so it does not wash over the room)
+        const r = Math.min(size.h * 0.26, Math.max(12, (radiusM * size.h * 0.9) / dist));
         next.push({ id: s.id, name: s.name, x: screen.x, y: screen.y, r, color: look.color, label: s.label, upgrade: s.upgrade });
       }
       // Draw big glows first so small ones stay visible on top; label the biggest first and skip a
@@ -256,7 +256,7 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, upgrad
             top: g.y - g.r,
             width: g.r * 2,
             height: g.r * 2,
-            background: `radial-gradient(circle, ${g.color}b3 0%, ${g.color}73 28%, ${g.color}2e 52%, ${g.color}00 72%)`,
+            background: `radial-gradient(circle, ${g.color}cc 0%, ${g.color}80 22%, ${g.color}26 42%, ${g.color}00 58%)`,
             animationDelay: `${(index % 7) * -0.45}s`,
           }}
         >

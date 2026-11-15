@@ -139,6 +139,22 @@ function PopNow({ row, scale }: { row: AssetEnergy; scale: EnergyScale | null })
 }
 
 /** Pop-out: the upgrade, what it saves (big), and cost and payback in one line. */
+/** Options worth showing in the card: they save at least $2 a year and pay back within 15 years. */
+export function worthShowing(alt: EnergyAlternative): boolean {
+  const saves = (alt.saves_usd_yr[0] + alt.saves_usd_yr[1]) / 2;
+  const payback = alt.payback_years ? (alt.payback_years[0] + alt.payback_years[1]) / 2 : 0;
+  return saves >= 2 && payback <= 15;
+}
+
+/** "5 months", "2 years", "11 years": one number, from the middle of the range. */
+function paybackText(range: [number, number] | null): string {
+  if (!range) return "";
+  const years = (range[0] + range[1]) / 2;
+  if (years < 1) return `${Math.max(1, Math.round(years * 12))} months`;
+  const rounded = years < 3 ? Math.round(years * 2) / 2 : Math.round(years);
+  return `${rounded} year${rounded === 1 ? "" : "s"}`;
+}
+
 function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEnergy; ai?: boolean }) {
   const dispatch = useAppDispatch();
   const picked = useAppState().chosenUpgrades[row.asset_id] === alt.upgrade_id;
@@ -164,32 +180,27 @@ function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEn
       <div>
         <div className="pop-title">
           {alt.title}
-          {ai ? <span className="pop-ai-tag" title={alt.basis}>estimate</span> : null}
+          {ai ? <span className="pop-ai-mark" title={`AI estimate. ${alt.basis}`} aria-label="AI estimate">✦</span> : null}
         </div>
         <div className="pop-save">
-          Save {formatRange(alt.saves_usd_yr, "", true)}
+          Save ${Math.round((alt.saves_usd_yr[0] + alt.saves_usd_yr[1]) / 2).toLocaleString()}
           <span className="pop-unit">/yr</span>
         </div>
-        <div className="pop-sub">
-          {free ? "Free" : `Pays back in ${formatPayback(alt.payback_years)}`}
-          {alt.products?.[0] ? (
-            <>
-              {" · "}
-              <a
-                className="pop-shop"
-                href={alt.products[0].url}
-                target="_blank"
-                rel="noopener noreferrer"
-                title={`${alt.products[0].name} (opens on Amazon)`}
-                // Opening a product must not pick or unpick the upgrade.
-                onClick={(event) => event.stopPropagation()}
-                onKeyDown={(event) => event.stopPropagation()}
-              >
-                Shop ↗
-              </a>
-            </>
-          ) : null}
-        </div>
+        <div className="pop-sub">{free ? "Free" : `Pays back in ${paybackText(alt.payback_years)}`}</div>
+        {alt.products?.[0] ? (
+          <a
+            className="pop-buy"
+            href={alt.products[0].url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={alt.products[0].name}
+            // Opening a product must not pick or unpick the upgrade.
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
+          >
+            Buy on Amazon <span aria-hidden="true">↗</span>
+          </a>
+        ) : null}
       </div>
     </li>
   );
@@ -286,17 +297,17 @@ function PopAiAlternatives({ sid, row }: { sid: string; row: AssetEnergy }) {
       {data.today_usd_yr ? (
         <p className="pop-ai-today">
           Today, roughly <strong>{formatRange(data.today_usd_yr, "", true)}/yr</strong>
-          <span className="pop-ai-tag">estimate</span>
+          <span className="pop-ai-mark" title="AI estimate" aria-label="AI estimate">✦</span>
         </p>
       ) : null}
-      {data.alternatives.length ? (
+      {data.alternatives.some(worthShowing) ? (
         <ul className="energy-alt-list">
-          {data.alternatives.map((alt) => (
+          {data.alternatives.filter(worthShowing).map((alt) => (
             <PopAlt key={alt.upgrade_id} alt={alt} row={base} ai />
           ))}
         </ul>
       ) : (
-        <p className="empty">{data.note}</p>
+        <p className="empty">{data.alternatives.length ? "No other upgrade here is worth it." : data.note}</p>
       )}
       <button className="pop-link" onClick={() => void find(true)}>
         Look again
@@ -489,7 +500,7 @@ export function EnergyAlternatives() {
           </p>
         ) : (
           <ul className="energy-alt-list">
-            {row.alternatives.map((alt, index) =>
+            {row.alternatives.filter((alt) => !popout || worthShowing(alt)).map((alt, index) =>
               popout ? (
                 <PopAlt key={alt.upgrade_id} alt={alt} row={row} />
               ) : (
