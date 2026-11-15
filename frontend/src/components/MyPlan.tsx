@@ -32,6 +32,7 @@ export function MyPlan({ onClose }: { onClose: () => void }) {
   const groups = new Map<string, Group>();
   for (const [sid, items] of Object.entries(state.picks)) {
     const model = state.testModels.find((m) => m.sid === sid);
+    if (!model) continue; // an apartment no longer in the list
     const street = model ? model.address.split(",")[0].trim() : sid;
     const sameBuilding = state.testModels.filter((m) => m.address.split(",")[0].trim() === street).length;
     const unit = model && sameBuilding > 1 ? unitName(model) : null;
@@ -56,7 +57,7 @@ export function MyPlan({ onClose }: { onClose: () => void }) {
   const ordered = [...groups.values()].sort((a, b) => b.saves - a.saves);
   ordered.forEach((g) => g.lines.sort((a, b) => b.saves - a.saves));
   const lines = ordered.flatMap((g) => g.lines);
-  const picks = Object.values(state.picks).flatMap((items) => Object.values(items));
+  const picks = lines.flatMap((line) => line.assetIds.map((id) => state.picks[line.sid][id]));
   const times = (pick: Pick) => pick.units ?? 1; // a building-wide pick counts for every unit
   const saves = picks.reduce((sum, pick) => sum + pick.saves * times(pick), 0);
   const cost = picks.reduce((sum, pick) => sum + pick.cost * times(pick), 0);

@@ -7,7 +7,10 @@ export function PickedUpgrades() {
   const state = useAppState();
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
-  const picks = Object.values(state.picks).flatMap((items) => Object.values(items));
+  const known = new Set(state.testModels.map((m) => m.sid));
+  const picks = Object.entries(state.picks)
+    .filter(([sid]) => known.has(sid))
+    .flatMap(([, items]) => Object.values(items));
   if (picks.length === 0) return null;
   const saves = picks.reduce((sum, pick) => sum + pick.saves * (pick.units ?? 1), 0);
   return (
