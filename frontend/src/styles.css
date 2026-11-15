@@ -5403,3 +5403,21 @@ h1, h2, h3,
   border-color: var(--forest);
   background: var(--forest);
 }
+
+/* Your plan: one button to put the small products in an Amazon cart */
+.my-plan-actions .pm-cart {
+  background: #ff9f1c;
+  border-color: #ff9f1c;
+  color: #1f1a12;
+  font-weight: 700;
+  text-decoration: none;
+}
+.my-plan-actions .pm-cart:hover {
+  background: #f39200;
+  border-color: #f39200;
+}
+@media print {
+  .pm-cart {
+    display: none;
+  }
+}

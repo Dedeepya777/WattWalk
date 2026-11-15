@@ -8,6 +8,31 @@ import { unitName } from "./ModelPicker";
 
 const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
 
+/**
+ * Amazon product for each small library upgrade (the same products the cards link to). Big appliances
+ * (fridge, heat pump) and AI ideas are not put in a cart.
+ */
+const CART_PRODUCTS: Record<string, string> = {
+  window_film: "B00FRLG65K", // BDF S2 Window Film Heat Control, one per window
+  led: "B0CVBMQC5R", // Philips Ultra Efficient LED A19, one per light fixture
+  smart_thermostat: "B08HRPDYTP", // Google Nest Thermostat, one per apartment
+};
+
+/** Amazon's add-to-cart link for several products at once (opens a page to confirm the items). */
+function cartLink(picks: Pick[]): { url: string; items: number } | null {
+  const counts = new Map<string, number>();
+  for (const pick of picks) {
+    const asin = CART_PRODUCTS[pick.upgradeId];
+    if (asin) counts.set(asin, (counts.get(asin) ?? 0) + (pick.units ?? 1));
+  }
+  if (counts.size === 0) return null;
+  const params = [...counts.entries()].flatMap(([asin, quantity], i) => [
+    `ASIN.${i + 1}=${asin}`,
+    `Quantity.${i + 1}=${Math.min(quantity, 999)}`,
+  ]);
+  return { url: `https://www.amazon.com/gp/aws/cart/add.html?${params.join("&")}`, items: [...counts.values()].reduce((a, b) => a + b, 0) };
+}
+
 interface Line {
   sid: string;
   /** The items this line covers (the same upgrade on several items of one apartment is one line). */
@@ -60,6 +85,7 @@ export function MyPlan({ onClose }: { onClose: () => void }) {
   const picks = lines.flatMap((line) => line.assetIds.map((id) => state.picks[line.sid][id]));
   const times = (pick: Pick) => pick.units ?? 1; // a building-wide pick counts for every unit
   const saves = picks.reduce((sum, pick) => sum + pick.saves * times(pick), 0);
+  const cart = cartLink(picks);
   const cost = picks.reduce((sum, pick) => sum + pick.cost * times(pick), 0);
   // Heat the picked items add to the rooms, before and after (only picks that know their heat).
   const heatBefore = picks.reduce((sum, pick) => sum + (pick.heatBefore ?? 0) * times(pick), 0);
@@ -90,6 +116,17 @@ export function MyPlan({ onClose }: { onClose: () => void }) {
         <div className="my-plan-top">
           <span className="my-plan-place">Your plan</span>
           <div className="my-plan-actions">
+            {cart ? (
+              <a
+                className="button pm-cart"
+                href={cart.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Window film, LED bulbs and thermostats in your plan, with their quantities"
+              >
+                Add all to Amazon cart ↗
+              </a>
+            ) : null}
             <button type="button" className="button primary" onClick={() => window.print()}>
               Download PDF
             </button>
