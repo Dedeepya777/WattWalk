@@ -11,7 +11,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Asset, AssetEnergy, Pano } from "../contracts";
-import { formatRange, labelText } from "../format";
+import { labelText } from "../format";
 import { useAppDispatch, useAppState } from "../state";
 import { pinColor, position, toHex, type EnergyScale } from "./energyColor";
 import type { MpSdk } from "./sdkAdapter";
@@ -96,11 +96,10 @@ function forward(rotation: { x: number; y: number }) {
   return { x: -Math.sin(ry) * Math.cos(rx), y: Math.sin(rx), z: -Math.cos(ry) * Math.cos(rx) };
 }
 
-function glowLabel(row: AssetEnergy, scale: EnergyScale): string {
-  if (scale.mode === "cost") return row.usd_yr ? `${formatRange(row.usd_yr, "", true)}/yr` : "";
-  if (row.heat_kwh_yr && row.heat_kwh_yr[0] < 0) return "removes heat";
-  if (row.power_w) return formatRange(row.power_w, "W");
-  return row.heat_kwh_yr ? `${formatRange(row.heat_kwh_yr, "kWh")}/yr` : "";
+/** The glow's colour shows heat; its label shows what the item costs a year, the number people act on. */
+function glowLabel(row: AssetEnergy): string {
+  if (!row.usd_yr) return "";
+  return `$${Math.round((row.usd_yr[0] + row.usd_yr[1]) / 2).toLocaleString()}/yr`;
 }
 
 export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, upgraded, scale, onCount }: Props) {
@@ -133,7 +132,7 @@ export function HeatGlow({ sdk, fit, frame, inventory, panos, energyById, upgrad
         world: modelToSdk(fit, asset.anchor),
         color: toHex(color),
         strength: t,
-        label: t >= LABEL_FROM || value < 0 || upgraded?.has(asset.id) ? glowLabel(row, scale) : "",
+        label: t >= LABEL_FROM || value < 0 || upgraded?.has(asset.id) ? glowLabel(row) : "",
         upgrade: upgraded?.get(asset.id),
       }];
     });
