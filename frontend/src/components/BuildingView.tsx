@@ -8,7 +8,6 @@ import { ApiFailure, getAssetEnergy, getAudit } from "../api";
 import type { AssetEnergyResponse, AuditResponse, EnergyAlternative } from "../contracts";
 import { labelText } from "../format";
 import { useAppDispatch, useAppState } from "../state";
-import { formatPayback } from "./EnergyAlternatives";
 import { groupModels, unitName } from "./ModelPicker";
 
 const mid = (r: [number, number] | null | undefined) => (r ? (r[0] + r[1]) / 2 : 0);
@@ -122,11 +121,8 @@ export function BuildingView() {
   const scale = audited.length; // the landlord's own audited units only, not the whole building
   const spend = avgCost * scale;
   const avgSave = audited.length ? audited.reduce((s, u) => s + u.saveAll, 0) / audited.length : 0;
-  const avgInstall = audited.length ? audited.reduce((s, u) => s + u.installAll, 0) / audited.length : 0;
   const save = avgSave * scale;
-  const install = avgInstall * scale;
   const share = spend > 0 ? Math.min(1, save / spend) : 0;
-  const payback = save > 0 ? install / save : null;
   const maxCost = audited[0]?.cost ?? 1;
   const open = (sid: string) => {
     dispatch({ type: "selectSid", sid });
@@ -160,7 +156,7 @@ export function BuildingView() {
               <span className="bvm-label">Could save</span>
               <span className="bvm-big bvm-green">{money(save)}</span>
               <span className="bvm-unit">
-                a year{payback !== null && install > 0 ? ` · pays back in ${formatPayback([payback, payback])}` : ""}
+                a year
               </span>
             </div>
           </section>

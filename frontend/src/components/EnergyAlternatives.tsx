@@ -146,14 +146,6 @@ export function worthShowing(alt: EnergyAlternative): boolean {
   return saves >= 2 && payback <= 15;
 }
 
-/** "5 months", "2 years", "11 years": one number, from the middle of the range. */
-function paybackText(range: [number, number] | null): string {
-  if (!range) return "";
-  const years = (range[0] + range[1]) / 2;
-  if (years < 1) return `${Math.max(1, Math.round(years * 12))} months`;
-  const rounded = years < 3 ? Math.round(years * 2) / 2 : Math.round(years);
-  return `${rounded} year${rounded === 1 ? "" : "s"}`;
-}
 
 function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEnergy; ai?: boolean }) {
   const dispatch = useAppDispatch();
@@ -186,7 +178,7 @@ function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEn
           Save ${Math.round((alt.saves_usd_yr[0] + alt.saves_usd_yr[1]) / 2).toLocaleString()}
           <span className="pop-unit">/yr</span>
         </div>
-        <div className="pop-sub">{free ? "Free" : `Pays back in ${paybackText(alt.payback_years)}`}</div>
+        {free ? <div className="pop-sub">Free</div> : null}
         {alt.products?.[0] ? (
           <a
             className="pop-buy"
