@@ -665,6 +665,12 @@ export async function getBenchmark(): Promise<Benchmark> {
   return request<Benchmark>("/benchmark");
 }
 
+/** Bird's-eye (oblique aerial) photo of the building of `sid`, looking `direction`; "" in fixture mode. */
+export function birdseyeUrl(sid: string, direction: "north" | "east" | "south" | "west"): string {
+  if (isFixtureMode || !sid) return "";
+  return `${HTTP_BASE}/buildings/birdseye?sid=${encodeURIComponent(sid)}&direction=${direction}`;
+}
+
 export function fileUrl(sid: string, relPath: string): string {
   if (isFixtureMode) return "";
   return `${HTTP_BASE}/audits/${encodeURIComponent(sid)}/files/${relPath}`;

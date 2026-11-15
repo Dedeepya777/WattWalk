@@ -186,6 +186,25 @@ def models_test() -> list[TestModel]:
 
 
 # ----------------------------------------------------------------------------- landlord buildings
+@app.get("/buildings/birdseye")
+def buildings_birdseye(sid: str, direction: str = "north") -> FileResponse:
+    """Bird's-eye (oblique aerial) photo of the building of `sid` from Vexcel, looking `direction`."""
+    from .. import birdseye
+
+    try:
+        path = birdseye.birdseye(sid, direction)
+    except ValueError as e:
+        raise E.invalid(str(e), "direction", direction)
+    except birdseye.NoLocation:
+        raise E.not_found(f"No map location for {sid}.", sid=sid)
+    except birdseye.NoKey as e:
+        raise E.ApiError(503, "upstream_unavailable", str(e), False, {"fix": "Add VEXCEL_API_KEY to .env and restart."})
+    except birdseye.Unavailable as e:
+        raise E.ApiError(502, "upstream_unavailable", str(e), True)
+    return FileResponse(path, media_type="image/jpeg", headers={"Cache-Control": "max-age=86400"})
+
+
+
 @app.get("/buildings/search", response_model=BuildingSearchResponse)
 def buildings_search(q: str = "") -> BuildingSearchResponse:
     """Find Los Angeles buildings by street address in the Matterport models index."""

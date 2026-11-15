@@ -18,6 +18,7 @@ import {
 } from "./api";
 import { AgentLog } from "./components/AgentLog";
 import { BottomTabs } from "./components/BottomTabs";
+import { BirdsEye } from "./components/BirdsEye";
 import { BuildingCard } from "./components/BuildingCard";
 import { EnergyAlternatives } from "./components/EnergyAlternatives";
 import { EvidenceCard } from "./components/EvidenceCard";
@@ -551,6 +552,7 @@ export default function App() {
             auditLoading={auditLoading}
             otherRunSid={activeRunSid && activeRunSid !== state.selectedSid ? activeRunSid : null}
           />
+          <BirdsEye />
           <BuildingCard />
         </aside>
 
