@@ -5258,27 +5258,31 @@ h1, h2, h3,
   }
 }
 
-/* Heat as a picture: today's glow -> after (EnergyAlternatives HeatShift) */
+/* Heat bar in the card: warm part kept, cool part cut (EnergyAlternatives HeatShift) */
 .energy-pop .heat-shift {
   display: flex;
-  width: fit-content;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  width: fit-content;
   margin-top: 6px;
-  color: var(--muted);
 }
-.energy-pop .heat-shift svg {
-  width: 18px;
-  height: 10px;
+.energy-pop .heat-shift-bar {
+  display: flex;
+  width: 64px;
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  gap: 2px;
 }
-.energy-pop .heat-shift-glow {
-  display: inline-block;
-  border-radius: 50%;
+.energy-pop .heat-shift-kept {
+  background: linear-gradient(90deg, #f29b38, #e0573f);
 }
-.energy-pop .heat-shift-word {
-  margin-left: 2px;
-  font-size: 12px;
-  font-weight: 600;
+.energy-pop .heat-shift-cut {
+  background: #9cc0ea;
+}
+.energy-pop .heat-shift-pct {
+  font-size: 13px;
+  font-weight: 700;
   color: #4e78b0;
 }
 /* Your plan: two big numbers */
@@ -5314,4 +5318,22 @@ h1, h2, h3,
 .energy-pop .pop-buy {
   display: flex;
   width: fit-content;
+}
+
+/* Cost pill and details follow the picks */
+.costs-button-was {
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: line-through;
+  font-variant-numeric: tabular-nums;
+}
+.costs-button-arrow {
+  font-size: 12px;
+  color: var(--muted);
+}
+.costs-button-now {
+  color: var(--forest);
+}
+.glance-bar .glance-bar-cut {
+  background: repeating-linear-gradient(135deg, #cfe0f3 0 4px, #e6eef8 4px 8px);
 }

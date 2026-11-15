@@ -148,28 +148,17 @@ export function worthShowing(alt: EnergyAlternative): boolean {
 }
 
 
-/** Today's glow shrinking to the glow after the upgrade: the heat cut as a picture, not a number. */
+/** The item's heat as a short bar: the part the upgrade cuts turns cool, with the % in bold. */
 function HeatShift({ before, after, label }: { before: number; after: number; label: string }) {
-  const scale = buildScale(useAppState().energy?.assets ?? [], "heat");
-  const size = (heat: number) => Math.max(8, 26 * Math.sqrt(Math.min(1, heat / Math.max(before, 1))));
-  const glow = (heat: number) => {
-    const color = glowColor(heat, scale);
-    const d = size(heat);
-    return (
-      <span
-        className="heat-shift-glow"
-        style={{ width: d, height: d, background: `radial-gradient(circle, ${color} 0%, ${color}aa 45%, ${color}00 72%)` }}
-      />
-    );
-  };
+  const kept = Math.max(0, Math.min(1, after / Math.max(before, 1)));
+  const cut = Math.round((1 - kept) * 100);
   return (
     <div className="heat-shift" role="img" aria-label={label} title={label}>
-      {glow(before)}
-      <svg viewBox="0 0 20 10" aria-hidden="true">
-        <path d="M1 5h15M12 1.5 16 5l-4 3.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-      {glow(after)}
-      <span className="heat-shift-word">cooler</span>
+      <span className="heat-shift-bar" aria-hidden="true">
+        <span className="heat-shift-kept" style={{ width: `${kept * 100}%` }} />
+        <span className="heat-shift-cut" style={{ width: `${(1 - kept) * 100}%` }} />
+      </span>
+      <span className="heat-shift-pct">{cut}% less heat</span>
     </div>
   );
 }
