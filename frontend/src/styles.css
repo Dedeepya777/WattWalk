@@ -5337,3 +5337,9 @@ h1, h2, h3,
 .glance-bar .glance-bar-cut {
   background: repeating-linear-gradient(135deg, #cfe0f3 0 4px, #e6eef8 4px 8px);
 }
+
+/* Pop-out never taller than the screen, and it slides when it has to move to stay in view */
+.energy-pop {
+  max-height: calc(100vh - 24px);
+  transition: top 220ms ease, left 220ms ease;
+}

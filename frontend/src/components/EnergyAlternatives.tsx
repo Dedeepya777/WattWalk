@@ -416,32 +416,47 @@ export function EnergyAlternatives() {
   const cardRef = useRef<HTMLDivElement | null>(null);
   const [place, setPlace] = useState<{ left: number; top: number; ox: number; oy: number; h: number } | null>(null);
 
-  // Pop-out mode (opened from a 3D pin or glow): measure before the first paint, sit beside the clicked
-  // point (right of it, or left if there is no room), stay on screen, and grow out of that point.
+  // Pop-out mode (opened from a 3D pin or glow): measure before the first paint and sit beside the clicked
+  // item (left of it on the right half of the screen, right of it otherwise), centred on it vertically and
+  // always fully on screen.
   useLayoutEffect(() => {
     if (!assetId || !origin || !cardRef.current) {
       setPlace(null);
       return;
     }
-    const cardRect = cardRef.current.getBoundingClientRect();
-    const h = cardRect.height;
+    const h = cardRef.current.getBoundingClientRect().height;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    // Put the card's "Today" glow exactly on the pressed button, so the button becomes that glow and the
-    // card grows out around it. Clamp to the screen (the reveal still starts at the button).
-    const todayGlow = cardRef.current.querySelector(".energy-alt-now .energy-alt-glow-box");
-    let gx = 46;
-    let gy = 110;
-    if (todayGlow) {
-      const g = todayGlow.getBoundingClientRect();
-      gx = g.left - cardRect.left + g.width / 2;
-      gy = g.top - cardRect.top + g.height / 2;
-    }
-    const left = Math.max(POP_MARGIN, Math.min(origin.x - gx, vw - POP_WIDTH - POP_MARGIN));
-    const top = Math.max(POP_MARGIN, Math.min(origin.y - gy, vh - h - POP_MARGIN));
-    const ox = origin.x - left;
-    const oy = origin.y - top;
-    setPlace({ left, top, ox, oy, h });
+    const gap = 28;
+    const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(v, Math.max(lo, hi)));
+    const side = origin.x > vw / 2 ? origin.x - gap - POP_WIDTH : origin.x + gap;
+    const left = clamp(side, POP_MARGIN, vw - POP_WIDTH - POP_MARGIN);
+    const top = clamp(origin.y - h / 2, POP_MARGIN, vh - h - POP_MARGIN);
+    setPlace({ left, top, ox: origin.x - left, oy: origin.y - top, h });
+  }, [assetId, origin]);
+
+  // The card grows after it opens (photo, more options): slide it back so it stays fully on screen.
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card || !origin) return undefined;
+    const keepInView = () => {
+      const h = card.getBoundingClientRect().height;
+      const vh = window.innerHeight;
+      const vw = window.innerWidth;
+      setPlace((current) => {
+        if (!current) return current;
+        const top = Math.max(POP_MARGIN, Math.min(current.top, Math.max(POP_MARGIN, vh - h - POP_MARGIN)));
+        const left = Math.max(POP_MARGIN, Math.min(current.left, Math.max(POP_MARGIN, vw - POP_WIDTH - POP_MARGIN)));
+        return top === current.top && left === current.left && h === current.h ? current : { ...current, top, left, h };
+      });
+    };
+    const observer = new ResizeObserver(keepInView);
+    observer.observe(card);
+    window.addEventListener("resize", keepInView);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", keepInView);
+    };
   }, [assetId, origin]);
 
   useEffect(() => {
