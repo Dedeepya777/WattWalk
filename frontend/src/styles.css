@@ -5403,3 +5403,65 @@ h1, h2, h3,
   border-color: var(--forest);
   background: var(--forest);
 }
+
+/* Your plan: one button to put the small products in an Amazon cart */
+.my-plan-actions .pm-cart {
+  background: #ff9f1c;
+  border-color: #ff9f1c;
+  color: #1f1a12;
+  font-weight: 700;
+  text-decoration: none;
+}
+.my-plan-actions .pm-cart:hover {
+  background: #f39200;
+  border-color: #f39200;
+}
+@media print {
+  .pm-cart {
+    display: none;
+  }
+}
+
+/* Your plan: shopping list */
+.pm-shop {
+  margin-top: 26px;
+}
+.pm-shop h3 {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.pm-shop ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.pm-shop li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 14px;
+}
+.pm-shop .pm-qty {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.pm-shop a {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #ff9f1c;
+  color: #1f1a12;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.pm-shop a:hover {
+  background: #f39200;
+}

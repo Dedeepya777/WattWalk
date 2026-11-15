@@ -8,6 +8,25 @@ import { unitName } from "./ModelPicker";
 
 const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
 
+/**
+ * Amazon product for each small library upgrade (the same products the cards link to). Big appliances
+ * (fridge, heat pump) and AI ideas are not in the shopping list.
+ */
+const SHOP_PRODUCTS: Record<string, { name: string; asin: string; per: string }> = {
+  window_film: { name: "BDF S2 window film", asin: "B00FRLG65K", per: "window" },
+  led: { name: "Philips LED A19 bulb", asin: "B0CVBMQC5R", per: "fixture" },
+  smart_thermostat: { name: "Google Nest Thermostat", asin: "B08HRPDYTP", per: "apartment" },
+};
+
+/** One line per product with how many to buy (one per item it was picked for). */
+function shoppingList(picks: Pick[]) {
+  const counts = new Map<string, number>();
+  for (const pick of picks) {
+    if (SHOP_PRODUCTS[pick.upgradeId]) counts.set(pick.upgradeId, (counts.get(pick.upgradeId) ?? 0) + (pick.units ?? 1));
+  }
+  return [...counts.entries()].map(([id, quantity]) => ({ ...SHOP_PRODUCTS[id], quantity }));
+}
+
 interface Line {
   sid: string;
   /** The items this line covers (the same upgrade on several items of one apartment is one line). */
@@ -32,6 +51,7 @@ export function MyPlan({ onClose }: { onClose: () => void }) {
   const groups = new Map<string, Group>();
   for (const [sid, items] of Object.entries(state.picks)) {
     const model = state.testModels.find((m) => m.sid === sid);
+    if (!model) continue; // an apartment no longer in the list
     const street = model ? model.address.split(",")[0].trim() : sid;
     const sameBuilding = state.testModels.filter((m) => m.address.split(",")[0].trim() === street).length;
     const unit = model && sameBuilding > 1 ? unitName(model) : null;
@@ -56,9 +76,10 @@ export function MyPlan({ onClose }: { onClose: () => void }) {
   const ordered = [...groups.values()].sort((a, b) => b.saves - a.saves);
   ordered.forEach((g) => g.lines.sort((a, b) => b.saves - a.saves));
   const lines = ordered.flatMap((g) => g.lines);
-  const picks = Object.values(state.picks).flatMap((items) => Object.values(items));
+  const picks = lines.flatMap((line) => line.assetIds.map((id) => state.picks[line.sid][id]));
   const times = (pick: Pick) => pick.units ?? 1; // a building-wide pick counts for every unit
   const saves = picks.reduce((sum, pick) => sum + pick.saves * times(pick), 0);
+  const shopping = shoppingList(picks);
   const cost = picks.reduce((sum, pick) => sum + pick.cost * times(pick), 0);
   // Heat the picked items add to the rooms, before and after (only picks that know their heat).
   const heatBefore = picks.reduce((sum, pick) => sum + (pick.heatBefore ?? 0) * times(pick), 0);
@@ -158,6 +179,24 @@ export function MyPlan({ onClose }: { onClose: () => void }) {
             </ul>
           </section>
         ))}
+
+        {shopping.length ? (
+          <section className="pm-shop" aria-label="Shopping list">
+            <h3>Shopping list</h3>
+            <ul>
+              {shopping.map((item) => (
+                <li key={item.asin}>
+                  <span>
+                    {item.name} <span className="pm-qty">× {item.quantity}</span>
+                  </span>
+                  <a href={`https://www.amazon.com/dp/${item.asin}`} target="_blank" rel="noopener noreferrer">
+                    Buy on Amazon ↗
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
       </div>
     </div>
   );

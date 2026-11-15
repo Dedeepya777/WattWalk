@@ -1,25 +1,49 @@
 [
   {
-    "sid": "r1NfhYW4TAr",
-    "address": "215 W 7th St, Unit 301, Los Angeles, CA",
+    "sid": "2ibibwUGQAe",
+    "address": "1830 N Cherokee Ave, Studio - 331, Los Angeles, CA",
     "city": "Los Angeles",
-    "note": "Demo scan (hero); downtown LA; building listed in LA EBEWE (built 1911, site EUI 40.8); 10 rooms, 64 walls",
-    "has_fixture": true,
-    "has_replay": false
-  },
-  {
-    "sid": "H7CHGZ8m3Dg",
-    "address": "889 Francisco St, Unit 1206, Los Angeles, CA",
-    "city": "Los Angeles",
-    "note": "Demo scan (backup); built 2017, not in LA EBEWE; 12 rooms, 90 walls",
+    "note": "Studio; building in LA EBEWE (built 1946, site EUI 32.5); 4 rooms; 8 panoramas",
     "has_fixture": false,
     "has_replay": false
   },
   {
-    "sid": "2ibibwUGQAe",
-    "address": "1830 N Cherokee Ave, Los Angeles, CA",
+    "sid": "uyWj3z6icci",
+    "address": "1830 N Cherokee Ave, Studio - 513SF, Los Angeles, CA",
     "city": "Los Angeles",
-    "note": "Real scan used in vision regression tests; building listed in LA EBEWE (built 1946, site EUI 32.5); 4 rooms, 25 walls, no room heights",
+    "note": "Studio, 513 sq ft; 10 panoramas",
+    "has_fixture": false,
+    "has_replay": false
+  },
+  {
+    "sid": "FEtKvwWwMTx",
+    "address": "1830 N Cherokee Ave, 1BR, 1BA - 817 SF, Los Angeles, CA",
+    "city": "Los Angeles",
+    "note": "1 bedroom, 817 sq ft; 10 panoramas",
+    "has_fixture": false,
+    "has_replay": false
+  },
+  {
+    "sid": "dTpLikSKmsS",
+    "address": "819 Santee St, 1BD, 1BA - 737SF, Los Angeles, CA",
+    "city": "Los Angeles",
+    "note": "1 bedroom, 737 sq ft; high-energy building in LA EBEWE (site EUI 93.8); 8 panoramas",
+    "has_fixture": false,
+    "has_replay": false
+  },
+  {
+    "sid": "D98wM3QKc91",
+    "address": "819 Santee St, Studio - 662SF, Los Angeles, CA",
+    "city": "Los Angeles",
+    "note": "Studio, 662 sq ft; 7 panoramas",
+    "has_fixture": false,
+    "has_replay": false
+  },
+  {
+    "sid": "wYFF3KYdETV",
+    "address": "819 Santee St, Studio - 735SF, Los Angeles, CA",
+    "city": "Los Angeles",
+    "note": "Studio, 735 sq ft; 9 panoramas",
     "has_fixture": false,
     "has_replay": false
   },
@@ -44,14 +68,6 @@
     "address": "601 N Rossmore Ave, Los Angeles, CA",
     "city": "Los Angeles",
     "note": "Studio, 655 sq ft; Hancock Park; efficient building in LA EBEWE (site EUI 15.5, 2023); 5 rooms, 26 walls; 9 panoramas",
-    "has_fixture": false,
-    "has_replay": false
-  },
-  {
-    "sid": "wYFF3KYdETV",
-    "address": "819 Santee St, Los Angeles, CA",
-    "city": "Los Angeles",
-    "note": "Studio, 735 sq ft; Fashion District; high-energy building in LA EBEWE (site EUI 93.8, 2025); 3 rooms, 40 walls; 9 panoramas",
     "has_fixture": false,
     "has_replay": false
   },
