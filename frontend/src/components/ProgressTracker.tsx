@@ -23,19 +23,24 @@ export function ProgressTracker() {
     return () => window.clearInterval(timer);
   }, [running]);
 
-  if (!running && state.events.length === 0) return null;
-  if (!running && status !== "completed") return null;
+  // Only while an audit runs: once it is done, the status next to the apartment's name says so.
+  if (!running) return null;
 
   const startedAt = state.audit?.status.started_at ? Date.parse(state.audit.status.started_at) : NaN;
   const elapsed = running && Number.isFinite(startedAt)
     ? Math.max(progress.elapsedS, Math.round((Date.now() - startedAt) / 1000))
     : progress.elapsedS;
 
+  // The last steps (the AI double-checking and summing up) have no measurable length: say so
+  // instead of sitting at 97-100 %.
+  const finishing = progress.percent >= 97;
+  const stage = finishing ? "Finishing up" : progress.stage;
+
   return (
     <div className="progress" role="group" aria-label="Audit progress">
       <div className="progress-head">
-        <strong>{progress.stage}</strong>
-        <span>{progress.percent}%</span>
+        <strong>{stage}</strong>
+        <span>{finishing ? "" : `${progress.percent}%`}</span>
       </div>
       <div
         className="progress-track"
@@ -43,18 +48,20 @@ export function ProgressTracker() {
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={progress.percent}
-        aria-valuetext={`${progress.percent}% \u2013 ${progress.stage}`}
+        aria-valuetext={finishing ? "Finishing up" : `${progress.percent}% \u2013 ${progress.stage}`}
       >
         <div
-          className={running ? "progress-fill running" : "progress-fill"}
-          style={{ width: `${progress.percent}%` }}
+          className={finishing ? "progress-fill finishing" : "progress-fill running"}
+          style={{ width: finishing ? "100%" : `${progress.percent}%` }}
         />
       </div>
       <div className="progress-meta muted small">
-        <span>{progress.detail}</span>
+        <span>{finishing ? "Double-checking the results and writing the summary\u2026" : progress.detail}</span>
         <span>
           {clock(elapsed)} elapsed
-          {running && progress.etaS !== null
+          {finishing
+            ? ""
+            : running && progress.etaS !== null
             ? ` \u00b7 about ${clock(progress.etaS)} left in this stage`
             : running && progress.estimating
               ? " \u00b7 estimating time left\u2026"

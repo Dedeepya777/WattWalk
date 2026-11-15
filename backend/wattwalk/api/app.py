@@ -27,6 +27,9 @@ from ..agent import tools
 from ..agent.verify import verify_audit  # noqa: F401  (re-exported for convenience)
 from ..engine.asset_energy import energy_response
 from ..contracts import (
+    AddBuildingRequest,
+    BuildingSearchResponse,
+    Portfolio,
     AiAlternativesResponse,
     AnswerRequest,
     AssetEnergyResponse,
@@ -167,12 +170,76 @@ def health(probe: bool = False) -> Health:
 
 @app.get("/models/test", response_model=list[TestModel])
 def models_test() -> list[TestModel]:
+    from .. import portfolio
+
     out = []
+    in_buildings = portfolio.unit_addresses()
     for m in json.loads(TEST_MODELS_FILE.read_text(encoding="utf-8")):
         m["has_fixture"] = runner.fixture_available(m["sid"])
         m["has_replay"] = replay.has_replay(m["sid"])
+        if m["sid"] in in_buildings:
+            m["address"] = in_buildings[m["sid"]]  # name the unit inside the landlord's building
         out.append(TestModel.model_validate(m))
+    # Units from the landlord's buildings follow the configured apartments.
+    for m in portfolio.portfolio_models({m.sid for m in out}):
+        m.has_fixture = runner.fixture_available(m.sid)
+        m.has_replay = replay.has_replay(m.sid)
+        out.append(m)
     return out
+
+
+# ----------------------------------------------------------------------------- landlord buildings
+@app.get("/buildings/birdseye")
+def buildings_birdseye(sid: str, direction: str = "north") -> FileResponse:
+    """Bird's-eye (oblique aerial) photo of the building of `sid` from Vexcel, looking `direction`."""
+    from .. import birdseye
+
+    try:
+        path = birdseye.birdseye(sid, direction)
+    except ValueError as e:
+        raise E.invalid(str(e), "direction", direction)
+    except birdseye.NoLocation:
+        raise E.not_found(f"No map location for {sid}.", sid=sid)
+    except birdseye.NoKey as e:
+        raise E.ApiError(503, "upstream_unavailable", str(e), False, {"fix": "Add VEXCEL_API_KEY to .env and restart."})
+    except birdseye.Unavailable as e:
+        raise E.ApiError(502, "upstream_unavailable", str(e), True)
+    return FileResponse(path, media_type="image/jpeg", headers={"Cache-Control": "max-age=86400"})
+
+
+
+@app.get("/buildings/search", response_model=BuildingSearchResponse)
+def buildings_search(q: str = "") -> BuildingSearchResponse:
+    """Find Los Angeles buildings by street address in the Matterport models index."""
+    from .. import portfolio
+
+    return portfolio.search(q)
+
+
+@app.get("/portfolio", response_model=Portfolio)
+def portfolio_get() -> Portfolio:
+    from .. import portfolio
+
+    return portfolio.load()
+
+
+@app.post("/portfolio/buildings", response_model=Portfolio)
+def portfolio_add(req: AddBuildingRequest) -> Portfolio:
+    from .. import portfolio
+
+    try:
+        return portfolio.add_building(req.building_id, req.sids)
+    except KeyError:
+        raise E.not_found(f"No building {req.building_id} in the index.", building_id=req.building_id)
+    except ValueError as e:
+        raise E.invalid(str(e), "sids", req.sids)
+
+
+@app.delete("/portfolio/buildings/{building_id}", response_model=Portfolio)
+def portfolio_remove(building_id: str) -> Portfolio:
+    from .. import portfolio
+
+    return portfolio.remove_building(building_id)
 
 
 @app.get("/benchmark", response_model=Benchmark)

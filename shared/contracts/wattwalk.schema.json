@@ -185,7 +185,7 @@
         "escalated": {"type": "boolean"},
         "crop_ref": {"type": "string", "description": "Relative path under the audit folder, e.g. crops/o001.jpg"},
         "anchor": {"anyOf": [{"$ref": "#/$defs/Vec3"}, {"type": "null"}]},
-        "anchor_method": {"type": "string", "enum": ["wall_raycast", "ceiling_plane", "floor_plane", "none"]},
+        "anchor_method": {"type": "string", "enum": ["wall_raycast", "ceiling_plane", "floor_plane", "two_view", "none"]},
         "room_id": {"anyOf": [{"$ref": "#/$defs/Id"}, {"type": "null"}]},
         "quality": {"$ref": "#/$defs/Quality"},
         "created_at": {"$ref": "#/$defs/Timestamp"}
@@ -532,6 +532,64 @@
         "type": {"type": "string", "enum": ["status", "todo", "tool_call", "tool_result", "finding", "question", "error", "done"]},
         "summary": {"type": "string", "maxLength": 200},
         "data": {"type": "object"}
+      }
+    },
+    "TourMatch": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sid", "name", "pano_count", "room_count", "scanned_on", "defurnished"],
+      "properties": {
+        "sid": {"type": "string"},
+        "name": {"type": "string"},
+        "pano_count": {"type": "integer", "minimum": 0},
+        "room_count": {"type": "integer", "minimum": 0},
+        "scanned_on": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+        "defurnished": {"type": "boolean"}
+      }
+    },
+    "BuildingMatch": {
+      "type": "object", "additionalProperties": false,
+      "required": ["building_id", "address", "city", "postal_code", "tours"],
+      "properties": {
+        "building_id": {"type": "string"},
+        "address": {"type": "string"},
+        "city": {"$ref": "#/$defs/City"},
+        "postal_code": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+        "tours": {"type": "array", "items": {"$ref": "#/$defs/TourMatch"}}
+      }
+    },
+    "BuildingSearchResponse": {
+      "type": "object", "additionalProperties": false,
+      "required": ["query", "buildings"],
+      "properties": {
+        "query": {"type": "string"},
+        "buildings": {"type": "array", "items": {"$ref": "#/$defs/BuildingMatch"}}
+      }
+    },
+    "PortfolioBuilding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["building_id", "address", "city", "sids", "added_at"],
+      "properties": {
+        "building_id": {"type": "string"},
+        "address": {"type": "string"},
+        "city": {"$ref": "#/$defs/City"},
+        "sids": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "added_at": {"type": "string"}
+      }
+    },
+    "Portfolio": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "buildings"],
+      "properties": {
+        "schema_version": {"$ref": "#/$defs/SchemaVersion"},
+        "buildings": {"type": "array", "items": {"$ref": "#/$defs/PortfolioBuilding"}}
+      }
+    },
+    "AddBuildingRequest": {
+      "type": "object", "additionalProperties": false,
+      "required": ["building_id", "sids"],
+      "properties": {
+        "building_id": {"type": "string"},
+        "sids": {"type": "array", "minItems": 1, "items": {"type": "string"}}
       }
     },
     "TestModel": {

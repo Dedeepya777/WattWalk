@@ -1,5 +1,6 @@
 /** Person 4's application shell: fixture/live data flow, SSE refetch rules, layout. */
-import { PinColorControls } from "./components/PinColorControls";
+import { CostsButton, ViewerStats } from "./components/ViewerStats";
+import { ProgressTracker } from "./components/ProgressTracker";
 import { PickedUpgrades } from "./components/PickedUpgrades";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -18,7 +19,6 @@ import {
 } from "./api";
 import { AgentLog } from "./components/AgentLog";
 import { BottomTabs } from "./components/BottomTabs";
-import { BuildingCard } from "./components/BuildingCard";
 import { EnergyAlternatives } from "./components/EnergyAlternatives";
 import { EvidenceCard } from "./components/EvidenceCard";
 import { ModelPicker } from "./components/ModelPicker";
@@ -27,6 +27,7 @@ import { QuestionDialog } from "./components/QuestionDialog";
 import { StartControls } from "./components/StartControls";
 import { Logo } from "./components/Logo";
 import { Intro } from "./components/Intro";
+import { BuildingView } from "./components/BuildingView";
 import type { StartAuditRequest, WattEvent } from "./contracts";
 import { useAppDispatch, useAppState, type RequestError } from "./state";
 import { FloorPlan2D } from "./viewer/FloorPlan2D";
@@ -58,6 +59,7 @@ export default function App() {
   const dispatch = useAppDispatch();
   // The intro page shows each time the site opens; the app loads underneath it.
   const [showIntro, setShowIntro] = useState(true);
+  const [costsOpen, setCostsOpen] = useState(false);
   const closeIntro = useCallback(() => setShowIntro(false), []);
   const exploreDemo = useCallback(() => {
     const models = state.testModels;
@@ -538,23 +540,20 @@ export default function App() {
         <aside className="left-column">
           <ModelPicker
             onRetry={() => void loadModels()}
+            onReload={loadModels}
             onCancelAndSwitch={cancelAndSwitch}
             switchBusy={switchBusy}
             switchError={switchError}
             onDismissSwitchError={() => setSwitchError(null)}
           />
-          <StartControls
-            onStart={handleStart}
-            onCancel={handleCancel}
-            onReset={handleReset}
-            auditLoading={auditLoading}
-            otherRunSid={activeRunSid && activeRunSid !== state.selectedSid ? activeRunSid : null}
-          />
           <PickedUpgrades />
-          <BuildingCard />
         </aside>
 
         <section className="panel viewer-panel" aria-labelledby="viewer-heading">
+          {state.buildingView ? (
+            <BuildingView />
+          ) : (
+            <>
           <div className="viewer-tab-row">
             <h2 id="viewer-heading" className="sr-only">
               Spatial viewer
@@ -588,12 +587,18 @@ export default function App() {
                 2D plan
               </button>
             </div>
-            <PinColorControls />
-            <span className="muted small">
-              {state.audit?.rooms.length ?? 0} rooms {"\u00b7"}{" "}
-              {state.audit?.inventory.length ?? 0} assets
-            </span>
+            <CostsButton open={costsOpen} onToggle={() => setCostsOpen((open) => !open)} />
+            <span className="toolbar-spacer" />
+            <StartControls
+              onStart={handleStart}
+              onCancel={handleCancel}
+              onReset={handleReset}
+              auditLoading={auditLoading}
+              otherRunSid={activeRunSid && activeRunSid !== state.selectedSid ? activeRunSid : null}
+            />
           </div>
+          <ProgressTracker />
+          <ViewerStats open={costsOpen} />
           <div className="viewer-body">
             {state.viewMode === "3d" ? (
               <Viewer3D
@@ -607,6 +612,8 @@ export default function App() {
               <FloorPlan2D />
             )}
           </div>
+            </>
+          )}
         </section>
 
       </div>

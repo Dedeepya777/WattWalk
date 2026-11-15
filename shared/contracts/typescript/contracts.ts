@@ -102,7 +102,7 @@ export interface Observation {
   escalated: boolean;
   crop_ref: string;
   anchor: Vec3 | null;
-  anchor_method: "wall_raycast" | "ceiling_plane" | "floor_plane" | "none";
+  anchor_method: "wall_raycast" | "ceiling_plane" | "floor_plane" | "two_view" | "none";
   room_id: string | null;
   quality: Quality;
   created_at: string;
@@ -363,6 +363,52 @@ export interface WattEvent {
   type: "status" | "todo" | "tool_call" | "tool_result" | "finding" | "question" | "error" | "done";
   summary: string;
   data: Record<string, unknown>;
+}
+
+/** One 3D tour (a scanned unit) at a building found by address search. */
+export interface TourMatch {
+  sid: string;
+  name: string;
+  pano_count: number;
+  room_count: number;
+  scanned_on: string | null;
+  defurnished: boolean;
+}
+
+/** A building found by address search (Los Angeles), with its scanned units. */
+export interface BuildingMatch {
+  building_id: string;
+  address: string;
+  city: City;
+  postal_code: string | null;
+  tours: TourMatch[];
+}
+
+/** GET /buildings/search?q= */
+export interface BuildingSearchResponse {
+  query: string;
+  buildings: BuildingMatch[];
+}
+
+/** A building the landlord added, with the units they track. */
+export interface PortfolioBuilding {
+  building_id: string;
+  address: string;
+  city: City;
+  sids: string[];
+  added_at: string;
+}
+
+/** GET /portfolio */
+export interface Portfolio {
+  schema_version: "1.0.0";
+  buildings: PortfolioBuilding[];
+}
+
+/** POST /portfolio/buildings */
+export interface AddBuildingRequest {
+  building_id: string;
+  sids: string[];
 }
 
 export interface TestModel {

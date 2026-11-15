@@ -6,6 +6,12 @@ anchors the window on the closet wall. When another pano saw the same object cle
 sight lines meet behind that "wall"; the blocked observation adopts the clean observation's anchor
 so dedupe merges them.
 
+Two-view anchors: a scan without walls (some Matterport models have no floor plan) cannot place
+windows by casting a sight line onto a wall, so they had no anchor, could not glow, and were never
+merged across panoramas (one window seen from three panos became three windows). When two panoramas
+see the same kind of object, their sight lines nearly cross at it; the crossing point becomes the
+anchor ("two_view") for both, so dedupe merges them.
+
 Owner: Person 2. Uses Person 4's ray maths (spatial.geometry) and changes no anchor otherwise.
 """
 from __future__ import annotations
@@ -85,4 +91,58 @@ def rescue_blocked(observations: list[Observation], geometry: ModelGeometry) -> 
         if best is not None:
             anchor = best[1].anchor
             fixed[a.id] = a.model_copy(update={"anchor": anchor, "room_id": room_for(geometry, pano_a, anchor)})
+    return fixed
+
+
+# ---------- two-view anchors (no wall to cast onto) ----------
+
+TWO_VIEW_GAP_M = 0.6    # windows are big: the two sight lines may aim at slightly different points of it
+TWO_VIEW_MIN_M = 0.5    # crossing point must be in front of both cameras, at a plausible distance
+TWO_VIEW_MAX_M = 10.0
+HEIGHT_RANGE_M = (0.2, 2.6)  # above the floor (model z): a window centre or wall item is in this band
+
+
+def anchor_unplaced(observations: list[Observation], geometry: ModelGeometry) -> dict[str, Observation]:
+    """Updated copies (keyed by id) of observations that had no anchor and now have a two-view one.
+
+    For each unanchored observation, the observation of the same label from another panorama whose
+    sight line passes closest to it (within TWO_VIEW_GAP_M, in front of both cameras, at a plausible
+    height) gives the crossing point. Observations that already have an anchor are never changed.
+    """
+    from .views import room_for
+
+    try:
+        rays = {o.id: _ray(geometry, o) for o in observations}
+    except Exception:  # spatial module missing or a different API: change nothing
+        return {}
+    floor = 0.0
+    fixed: dict[str, Observation] = {}
+    for a in observations:
+        if a.anchor is not None or rays.get(a.id) is None:
+            continue
+        pano_a, oa, da = rays[a.id]
+        best = None
+        for b in observations:
+            if b.id == a.id or b.label != a.label or b.pano_id == a.pano_id or rays.get(b.id) is None:
+                continue
+            _, ob, db = rays[b.id]
+            res = _closest(oa, da, ob, db)
+            if res is None:
+                continue
+            s, t, gap = res
+            if gap > TWO_VIEW_GAP_M or not (TWO_VIEW_MIN_M < s < TWO_VIEW_MAX_M and TWO_VIEW_MIN_M < t < TWO_VIEW_MAX_M):
+                continue
+            meet = (oa + s * da + ob + t * db) / 2.0
+            if not HEIGHT_RANGE_M[0] <= float(meet[2]) - floor <= HEIGHT_RANGE_M[1]:
+                continue
+            if best is None or gap < best[0]:
+                best = (gap, meet)
+        if best is None:
+            continue
+        from ..contracts import Vec3
+
+        meet = best[1]
+        anchor = Vec3(x=float(meet[0]), y=float(meet[1]), z=float(meet[2]))
+        fixed[a.id] = a.model_copy(update={
+            "anchor": anchor, "anchor_method": "two_view", "room_id": room_for(geometry, pano_a, anchor)})
     return fixed
