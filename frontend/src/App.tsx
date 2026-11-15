@@ -51,7 +51,7 @@ function toRequestError(error: unknown): RequestError {
   };
 }
 
-const DEMO_SID = "r1NfhYW4TAr"; // 215 W 7th St, the hero demo apartment
+const DEMO_SID = "2ibibwUGQAe"; // 1830 N Cherokee Ave, Studio 331: the demo apartment the intro opens
 
 export default function App() {
   const state = useAppState();
