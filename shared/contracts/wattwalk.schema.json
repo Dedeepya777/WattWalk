@@ -307,7 +307,18 @@
         "cost_usd": {"$ref": "#/$defs/Range2"},
         "payback_years": {"anyOf": [{"$ref": "#/$defs/Range2"}, {"type": "null"}]},
         "who": {"type": "string"},
-        "basis": {"type": "string"}
+        "basis": {"type": "string"},
+        "products": {"type": "array", "items": {"$ref": "#/$defs/ProductSuggestion"}}
+      }
+    },
+    "ProductSuggestion": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "approx_price_usd", "why", "url"],
+      "properties": {
+        "name": {"type": "string"},
+        "approx_price_usd": {"anyOf": [{"type": "number", "minimum": 0}, {"type": "null"}]},
+        "why": {"type": "string"},
+        "url": {"type": "string"}
       }
     },
     "AssetEnergyResponse": {

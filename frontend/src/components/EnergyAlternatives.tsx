@@ -205,6 +205,31 @@ function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEn
         <div className="pop-sub">
           {free ? "Free, just a habit change" : `${formatRange(alt.cost_usd, "", true)} · pays back in ${formatPayback(alt.payback_years)}`}
         </div>
+        {alt.products?.length ? (
+          <ul className="pop-products" aria-label={`Products for ${alt.title}`}>
+            {alt.products.map((product) => (
+              <li key={product.name}>
+                <a
+                  href={product.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={`${product.name}${product.why ? `: ${product.why}` : ""}. Opens on Amazon (the price there is the real one).`}
+                  // Opening a product must not pick or unpick the upgrade.
+                  onClick={(event) => event.stopPropagation()}
+                  onKeyDown={(event) => event.stopPropagation()}
+                >
+                  <span className="pop-product-name">
+                    <span className="pop-product-shop">Shop</span> {product.name}
+                  </span>
+                  {product.approx_price_usd ? (
+                    <span className="pop-product-price">~${Math.round(product.approx_price_usd).toLocaleString()}</span>
+                  ) : null}
+                  <span className="pop-product-go" aria-hidden="true">↗</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
     </li>
   );

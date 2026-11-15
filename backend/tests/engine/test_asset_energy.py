@@ -99,3 +99,13 @@ def test_alternatives_match_the_upgrade_library(building):
     assert rows["old"].alternatives[0]["kwh_yr"] == (400, 400) and rows["new"].alternatives == []
     assert rows["ac"].alternatives[0]["kwh_yr"][0] == pytest.approx(rows["ac"].kwh_yr[0] / 2, abs=0.1)
     assert rows["t"].alternatives[0]["upgrade_id"] == "smart_thermostat" and rows["t"].alternatives[0]["kwh_yr"] is None
+
+
+def test_every_library_upgrade_has_one_product_link():
+    from wattwalk.engine.assumptions import load_upgrades
+    from wattwalk.engine.products import library_products
+
+    for upgrade in load_upgrades():
+        products = library_products(upgrade["id"])
+        assert len(products) == 1, upgrade["id"]
+        assert products[0]["url"].startswith("https://www.amazon.com/dp/")

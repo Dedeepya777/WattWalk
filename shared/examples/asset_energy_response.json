@@ -59,7 +59,15 @@
             2.8
           ],
           "who": "the tenant can do it with the owner's approval",
-          "basis": "film blocks 30% of the sun heat through 1.8 m2 of glass"
+          "basis": "film blocks 30% of the sun heat through 1.8 m2 of glass",
+          "products": [
+            {
+              "name": "BDF S2 Window Film Heat Control",
+              "approx_price_usd": null,
+              "why": "solar control film, peel-and-stick",
+              "url": "https://www.amazon.com/dp/B00FRLG65K"
+            }
+          ]
         }
       ]
     },
@@ -120,7 +128,15 @@
             2.8
           ],
           "who": "the tenant can do it with the owner's approval",
-          "basis": "film blocks 30% of the sun heat through 1.2 m2 of glass"
+          "basis": "film blocks 30% of the sun heat through 1.2 m2 of glass",
+          "products": [
+            {
+              "name": "BDF S2 Window Film Heat Control",
+              "approx_price_usd": null,
+              "why": "solar control film, peel-and-stick",
+              "url": "https://www.amazon.com/dp/B00FRLG65K"
+            }
+          ]
         }
       ]
     },
@@ -179,7 +195,15 @@
             20.5
           ],
           "who": "the owner pays",
-          "basis": "same cooling with EER 18 instead of 9"
+          "basis": "same cooling with EER 18 instead of 9",
+          "products": [
+            {
+              "name": "MRCOOL DIY Ductless Mini-Split Heat Pump",
+              "approx_price_usd": null,
+              "why": "inverter heat pump, single zone",
+              "url": "https://www.amazon.com/dp/B0B39GVPKS"
+            }
+          ]
         }
       ]
     },
@@ -246,7 +270,15 @@
             0.5
           ],
           "who": "the tenant can do it",
-          "basis": "2 bulb(s) at 9 W instead of today's bulbs, 3 h/day; saves nothing if it is already efficient (detail not seen), so payback is the best case"
+          "basis": "2 bulb(s) at 9 W instead of today's bulbs, 3 h/day; saves nothing if it is already efficient (detail not seen), so payback is the best case",
+          "products": [
+            {
+              "name": "Philips Ultra Efficient LED A19 Light Bulb",
+              "approx_price_usd": null,
+              "why": "uses about 4 W for 60 W of light",
+              "url": "https://www.amazon.com/dp/B0CVBMQC5R"
+            }
+          ]
         }
       ]
     },
@@ -313,7 +345,15 @@
             0.5
           ],
           "who": "the tenant can do it",
-          "basis": "2 bulb(s) at 9 W instead of today's bulbs, 3 h/day; saves nothing if it is already efficient (detail not seen), so payback is the best case"
+          "basis": "2 bulb(s) at 9 W instead of today's bulbs, 3 h/day; saves nothing if it is already efficient (detail not seen), so payback is the best case",
+          "products": [
+            {
+              "name": "Philips Ultra Efficient LED A19 Light Bulb",
+              "approx_price_usd": null,
+              "why": "uses about 4 W for 60 W of light",
+              "url": "https://www.amazon.com/dp/B0CVBMQC5R"
+            }
+          ]
         }
       ]
     },
@@ -380,7 +420,15 @@
             0.5
           ],
           "who": "the tenant can do it",
-          "basis": "2 bulb(s) at 9 W instead of today's bulbs, 3 h/day; saves nothing if it is already efficient (detail not seen), so payback is the best case"
+          "basis": "2 bulb(s) at 9 W instead of today's bulbs, 3 h/day; saves nothing if it is already efficient (detail not seen), so payback is the best case",
+          "products": [
+            {
+              "name": "Philips Ultra Efficient LED A19 Light Bulb",
+              "approx_price_usd": null,
+              "why": "uses about 4 W for 60 W of light",
+              "url": "https://www.amazon.com/dp/B0CVBMQC5R"
+            }
+          ]
         }
       ]
     },
@@ -447,7 +495,15 @@
             0.5
           ],
           "who": "the tenant can do it",
-          "basis": "2 bulb(s) at 9 W instead of today's bulbs, 3 h/day; saves nothing if it is already efficient (detail not seen), so payback is the best case"
+          "basis": "2 bulb(s) at 9 W instead of today's bulbs, 3 h/day; saves nothing if it is already efficient (detail not seen), so payback is the best case",
+          "products": [
+            {
+              "name": "Philips Ultra Efficient LED A19 Light Bulb",
+              "approx_price_usd": null,
+              "why": "uses about 4 W for 60 W of light",
+              "url": "https://www.amazon.com/dp/B0CVBMQC5R"
+            }
+          ]
         }
       ]
     },
@@ -514,7 +570,15 @@
             17.8
           ],
           "who": "the owner pays",
-          "basis": "an ENERGY STAR model uses about 400 kWh/yr; saves nothing if it is already efficient (detail not seen), so payback is the best case"
+          "basis": "an ENERGY STAR model uses about 400 kWh/yr; saves nothing if it is already efficient (detail not seen), so payback is the best case",
+          "products": [
+            {
+              "name": "GE ENERGY STAR Top-Freezer Refrigerator",
+              "approx_price_usd": null,
+              "why": "ENERGY STAR certified",
+              "url": "https://www.amazon.com/dp/B0BNLZCJPC"
+            }
+          ]
         }
       ]
     },

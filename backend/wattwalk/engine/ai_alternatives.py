@@ -21,8 +21,10 @@ from wattwalk import config, store
 from wattwalk.contracts import AiAlternativesResponse, Asset, Building, EnergyAlternative
 from wattwalk.engine.asset_energy import AUTHORIZER_TEXT, AssetEnergy, _money, _r, _value, inventory_energy
 from wattwalk.engine.assumptions import AssumptionContext
+from wattwalk.engine.products import product_link
 
 MAX_IDEAS = 3
+MAX_PRODUCTS = 1  # one product link per idea
 CACHE_FILE = "ai_alternatives.json"
 DEFAULT_MODEL = "deepseek/deepseek-flash"
 TIMEOUT_S = 60
@@ -60,7 +62,7 @@ def _ask_deepseek(model_id: str) -> Ask:
             "model": _normalize_deepseek_model(model_id),
             "messages": [{"role": "user", "content": prompt}],
             "temperature": 0.3,
-            "max_tokens": 900,
+            "max_tokens": 1500,
             # Same as vision: thinking off returns clean JSON quickly.
             "thinking": {"type": "disabled"},
             "response_format": {"type": "json_object"},
@@ -100,9 +102,36 @@ def build_prompt(asset: Asset, row: AssetEnergy, rate: float, library_titles: li
         "For each give: title (max 6 words), why (max 12 words), kwh_cut_pct as [low, high] percent of this "
         "item's electricity saved, cost_usd as [low, high] typical US installed price, and who: one of "
         '"tenant", "tenant_with_approval", "owner". Be conservative and realistic.\n'
+        "For each idea also give one real product sold on amazon.com that does it (a list with one item): the exact "
+        "product name: brand and product line as Amazon titles it, e.g. Philips Ultra Efficient LED A19 Light Bulb, "
+        "without sizes, pack counts or colours; approx_price_usd; and why (max 8 words). "
+        "Only well-known products you are sure are sold on Amazon. "
+        "No URLs. Leave products empty for work that needs a contractor and no product applies.\n"
         'Reply only with JSON: {"today_kwh_yr": [low, high] or null, "ideas": [{"title": "", "why": "", '
-        '"kwh_cut_pct": [0, 0], "cost_usd": [0, 0], "who": ""}]}'
+        '"kwh_cut_pct": [0, 0], "cost_usd": [0, 0], "who": "", '
+        '"products": [{"name": "", "approx_price_usd": 0, "why": ""}]}]}'
     )
+
+
+def parse_products(raw) -> list[dict]:
+    """The model's products, checked: a name is required, prices are clamped, URLs come from product_link."""
+    out: list[dict] = []
+    seen: set[str] = set()
+    for item in raw if isinstance(raw, list) else []:
+        if not isinstance(item, dict) or len(out) >= MAX_PRODUCTS:
+            continue
+        name = re.sub(r"\s+", " ", str(item.get("name") or "")).strip()[:120]
+        if len(name) < 4 or name.lower() in seen or "http" in name.lower():
+            continue
+        seen.add(name.lower())
+        price = item.get("approx_price_usd")
+        try:
+            price = round(min(max(float(price), 0.0), 100000.0), 2) if price not in (None, "") else None
+        except (TypeError, ValueError):
+            price = None
+        out.append({"name": name, "approx_price_usd": price or None,
+                    "why": str(item.get("why") or "").strip()[:80], "url": product_link(name)})
+    return out
 
 
 def _pair(value, lo: float, hi: float) -> Optional[tuple[float, float]]:
@@ -174,6 +203,7 @@ def parse_ideas(text: str, row: AssetEnergy, rate: float) -> tuple[Optional[tupl
             payback_years=payback,
             who=AUTHORIZER_TEXT.get(who, "check who can do it"),
             basis=f"AI estimate, not sourced: cuts {cut[0]:g}-{cut[1]:g}% of this item's electricity. {why}".strip(),
+            products=parse_products(idea.get("products")),
         ).model_dump())
     if not out:
         raise ResearchFailed("The model returned no usable ideas.")
@@ -200,8 +230,13 @@ def research(sid: str, asset_id: str, inventory: list[Asset], building: Building
     if asset is None:
         raise KeyError(asset_id)
     cache = _load_cache(sid)
-    if asset_id in cache and not refresh:
-        return AiAlternativesResponse(**{**cache[asset_id], "cached": True})
+    # Answers saved before products were added are asked again once.
+    saved = cache.get(asset_id)
+    stale = saved is not None and any("products" not in alt for alt in saved.get("alternatives", []))
+    if saved is not None and not refresh and not stale:
+        # Answers saved when ideas had several products keep only the first (one product per idea).
+        alternatives = [{**alt, "products": alt.get("products", [])[:MAX_PRODUCTS]} for alt in saved.get("alternatives", [])]
+        return AiAlternativesResponse(**{**saved, "alternatives": alternatives, "cached": True})
 
     ctx = AssumptionContext(building)
     rate = ctx.get("electricity_rate_usd_per_kwh")

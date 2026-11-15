@@ -172,6 +172,14 @@ export interface HeatShare { room_id: string; share: number; weight: number; }
 export type Range2 = [number, number];
 
 /** One upgrade applied to one asset: usage after it, the saving, cost and payback. */
+/** A real product for an AI upgrade idea; url opens its page (first result on amazon.com). */
+export interface ProductSuggestion {
+  name: string;
+  approx_price_usd: number | null;
+  why: string;
+  url: string;
+}
+
 export interface EnergyAlternative {
   upgrade_id: string;
   title: string;
@@ -185,6 +193,7 @@ export interface EnergyAlternative {
   payback_years: Range2 | null;
   who: string;
   basis: string;
+  products: ProductSuggestion[];
 }
 
 /** Energy and heat of one inventory asset (GET /audits/{sid}/energy). heat_kwh_yr < 0 removes heat. */
