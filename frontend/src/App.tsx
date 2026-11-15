@@ -28,7 +28,7 @@ import { Logo } from "./components/Logo";
 import { Intro } from "./components/Intro";
 import { BuildingView } from "./components/BuildingView";
 import type { StartAuditRequest, WattEvent } from "./contracts";
-import { useAppDispatch, useAppState, type RequestError } from "./state";
+import { savePicks, useAppDispatch, useAppState, type RequestError } from "./state";
 import { FloorPlan2D } from "./viewer/FloorPlan2D";
 import { Viewer3D } from "./viewer/Viewer3D";
 import {
@@ -59,6 +59,7 @@ export default function App() {
   // The intro page shows each time the site opens; the app loads underneath it.
   const [showIntro, setShowIntro] = useState(true);
   const [costsOpen, setCostsOpen] = useState(false);
+  useEffect(() => savePicks(state.picks), [state.picks]);
   const closeIntro = useCallback(() => setShowIntro(false), []);
   const exploreDemo = useCallback(() => {
     const models = state.testModels;

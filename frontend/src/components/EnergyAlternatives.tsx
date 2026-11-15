@@ -149,9 +149,26 @@ export function worthShowing(alt: EnergyAlternative): boolean {
 
 function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEnergy; ai?: boolean }) {
   const dispatch = useAppDispatch();
-  const picked = useAppState().chosenUpgrades[row.asset_id] === alt.upgrade_id;
+  const state = useAppState();
+  const picked = state.chosenUpgrades[row.asset_id] === alt.upgrade_id;
+  const room = state.audit?.rooms.find((r) => r.id === row.room_id)?.label ?? "";
+  const midpoint = (r: [number, number]) => (r[0] + r[1]) / 2;
   const toggle = () =>
-    dispatch({ type: "chooseUpgrade", assetId: row.asset_id, upgradeId: picked ? null : alt.upgrade_id });
+    dispatch({
+      type: "chooseUpgrade",
+      assetId: row.asset_id,
+      upgradeId: picked ? null : alt.upgrade_id,
+      pick: picked
+        ? undefined
+        : {
+            upgradeId: alt.upgrade_id,
+            title: alt.title,
+            saves: midpoint(alt.saves_usd_yr),
+            cost: midpoint(alt.cost_usd),
+            item: labelText(row.label),
+            room,
+          },
+    });
   const free = alt.cost_usd[1] <= 0;
   return (
     <li
