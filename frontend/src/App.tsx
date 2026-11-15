@@ -1,5 +1,5 @@
 /** Person 4's application shell: fixture/live data flow, SSE refetch rules, layout. */
-import { PinColorControls } from "./components/PinColorControls";
+import { HeatKey, ViewerStats } from "./components/ViewerStats";
 import { PickedUpgrades } from "./components/PickedUpgrades";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -588,13 +588,10 @@ export default function App() {
                 2D plan
               </button>
             </div>
-            <PinColorControls />
+            <HeatKey />
             {state.viewMode === "3d" ? <PickedUpgrades /> : null}
-            <span className="muted small">
-              {state.audit?.rooms.length ?? 0} rooms {"\u00b7"}{" "}
-              {state.audit?.inventory.length ?? 0} assets
-            </span>
           </div>
+          <ViewerStats />
           <div className="viewer-body">
             {state.viewMode === "3d" ? (
               <Viewer3D
