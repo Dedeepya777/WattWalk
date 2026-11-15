@@ -4897,3 +4897,33 @@ h1, h2, h3,
   font-size: 12px;
   color: var(--muted);
 }
+
+/* Intro: one button that grows to fill the screen, then the app */
+.intro-grow {
+  position: fixed;
+  z-index: 10;
+  left: var(--gx);
+  top: var(--gy);
+  width: var(--gw);
+  height: var(--gh);
+  border-radius: 999px;
+  background: var(--forest);
+  animation: intro-grow 650ms cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+@keyframes intro-grow {
+  0% {
+    left: var(--gx); top: var(--gy); width: var(--gw); height: var(--gh);
+    border-radius: 999px; background: var(--forest);
+  }
+  55% { background: var(--forest); }
+  100% {
+    left: 0; top: 0; width: 100vw; height: 100vh;
+    border-radius: 0; background: var(--bg);
+  }
+}
+.intro.intro-leaving .intro-copy,
+.intro.intro-leaving .intro-visual,
+.intro.intro-leaving .intro-top {
+  transition: opacity 250ms ease;
+  opacity: 0;
+}

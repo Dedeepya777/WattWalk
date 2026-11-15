@@ -3,7 +3,7 @@
  * Shown over the app each time the site opens; the app loads underneath so the demo opens at once.
  * The room on the right is a drawing (no scan imagery is bundled).
  */
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Logo } from "./Logo";
 
 interface Props {
@@ -67,6 +67,9 @@ function RoomIllustration() {
 }
 
 export function Intro({ onExplore, onSkip }: Props) {
+  // The button grows to fill the screen, fading to the app's background, then the app is there.
+  const [grow, setGrow] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") onSkip();
@@ -75,52 +78,54 @@ export function Intro({ onExplore, onSkip }: Props) {
     return () => window.removeEventListener("keydown", onKey);
   }, [onSkip]);
 
+  const start = (event: React.MouseEvent<HTMLButtonElement>) => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      onExplore();
+      return;
+    }
+    const b = event.currentTarget.getBoundingClientRect();
+    setGrow({ x: b.left, y: b.top, w: b.width, h: b.height });
+  };
+
   return (
-    <div className="intro" role="dialog" aria-modal="true" aria-labelledby="intro-title">
+    <div className={`intro${grow ? " intro-leaving" : ""}`} role="dialog" aria-modal="true" aria-labelledby="intro-title">
       <header className="intro-top">
         <span className="intro-brand">
           <Logo className="intro-logo" />
           WattWalk
         </span>
-        <button type="button" className="intro-skip" onClick={onSkip}>
-          Open the app
-        </button>
       </header>
 
       <main className="intro-hero">
         <div className="intro-copy">
-          <p className="intro-eyebrow">Energy audits from a 3D tour</p>
           <h1 id="intro-title">
             See where an apartment loses energy.
             <span>And what to fix first.</span>
           </h1>
           <div className="intro-actions">
-            <button type="button" className="intro-cta" onClick={onExplore}>
-              Explore a demo apartment
-            </button>
-            <button type="button" className="intro-link" onClick={onSkip}>
-              Open the app <span aria-hidden="true">›</span>
+            <button type="button" className="intro-cta" onClick={start} disabled={grow !== null}>
+              Get started
             </button>
           </div>
         </div>
         <div className="intro-visual">
           <RoomIllustration />
         </div>
-        <ol className="intro-steps">
-          <li>
-            <strong>Scan</strong>
-            <span>Uses the Matterport tour the listing already has. No site visit.</span>
-          </li>
-          <li>
-            <strong>See</strong>
-            <span>Every light, window and appliance glows by the heat it adds.</span>
-          </li>
-          <li>
-            <strong>Fix</strong>
-            <span>Pick upgrades and get one plan with cost, savings and payback.</span>
-          </li>
-        </ol>
       </main>
+
+      {grow ? (
+        <div
+          className="intro-grow"
+          style={{
+            ["--gx" as string]: `${grow.x}px`,
+            ["--gy" as string]: `${grow.y}px`,
+            ["--gw" as string]: `${grow.w}px`,
+            ["--gh" as string]: `${grow.h}px`,
+          } as React.CSSProperties}
+          onAnimationEnd={onExplore}
+          aria-hidden="true"
+        />
+      ) : null}
     </div>
   );
 }
