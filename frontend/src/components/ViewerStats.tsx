@@ -30,7 +30,23 @@ function heatSources(rows: AssetEnergy[]) {
   return [...totals.values()].sort((a, b) => b.kwh - a.kwh);
 }
 
-export function ViewerStats() {
+/** Toolbar button with the yearly cost; opens the cost details below the toolbar. */
+export function CostsButton({ open, onToggle }: { open: boolean; onToggle: () => void }) {
+  const state = useAppState();
+  if (!state.energy || state.energy.assets.length === 0) return null;
+  return (
+    <button type="button" className={`costs-button${open ? " open" : ""}`} onClick={onToggle} aria-expanded={open}>
+      <span className="costs-button-value">${Math.round(mid(state.energy.total_usd_yr)).toLocaleString()}</span>
+      <span className="costs-button-unit">/ yr</span>
+      <span className="costs-button-label">{open ? "Hide details" : "Cost details"}</span>
+      <svg className="costs-button-chevron" viewBox="0 0 12 12" aria-hidden="true">
+        <path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </button>
+  );
+}
+
+export function ViewerStats({ open }: { open: boolean }) {
   const state = useAppState();
   const rows = state.energy?.assets ?? [];
   if (!state.energy || rows.length === 0) return null;
@@ -41,9 +57,11 @@ export function ViewerStats() {
     { label: "Heat", value: Math.round(heat).toLocaleString(), unit: "kWh a year" },
     { label: "Items", value: String(state.audit?.inventory.length ?? 0), unit: "found" },
     { label: "Rooms", value: String(state.audit?.rooms.length ?? 0), unit: "scanned" },
-  ];
+  ].filter((metric) => !(metric.label === "Rooms" && metric.value === "0")); // some scans have no floor plan
 
   return (
+    <div className={`glance-wrap${open ? " open" : ""}`} aria-hidden={!open}>
+    <div className="glance-inner">
     <div className="glance">
       <dl className="glance-metrics">
         {metrics.map((metric) => (
@@ -72,6 +90,9 @@ export function ViewerStats() {
           </ul>
         </div>
       ) : null}
+      <HeatKey />
+    </div>
+    </div>
     </div>
   );
 }

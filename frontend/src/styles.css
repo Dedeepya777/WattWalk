@@ -3952,3 +3952,110 @@ select:disabled {
   background-size: 200% 100%;
   animation: shimmer 1.6s linear infinite;
 }
+
+/* Viewer toolbar: one row (components/ViewerStats.tsx CostsButton, StartControls compact) */
+.viewer-tab-row {
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 0;
+}
+.toolbar-spacer {
+  flex: 1;
+}
+.costs-button {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 6px 12px 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--charcoal);
+  font: inherit;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+.costs-button:hover,
+.costs-button.open {
+  background: var(--panel-2);
+  border-color: var(--moss);
+}
+.costs-button-value {
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.costs-button-unit {
+  font-size: 12px;
+  color: var(--muted);
+}
+.costs-button-label {
+  margin-left: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.costs-button-chevron {
+  align-self: center;
+  width: 12px;
+  height: 12px;
+  color: var(--muted);
+  transition: transform 250ms ease;
+}
+.costs-button.open .costs-button-chevron {
+  transform: rotate(180deg);
+}
+/* The cost details slide open: grid rows animate from 0fr to 1fr */
+.glance-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 320ms cubic-bezier(0.3, 0, 0.2, 1), opacity 220ms ease;
+}
+.glance-wrap.open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.glance-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+.glance {
+  margin: 0 14px 10px;
+  padding: 14px 16px 12px;
+  border-radius: 16px;
+  background: var(--panel-2);
+}
+.glance .heat-key {
+  margin-top: 10px;
+}
+/* Audit controls, compact on the right of the toolbar */
+.audit-bar {
+  position: relative;
+  padding: 0;
+}
+.audit-bar-row {
+  gap: 12px;
+}
+.audit-bar .audit-main {
+  padding: 7px 16px;
+  font-size: 13px;
+}
+.audit-bar .audit-extras {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 20;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+  box-shadow: 0 12px 30px rgba(40, 45, 40, 0.15);
+  white-space: nowrap;
+}
+.progress {
+  margin: 0 14px 10px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .glance-wrap,
+  .costs-button-chevron { transition: none; }
+}

@@ -4,7 +4,6 @@ import { ApiFailure, getHealthProbe, isFixtureMode } from "../api";
 import type { Health, StartAuditRequest } from "../contracts";
 import { FIXTURE_SID } from "../fixtures";
 import { useAppState } from "../state";
-import { ProgressTracker } from "./ProgressTracker";
 
 type Mode = StartAuditRequest["mode"];
 
@@ -162,15 +161,9 @@ export function StartControls({
   };
 
   return (
-    <section className="audit-bar" aria-labelledby="run-heading">
+    <section className="audit-bar" aria-label={`Audit of ${title}${subtitle ? `, ${subtitle}` : ""}`}>
       <div className="audit-bar-row">
-        <div className="audit-bar-title">
-          <h2 id="run-heading">{title}</h2>
-          <p>
-            {subtitle}
-            <span className={`status-dot status-${status}`}>{STATUS_TEXT[status] ?? status}</span>
-          </p>
-        </div>
+        <span className={`status-dot status-${status}`}>{STATUS_TEXT[status] ?? status}</span>
         <div className="audit-bar-actions">
       {!running ? (
         <button
@@ -242,8 +235,6 @@ export function StartControls({
           Live services aren’t ready. Pick an Instant demo apartment.
         </p>
       ) : null}
-
-      <ProgressTracker />
 
       {showOptions && !running ? (
       <div className="audit-extras">

@@ -1,5 +1,6 @@
 /** Person 4's application shell: fixture/live data flow, SSE refetch rules, layout. */
-import { HeatKey, ViewerStats } from "./components/ViewerStats";
+import { CostsButton, ViewerStats } from "./components/ViewerStats";
+import { ProgressTracker } from "./components/ProgressTracker";
 import { PickedUpgrades } from "./components/PickedUpgrades";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -57,6 +58,7 @@ export default function App() {
   const dispatch = useAppDispatch();
   // The intro page shows each time the site opens; the app loads underneath it.
   const [showIntro, setShowIntro] = useState(true);
+  const [costsOpen, setCostsOpen] = useState(false);
   const closeIntro = useCallback(() => setShowIntro(false), []);
   const exploreDemo = useCallback(() => {
     const models = state.testModels;
@@ -546,13 +548,6 @@ export default function App() {
         </aside>
 
         <section className="panel viewer-panel" aria-labelledby="viewer-heading">
-          <StartControls
-            onStart={handleStart}
-            onCancel={handleCancel}
-            onReset={handleReset}
-            auditLoading={auditLoading}
-            otherRunSid={activeRunSid && activeRunSid !== state.selectedSid ? activeRunSid : null}
-          />
           <div className="viewer-tab-row">
             <h2 id="viewer-heading" className="sr-only">
               Spatial viewer
@@ -586,10 +581,19 @@ export default function App() {
                 2D plan
               </button>
             </div>
-            <HeatKey />
+            <CostsButton open={costsOpen} onToggle={() => setCostsOpen((open) => !open)} />
             {state.viewMode === "3d" ? <PickedUpgrades /> : null}
+            <span className="toolbar-spacer" />
+            <StartControls
+              onStart={handleStart}
+              onCancel={handleCancel}
+              onReset={handleReset}
+              auditLoading={auditLoading}
+              otherRunSid={activeRunSid && activeRunSid !== state.selectedSid ? activeRunSid : null}
+            />
           </div>
-          <ViewerStats />
+          <ProgressTracker />
+          <ViewerStats open={costsOpen} />
           <div className="viewer-body">
             {state.viewMode === "3d" ? (
               <Viewer3D
