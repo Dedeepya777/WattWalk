@@ -218,7 +218,9 @@ function PopAlt({ alt, row, ai = false }: { alt: EnergyAlternative; row: AssetEn
                   onClick={(event) => event.stopPropagation()}
                   onKeyDown={(event) => event.stopPropagation()}
                 >
-                  <span className="pop-product-name">{product.name}</span>
+                  <span className="pop-product-name">
+                    <span className="pop-product-shop">Shop</span> {product.name}
+                  </span>
                   {product.approx_price_usd ? (
                     <span className="pop-product-price">~${Math.round(product.approx_price_usd).toLocaleString()}</span>
                   ) : null}

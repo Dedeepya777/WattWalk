@@ -3463,3 +3463,9 @@ select:disabled {
   color: var(--forest);
   font-weight: 700;
 }
+
+.energy-pop .pop-product-shop {
+  margin-right: 2px;
+  color: var(--forest);
+  font-weight: 700;
+}

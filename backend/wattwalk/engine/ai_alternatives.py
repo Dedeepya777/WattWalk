@@ -15,19 +15,16 @@ from __future__ import annotations
 
 import json
 import re
-import urllib.parse
 from typing import Callable, Optional
 
 from wattwalk import config, store
 from wattwalk.contracts import AiAlternativesResponse, Asset, Building, EnergyAlternative
 from wattwalk.engine.asset_energy import AUTHORIZER_TEXT, AssetEnergy, _money, _r, _value, inventory_energy
 from wattwalk.engine.assumptions import AssumptionContext
+from wattwalk.engine.products import product_link
 
 MAX_IDEAS = 3
-MAX_PRODUCTS = 3
-# A "jump to the first result" search limited to amazon.com: the user's click lands on the product page
-# for the exact name the model gave (the model never writes URLs, so links cannot be made up).
-PRODUCT_LINK = "https://duckduckgo.com/?q={query}"
+MAX_PRODUCTS = 1  # one product link per idea
 CACHE_FILE = "ai_alternatives.json"
 DEFAULT_MODEL = "deepseek/deepseek-flash"
 TIMEOUT_S = 60
@@ -105,7 +102,7 @@ def build_prompt(asset: Asset, row: AssetEnergy, rate: float, library_titles: li
         "For each give: title (max 6 words), why (max 12 words), kwh_cut_pct as [low, high] percent of this "
         "item's electricity saved, cost_usd as [low, high] typical US installed price, and who: one of "
         '"tenant", "tenant_with_approval", "owner". Be conservative and realistic.\n'
-        f"For each idea also list {MAX_PRODUCTS - 1} to {MAX_PRODUCTS} real products sold on amazon.com that do it: the exact "
+        "For each idea also give one real product sold on amazon.com that does it (a list with one item): the exact "
         "product name: brand and product line as Amazon titles it, e.g. Philips Ultra Efficient LED A19 Light Bulb, "
         "without sizes, pack counts or colours; approx_price_usd; and why (max 8 words). "
         "Only well-known products you are sure are sold on Amazon. "
@@ -114,11 +111,6 @@ def build_prompt(asset: Asset, row: AssetEnergy, rate: float, library_titles: li
         '"kwh_cut_pct": [0, 0], "cost_usd": [0, 0], "who": "", '
         '"products": [{"name": "", "approx_price_usd": 0, "why": ""}]}]}'
     )
-
-
-def product_link(name: str) -> str:
-    """Link that opens the first amazon.com result for the exact product name."""
-    return PRODUCT_LINK.format(query=urllib.parse.quote_plus(f"\\ site:amazon.com {name}"))
 
 
 def parse_products(raw) -> list[dict]:
@@ -242,7 +234,9 @@ def research(sid: str, asset_id: str, inventory: list[Asset], building: Building
     saved = cache.get(asset_id)
     stale = saved is not None and any("products" not in alt for alt in saved.get("alternatives", []))
     if saved is not None and not refresh and not stale:
-        return AiAlternativesResponse(**{**saved, "cached": True})
+        # Answers saved when ideas had several products keep only the first (one product per idea).
+        alternatives = [{**alt, "products": alt.get("products", [])[:MAX_PRODUCTS]} for alt in saved.get("alternatives", [])]
+        return AiAlternativesResponse(**{**saved, "alternatives": alternatives, "cached": True})
 
     ctx = AssumptionContext(building)
     rate = ctx.get("electricity_rate_usd_per_kwh")

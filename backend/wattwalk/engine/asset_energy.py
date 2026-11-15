@@ -30,6 +30,7 @@ from wattwalk.contracts import Asset, AssetEnergyResponse, Building
 from wattwalk.contracts import AssetEnergy as AssetEnergyModel
 from wattwalk.engine.assumptions import AssumptionContext, load_upgrades
 from wattwalk.engine.baseline import baseline
+from wattwalk.engine.products import library_products
 
 HOURS_PER_YEAR = 8760.0
 BTU_PER_WH = 3.412
@@ -189,6 +190,7 @@ def _alt(upgrade: dict, ctx: AssumptionContext, rate: float, now: AssetEnergy, c
         "payback_years": payback,
         "who": AUTHORIZER_TEXT.get(upgrade.get("authorizer", ""), upgrade.get("authorizer", "")),
         "basis": basis,
+        "products": library_products(upgrade["id"]),
     }
 
 
